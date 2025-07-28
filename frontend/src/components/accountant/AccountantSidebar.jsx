@@ -2,30 +2,31 @@ import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   UserOutlined,
-  MedicineBoxOutlined,
   CalendarOutlined,
-  ScheduleOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 
-const DoctorSidebar = () => {
+const AccountantSidebar = () => {
   const navigate = useNavigate();
 
   const links = [
-    { to: "/doctor/medical-profile", label: "Hồ Sơ Y Tế Người Dùng", icon: <UserOutlined /> },
-    { to: "/doctor/labtest", label: "Xét Nghiệm", icon: <ScheduleOutlined /> },
-    { to: "/doctor/medicine", label: "Xem Thuốc", icon: <MedicineBoxOutlined /> },
-    { to: "/doctor/appointments", label: "Xem Lịch Hẹn", icon: <CalendarOutlined /> },
-    { to: "/doctor/work-schedule", label: "Xem Lịch Làm Việc", icon: <ScheduleOutlined /> },
-    { to: "/doctor/profile", label: "Xem Hồ Sơ Cá Nhân", icon: <ScheduleOutlined /> },
-    { to: "/doctor/attendance", label: "Điểm Danh", icon: <ScheduleOutlined /> },
+    {
+      to: "/accountant/profile",
+      label: "Xem Hồ Sơ Cá Nhân",
+      icon: <UserOutlined />,
+    },
+    {
+      to: "/accountant/attendance",
+      label: "Điểm Danh",
+      icon: <CalendarOutlined />,
+    },
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("user"); // Clear user from localStorage
-    localStorage.removeItem("token"); // Clear token from localStorage
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/login");
-    window.location.reload(); // Force reload to update Header
+    window.location.reload();
   };
 
   return (
@@ -47,7 +48,6 @@ const DoctorSidebar = () => {
         </NavLink>
       ))}
 
-      {/* Nút Logout được đưa vào ngay sau Attendance */}
       <div
         onClick={handleLogout}
         style={{
@@ -56,7 +56,9 @@ const DoctorSidebar = () => {
           color: "#ddd",
         }}
       >
-        <span style={styles.icon}><LogoutOutlined /></span>
+        <span style={styles.icon}>
+          <LogoutOutlined />
+        </span>
         Đăng Xuất
       </div>
     </div>
@@ -95,4 +97,4 @@ const styles = {
   },
 };
 
-export default DoctorSidebar;
+export default AccountantSidebar;
