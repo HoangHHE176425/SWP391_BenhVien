@@ -445,14 +445,14 @@ function handleResetForm() {
 async function handleSubmit() {
   if (!validateForm()) return;
 
-  console.log("📋 === BẮT ĐẦU GỬI LỊCH HẸN ===");
-  console.log("🆔 identityNumber:", form.identityNumber);
-  console.log("📅 form.appointmentDate:", form.appointmentDate);
-  console.log("🏥 form.department:", form.department);
-  console.log("👨‍⚕️ form.doctorId:", form.doctorId);
-  console.log("⏰ form.timeSlot:", form.timeSlot);
-  console.log("🧾 selectedProfileId:", selectedProfileId);
-  console.log("📂 resolvedProfiles:", resolvedProfiles);
+  // console.log("📋 === BẮT ĐẦU GỬI LỊCH HẸN ===");
+  // console.log("🆔 identityNumber:", form.identityNumber);
+  // console.log("📅 form.appointmentDate:", form.appointmentDate);
+  // console.log("🏥 form.department:", form.department);
+  // console.log("👨‍⚕️ form.doctorId:", form.doctorId);
+  // console.log("⏰ form.timeSlot:", form.timeSlot);
+  // console.log("🧾 selectedProfileId:", selectedProfileId);
+  // console.log("📂 resolvedProfiles:", resolvedProfiles);
 
   const selectedProfile = resolvedProfiles.find((p) => p._id === selectedProfileId);
   if (!selectedProfile) {

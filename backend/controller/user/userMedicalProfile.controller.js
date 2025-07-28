@@ -1,7 +1,7 @@
 const Profile = require("../../models/Profile");
 const Service = require("../../models/Service");
 const Employee = require('../../models/Employee');
-const { createLab, updateModel } = require("../labtest/labTestServices")
+const { createLab, updateModel } = require("../doctor/labTestServices")
 
 const findUserByIdentity = async (req, res) => {
   try {
