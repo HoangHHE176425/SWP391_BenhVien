@@ -8,11 +8,11 @@ import {
 } from "react-router-dom";
 
 // Layouts
+import AccountantLayout from "./layouts/AccountantLayout";
+import PharmacistLayout from "./layouts/PharmacistLayout";
+import HrmanagerLayout from "./layouts/HrmanagerLayout";
 import DoctorLayout from "./components/doctor/DoctorLayout";
-import HrmanagerLayout from "./components/hrmanager/HrmanagerLayout";
 import ReceptionistLayout from "./components/receptionist/receptionistLayout";
-import AccountantSidebar from "./components/accountant/AccountantSidebar";
-import PharmacistLayout from "./components/pharmacist/PharmacistLayout";
 import AdminLayout from "./components/admin/AdminLayout";
 import StaffLayout from "./components/staff/StaffLayout";
 
@@ -84,6 +84,9 @@ import LabTestPage from "./pages/LabTestPage.jsx";
 import DoctorAppointments from "./pages/DoctorAppointment.jsx";
 import CreateInvoice2 from "./components/staff/CreateInvoiceTest.jsx";
 import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
+import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
+import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
+import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
 
 // Components
 import Header from "./components/HeaderComponent";
@@ -339,11 +342,9 @@ const AppRoutes = () => {
               </PrivateRouteByRole>
             }
           >
-            <Route index element={<MedicineManagement />} />
-            <Route path="medicines" element={<MedicineManagement />} />
-            <Route path="invoices" element={<InvoiceList />} />
-            <Route path="invoices/create" element={<CreateInvoice2 />} />
+            <Route index element={<InvoiceManagement />} />
             <Route path="profile" element={<ProfileStaff />} />
+            <Route path="attendance" element={<PharmacistAttendance />} />
           </Route>
 
           {/* HR Manager Routes */}
@@ -355,10 +356,9 @@ const AppRoutes = () => {
               </PrivateRouteByRole>
             }
           >
-            <Route index element={<EmployeeManagement />} />
-            <Route path="employees" element={<EmployeeManagement />} />
-            <Route path="attendance" element={<AttendanceManagement />} />
+            <Route index element={<InvoiceManagement />} />
             <Route path="profile" element={<ProfileStaff />} />
+            <Route path="attendance" element={<HrmanagerAttendance />} />
           </Route>
 
           {/* Accountant Routes */}
@@ -366,15 +366,13 @@ const AppRoutes = () => {
             path="/accountant/*"
             element={
               <PrivateRouteByRole allowedRoles={["Accountant"]}>
-                <AccountantSidebar />
+                <AccountantLayout  />
               </PrivateRouteByRole>
             }
           >
             <Route index element={<InvoiceManagement />} />
-            <Route path="invoices" element={<InvoiceList />} />
-            <Route path="invoices/create" element={<CreateInvoice2 />} />
-            <Route path="payments" element={<PaymentView />} />
             <Route path="profile" element={<ProfileStaff />} />
+            <Route path="attendance" element={<AccountantAttendance />} />
           </Route>
 
           {/* Receptionist Routes (Added for completeness) */}
@@ -387,7 +385,6 @@ const AppRoutes = () => {
             }
           >
             <Route index element={<AppointmentScheduleManagement />} />
-            <Route path="appointments" element={<AppointmentScheduleManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="profile" element={<ProfileStaff />} />
           </Route>
