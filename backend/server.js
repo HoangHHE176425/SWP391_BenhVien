@@ -41,7 +41,9 @@ app.use("/api/staff/news", require("./routers/Staff/news.route"));
 app.use("/api/staff/medical-record", require("./routers/Staff/medicalrecord.route"));
 app.use("/api/attendance", require("./routers/Doctor/attendance.routes"));
 app.use("/api/attendance", require("./routers/Staff/attendance.route"));
-
+app.use("/api/attendance/accountant", require("./routers/accountant/accountantAttendance.route"));
+app.use("/api/pharmacist/accountant", require("./routers/pharmacist/pharmacistAttendance.route"));
+app.use("/api/hrmanager/accountant", require("./routers/hrmanager/hrmanagerAttendance.route"));
 // Routers import
 const userRouter = require("./routers/User/user.route");
 const userMedicalProfile = require("./routers/User/userMedicalProfile.route");
