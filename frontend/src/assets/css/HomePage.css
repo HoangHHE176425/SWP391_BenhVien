@@ -1,0 +1,513 @@
+/********** Root & Fonts **********/
+:root {
+    --primary: #06A3DA;
+    --secondary: #F57E57;
+    --light: #EEF9FF;
+    --dark: #091E3E;
+    --white: #fff;
+    --gray: #6c757d;
+    --light-blue: #E6F0FA;
+    --light-gray: #d3d3d3;
+}
+
+/* Reset */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Jost', sans-serif;
+    background-color: var(--light);
+    color: var(--dark);
+    scroll-behavior: smooth;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/********** Typography **********/
+h1,
+h2,
+.font-weight-bold {
+    font-weight: 700 !important;
+    margin: 0 0 20px 0;
+    color: var(--dark);
+}
+
+h3,
+h4,
+.font-weight-semi-bold {
+    font-weight: 600 !important;
+    margin: 0 0 15px 0;
+    color: var(--dark);
+}
+
+h5,
+h6,
+.font-weight-medium {
+    font-weight: 500 !important;
+    margin: 0 0 10px 0;
+    color: var(--dark);
+}
+
+p {
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+/********** Buttons **********/
+.btn {
+    font-family: 'Jost', sans-serif;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    color: var(--white);
+}
+
+.btn-outline-light {
+    border-color: var(--white);
+    color: var(--white);
+}
+
+.btn-outline-light:hover {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    color: var(--white);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+/********** Spinner **********/
+.homepage-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+/********** Hero Carousel **********/
+#heroCarousel {
+    position: relative;
+}
+
+.carousel-item img {
+    object-fit: cover;
+    height: 90vh;
+}
+
+.carousel-caption {
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.carousel-caption h5 {
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+}
+
+.carousel-caption h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 2rem;
+}
+
+.carousel-caption .btn {
+    margin: 0.5rem;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+}
+
+/********** Carousel Controls **********/
+.carousel-control-prev,
+.carousel-control-next {
+    width: 60px;
+    height: 60px;
+    background: var(--light-gray);
+    border-radius: 50%;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto -38px;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-size: 100% 100%;
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fff"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>') !important;
+}
+
+.carousel-control-next-icon {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fff"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>') !important;
+}
+
+/********** Facility Carousel **********/
+#facilityCarousel .carousel-item img {
+    object-fit: cover;
+    height: 50vh;
+    border-radius: 8px;
+}
+
+#facilityCarousel .carousel-caption {
+    background: rgba(0, 0, 0, 0.6);
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+#facilityCarousel .carousel-caption h4 {
+    font-size: 1.75rem;
+    color: var(--white);
+    margin-bottom: 1rem;
+}
+
+#facilityCarousel .carousel-caption p {
+    font-size: 0.95rem;
+    color: var(--white);
+}
+
+/********** Services Section **********/
+.service-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    background-color: var(--white);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.service-card img {
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+}
+
+.service-card .p-3 {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.service-card h5 {
+    font-size: 1.25rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.service-card p {
+    font-size: 0.95rem;
+    color: var(--gray);
+    margin-bottom: 15px;
+}
+
+.services-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+.services-carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+/********** Departments Section **********/
+.department-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    background-color: var(--white);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.department-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.department-card img {
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+}
+
+.department-card .p-3 {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.department-card h5 {
+    font-size: 1.25rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.department-card p {
+    font-size: 0.95rem;
+    color: var(--gray);
+    margin-bottom: 15px;
+}
+
+.departments-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+.departments-carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+/********** Blogs Section **********/
+.blog-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: var(--white);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.blog-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.blog-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 12px 12px 0 0;
+}
+
+.blog-card .p-3 {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.blog-title {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: var(--dark);
+}
+
+.blog-excerpt {
+    font-size: 0.95rem;
+    color: var(--gray);
+    margin-bottom: 15px;
+}
+
+.blog-card .btn {
+    font-size: 0.95rem;
+    padding: 8px 20px;
+}
+
+.blogs-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+.blogs-carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+/********** News Section **********/
+.news-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: var(--white);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.news-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.news-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 12px 12px 0 0;
+}
+
+.news-card .p-3 {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.news-title {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: var(--dark);
+}
+
+.news-excerpt {
+    font-size: 0.95rem;
+    color: var(--gray);
+    margin-bottom: 15px;
+}
+
+.news-card .btn {
+    font-size: 0.95rem;
+    padding: 8px 20px;
+}
+
+.news-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+.news-carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+/********** About Section **********/
+.about-section {
+    padding: 5rem 0;
+}
+
+.about-section img {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.about-section img:hover {
+    transform: scale(1.05);
+}
+
+.about-section p {
+    color: var(--gray);
+    font-size: 1.1rem;
+}
+
+/********** Responsive Adjustments **********/
+@media (max-width: 991.98px) {
+    .services-carousel .col-lg-3,
+    .departments-carousel .col-lg-3,
+    .blogs-carousel .col-lg-3,
+    .news-carousel .col-lg-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .services-carousel .col-lg-3,
+    .departments-carousel .col-lg-3,
+    .blogs-carousel .col-lg-3,
+    .news-carousel .col-lg-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+
+    .carousel-caption h5 {
+        font-size: 1rem;
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 50px;
+        height: 50px;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        width: 30px;
+        height: 30px;
+    }
+}

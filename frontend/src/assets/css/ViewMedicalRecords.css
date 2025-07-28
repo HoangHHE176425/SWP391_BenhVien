@@ -1,0 +1,92 @@
+/* ViewMedicalRecords.css */
+body {
+    background-color: #f4f7fa;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #005555;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+.table-primary {
+    background-color: #e6f4f1 !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1faff;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #005555;
+    border-color: #005555;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #003d3d;
+    border-color: #003d3d;
+}
+
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #343a40;
+}
+
+.form-control,
+.form-select {
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #005555;
+    box-shadow: 0 0 0 0.2rem rgba(0, 85, 85, 0.25);
+}
+
+.input-group-text {
+    background-color: #e6f4f1;
+    border-color: #ced4da;
+}
+
+.badge {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.alert-danger {
+    border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+    }
+}

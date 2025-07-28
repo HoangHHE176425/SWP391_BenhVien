@@ -1,0 +1,446 @@
+/* Professional Header Styles */
+.header-nav {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.header-nav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: -1;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0; /* Set padding to 0 as requested */
+  height: 100px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative; /* Allow child elements to use positioning */
+}
+
+/* Adjust header-left to simulate negative padding effect */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: -80px; /* Pull left edge outward by 30px */
+  padding-left: 0;
+}
+
+/* Adjust header-right to simulate negative padding effect */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-grow: 1;
+  max-width: 80%;
+  margin-right: -80px; /* Pull right edge outward by 30px */
+}
+
+/* Button styling in header-left */
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0px; 
+}
+
+.header-left button {
+  margin-right: 0; 
+  padding: 0; 
+}
+
+.header-left .header-logo {
+  margin-left: 0; 
+}
+.header-left .ant-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  color: #64748b;
+}
+
+.header-left .ant-btn:hover {
+  background: #f1f5f9 !important;
+  color: #3b82f6 !important;
+  transform: translateY(-1px);
+}
+
+/* Logo styling */
+.header-logo {
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.header-logo:hover {
+  transform: translateY(-1px);
+}
+
+.header-logo h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.5px;
+}
+
+.header-logo h1 i {
+  color: #dc2626;
+  font-size: 32px;
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Link styling */
+.header-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.header-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.header-link:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  transform: translateY(-1px);
+}
+
+.header-link:hover::before {
+  width: 80%;
+}
+
+.header-link .anticon {
+  font-size: 16px;
+}
+
+/* Dropdown Trigger */
+.dropdown-trigger {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dropdown-trigger:hover {
+  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* Bell Icon */
+.bell-icon {
+  font-size: 20px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin: 0 8px;
+}
+
+.bell-icon:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  transform: translateY(-1px) rotate(15deg);
+}
+
+/* Badge Styling */
+.ant-badge {
+  display: flex;
+  align-items: center;
+}
+
+.ant-badge .ant-badge-count {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  font-weight: 600;
+  font-size: 11px;
+  min-width: 20px;
+  height: 20px;
+  line-height: 16px;
+}
+
+/* Account Menu */
+.account-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.account-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 150px; /* Tăng chiều rộng để nút dài hơn */
+  white-space: nowrap; /* Ngăn chặn ngắt dòng */
+}
+
+.account-button:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  transform: translateY(-1px);
+}
+
+.dropdown-arrow {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.account-menu-wrapper:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e2e8f0;
+  padding: 8px 0;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.account-menu-wrapper:hover .account-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.account-dropdown li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.account-dropdown a,
+.account-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-dropdown a:hover,
+.account-dropdown button:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.account-dropdown button:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.account-dropdown hr {
+  margin: 8px 16px;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Appointment Button */
+.appointment-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  margin-left: 12px;
+  width: 150px; /* Tăng chiều rộng để nút dài hơn */
+  white-space: nowrap; /* Ngăn chặn ngắt dòng */
+}
+
+.appointment-button:hover {
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.appointment-button .anticon {
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .header-right {
+    gap: 4px;
+  }
+  .header-link {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .appointment-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 15px; /* Reduce padding to ~15px on mobile for balance */
+    height: 64px;
+  }
+  .header-logo h1 {
+    font-size: 24px;
+  }
+  .header-right {
+    gap: 2px;
+    max-width: 60%;
+  }
+  .header-link span {
+    display: none;
+  }
+  .appointment-button span {
+    display: none;
+  }
+  .account-button span {
+    display: none;
+  }
+}
+
+/* Ant Design Dropdown Customization */
+.ant-dropdown {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden;
+}
+
+.ant-dropdown .ant-dropdown-menu {
+  border-radius: 12px !important;
+  padding: 8px 0 !important;
+  box-shadow: none !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item {
+  padding: 12px 20px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item:hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+  color: #3b82f6 !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item a {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Loading and Animation Effects */
+.header-nav {
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Focus States for Accessibility */
+.header-link:focus,
+.account-button:focus,
+.appointment-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Smooth Scrolling Effect */
+.header-nav.scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}

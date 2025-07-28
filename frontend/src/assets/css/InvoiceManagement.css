@@ -1,0 +1,190 @@
+/* InvoiceManagement.css */
+
+/* General container styling */
+.invoice-management {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  background-color: #f5f7fa; /* Light background for contrast */
+  min-height: 100vh;
+}
+
+/* Heading styling */
+.invoice-management h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1a3c34; /* Dark teal for headings */
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.invoice-management p {
+  font-size: 1.2rem;
+  color: #4a4a4a; /* Subtle gray for secondary text */
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* Button styling */
+.MuiButton-containedPrimary {
+  background-color: #1a3c34 !important; /* Custom teal color */
+  color: #ffffff !important;
+  font-weight: 500;
+  text-transform: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.MuiButton-containedPrimary:hover {
+  background-color: #155a4a !important; /* Darker teal on hover */
+}
+
+/* Dialog styling */
+.MuiDialog-paper {
+  border-radius: 12px !important;
+  padding: 16px;
+  background-color: #ffffff;
+}
+
+.MuiDialogTitle-root {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: #1a3c34 !important;
+  text-align: center;
+}
+
+.MuiDialogContent-root {
+  padding: 24px !important;
+}
+
+.MuiDialogActions-root {
+  padding: 16px 24px !important;
+}
+
+/* Form input styling */
+.MuiTextField-root {
+  background-color: #ffffff;
+  border-radius: 8px;
+}
+
+.MuiInputBase-root {
+  border-radius: 8px !important;
+  font-size: 1rem;
+}
+
+.MuiInputLabel-root {
+  color: #4a4a4a !important;
+  font-weight: 500;
+}
+
+.MuiInputBase-input {
+  padding: 12px !important;
+}
+
+.MuiSelect-select {
+  padding: 12px !important;
+}
+
+/* Table styling */
+.MuiTableContainer-root {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* Ensure responsiveness */
+}
+
+.MuiTable-root {
+  background-color: #ffffff;
+}
+
+.MuiTableHead-root {
+  background-color: #1a3c34;
+}
+
+.MuiTableCell-head {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 1rem;
+  padding: 16px;
+}
+
+.MuiTableCell-body {
+  color: #333333;
+  font-size: 0.95rem;
+  padding: 14px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.MuiTableRow-root:hover {
+  background-color: #f1f4f8 !important; /* Light hover effect */
+}
+
+/* Loading overlay */
+.custom-loading-overlay {
+  z-index: 10;
+  border-radius: 12px;
+}
+
+/* Snackbar styling */
+.MuiSnackbar-root {
+  top: 80px !important;
+}
+
+.MuiAlert-root {
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.MuiAlert-success {
+  background-color: #e6f4ea !important;
+  color: #2e7d32 !important;
+}
+
+.MuiAlert-error {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .invoice-management {
+    padding: 16px;
+  }
+
+  .invoice-management h1 {
+    font-size: 2rem;
+  }
+
+  .MuiTableCell-head,
+  .MuiTableCell-body {
+    font-size: 0.85rem;
+    padding: 12px;
+  }
+
+  .MuiButton-containedPrimary {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .MuiDialog-paper {
+    margin: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .invoice-management h1 {
+    font-size: 1.8rem;
+  }
+
+  .MuiTableCell-head,
+  .MuiTableCell-body {
+    font-size: 0.8rem;
+    padding: 10px;
+  }
+
+  .MuiTextField-root,
+  .MuiSelect-select {
+    font-size: 0.9rem;
+  }
+}

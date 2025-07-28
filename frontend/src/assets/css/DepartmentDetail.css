@@ -1,0 +1,36 @@
+.department-detail-container {
+  max-width: 700px;
+  margin: 36px auto 50px auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 28px #e0eefd81;
+  padding: 32px 20px 26px 20px;
+}
+
+.department-detail-title {
+  font-size: 2.15rem;
+  font-weight: bold;
+  color: #0a6fa4;
+  margin-bottom: 20px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.department-detail-desc {
+  font-size: 1.13rem;
+  margin-bottom: 16px;
+  color: #17304a;
+}
+
+.department-detail-price {
+  font-size: 1.17rem;
+  margin-bottom: 24px;
+  color: #00496b;
+}
+
+.department-detail-price span {
+  color: #d14f0f;
+  font-weight: 600;
+  margin-left: 8px;
+  font-size: 1.19rem;
+}

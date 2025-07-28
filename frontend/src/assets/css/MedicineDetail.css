@@ -1,0 +1,85 @@
+.medicine-detail-container {
+  max-width: 760px;
+  margin: 36px auto 60px auto;
+  padding: 32px 22px 30px 22px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 30px #e5eef7a8;
+}
+
+.medicine-detail-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #0167b1;
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.medicine-detail-block > div {
+  font-size: 1.07rem;
+  margin-bottom: 12px;
+  color: #193f6b;
+  line-height: 1.5;
+}
+
+.medicine-detail-block > div > b {
+  color: #0177c1;
+  font-weight: 500;
+}
+
+.medicine-detail-ref {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    justify-content: center;
+}
+
+.medicine-detail-ref button {
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.25s ease, transform 0.15s ease;
+    white-space: nowrap;
+}
+
+.medicine-detail-ref button:hover {
+    background-color: #0052a3;
+    transform: translateY(-1px);
+}
+
+.medicine-detail-ref button:active {
+    transform: scale(0.97);
+    background-color: #003f7f;
+}
+
+
+.medicine-detail-section {
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #d8e3ef;
+}
+.medicine-detail-section:last-child {
+  border-bottom: none;
+}
+.medicine-detail-section h2 {
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: #206fc4;
+  margin-bottom: 7px;
+}
+.medicine-detail-section div {
+  color: #223e59;
+  font-size: 1.07rem;
+  line-height: 1.55;
+  margin-bottom: 0;
+  white-space: pre-line;
+}

@@ -1,0 +1,11 @@
+### Book Appointment
+POST http://localhost:9999/api/profile/create
+Authorization: Bearer 68596f707ce35aa092e8eb82
+Content-Type: application/json
+
+
+{
+  "name": "Nguyễn Văn A",
+  "dateOfBirth": "2000-05-15",
+  "gender": "Male"
+}

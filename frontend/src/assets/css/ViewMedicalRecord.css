@@ -1,0 +1,225 @@
+/* ViewMedicalRecord.css */
+
+/* General page styling */
+.profile-page {
+  min-height: 100vh;
+  background-color: #f4f6f8; /* Light gray background for a clean look */
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Page title */
+.profile-page h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a3c34; /* Dark teal for a professional tone */
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Loading message */
+.profile-page p.text-center {
+  font-size: 1.1rem;
+  color: #6b7280; /* Gray for loading text */
+  margin: 1rem 0;
+}
+
+/* Error and warning messages */
+.profile-page .bg-red-100 {
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 1200px; /* Increased to match wider table */
+  text-align: center;
+}
+
+.profile-page .bg-yellow-100 {
+  background-color: #fef3c7;
+  border: 1px solid #facc15;
+  color: #b45309;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 1200px; /* Increased to match wider table */
+  text-align: center;
+}
+
+/* Table container */
+.MuiTableContainer-root {
+  max-width: 1200px; /* Increased table width to utilize more screen space */
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* Responsive for smaller screens */
+}
+
+/* Table styling */
+.MuiTable-root {
+  background-color: #ffffff;
+  border-collapse: collapse;
+}
+
+.MuiTableHead-root {
+  background-color: #e5e7eb; /* Light gray for table header */
+}
+
+.MuiTableCell-head {
+  font-weight: 600;
+  color: #1a3c34;
+  font-size: 1rem;
+  padding: 1rem;
+  text-align: left;
+}
+
+.MuiTableCell-body {
+  font-size: 0.95rem;
+  color: #374151; /* Dark gray for readability */
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Hover effect for table rows */
+.MuiTableRow-root:hover {
+  background-color: #f9fafb; /* Subtle hover effect */
+}
+
+/* Button styling */
+.MuiButton-outlined {
+  text-transform: none;
+  font-weight: 500;
+  color: #1a3c34;
+  border-color: #1a3c34;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.MuiButton-outlined:hover {
+  background-color: #1a3c34;
+  color: #ffffff;
+  border-color: #1a3c34;
+}
+
+/* Pagination styling */
+.MuiPagination-root {
+  margin-top: 1.5rem;
+}
+
+.MuiPaginationItem-root {
+  color: #1a3c34;
+  font-weight: 500;
+}
+
+.Mui-selected {
+  background-color: #1a3c34 !important;
+  color: #ffffff !important;
+}
+
+/* Dialog styling */
+.MuiDialog-root {
+  z-index: 1300; /* Ensure dialog is on top */
+}
+
+.MuiDialog-paper {
+  max-width: 1400px; /* Increased width to fully contain all sections without scrollbar */
+  width: 90%; /* Responsive width for smaller screens */
+  margin-top: 100px; /* Increased margin to avoid fixed header */
+}
+
+.MuiDialogTitle-root {
+  background-color: #1a3c34;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: 1rem 1.5rem;
+}
+
+.dialog-content {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping to keep all sections in one row */
+  gap: 1.5rem; /* Space between sections */
+  justify-content: space-between;
+  align-items: flex-start; /* Align sections at the top */
+}
+
+.section {
+  flex: 1;
+  min-width: 400px; /* Increased minimum width to ensure content fits without overflow */
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section strong {
+  color: #1a3c34;
+  font-weight: 600;
+}
+
+.MuiDialogContent-root {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+}
+
+.MuiTypography-root {
+  font-size: 1rem;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .profile-page {
+    padding: 1rem;
+  }
+
+  .profile-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .MuiTableContainer-root {
+    max-width: 100%; /* Full width on small screens */
+  }
+
+  .MuiTableCell-head,
+  .MuiTableCell-body {
+    font-size: 0.85rem;
+    padding: 0.75rem;
+  }
+
+  .MuiButton-outlined {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .MuiDialog-paper {
+    max-width: 90%; /* Full width on smaller screens */
+    margin-top: 80px; /* Adjusted margin for mobile */
+  }
+
+  .dialog-content {
+    flex-direction: column; /* Stack sections vertically on small screens */
+    flex-wrap: wrap; /* Allow wrapping if needed on smaller screens */
+  }
+
+  .section {
+    min-width: 100%; /* Full width on mobile */
+  }
+}
+
+@media (max-width: 600px) {
+  .MuiDialogContent-root {
+    padding: 1rem;
+  }
+
+  .MuiTypography-root {
+    font-size: 0.9rem;
+  }
+}

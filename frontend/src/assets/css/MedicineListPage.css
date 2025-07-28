@@ -1,0 +1,121 @@
+.medicine-container {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 30px 8px 50px 8px;
+  background: #fff;
+}
+
+.medicine-title {
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #193f6b;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.medicine-title-list {
+  font-size: 1.5rem;
+  color: #193f6b;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  border-bottom: 3px solid #009fd9;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
+.medicine-search {
+  width: 680px;              
+  max-width: 100%;
+  padding: 14px 20px;
+  font-size: 1.15rem;
+  border: 1.5px solid #d6e2f2;
+  border-radius: 7px;
+  background: #f8fafb;
+  box-shadow: 0 2px 12px #f0f5fa1c;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.medicine-search:focus {
+  border: 1.5px solid #009fd9;  
+  background: #fff;
+  box-shadow: 0 4px 18px #cdeafc2a;
+}
+
+.medicine-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 50px; 
+  margin-bottom: 24px;
+}
+
+.search-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.az-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 14px 0 28px 0;
+}
+
+.az-letter {
+  background: #f3f7fa;
+  border: none;
+  border-radius: 50%;
+  padding: 7px 15px;
+  font-weight: 600;
+  color: #287ec7;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+  outline: none;
+}
+
+.az-letter.active {
+  background: #009fd9;
+  color: #fff;
+}
+.az-letter.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  background: #e9e9e9;
+  color: #8e8e8e;
+}
+
+.medicine-list-row {
+  display: flex;
+  gap: 60px;
+}
+
+.medicine-list-col {
+  flex: 1;
+  min-width: 200px;
+}
+
+.medicine-row {
+  font-size: 1.13rem;
+  padding: 8px 0 8px 0;
+  border-bottom: 1px solid #eaeaea;
+  color: #1b3d6d;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+.medicine-row:hover {
+  color: #009fd9;
+  text-decoration: underline;
+}
+
+.medicine-link {
+  color: #1b3d6d;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.18s, text-decoration 0.18s;
+}
+.medicine-link:hover {
+  color: #009fd9;
+  text-decoration: underline;
+}

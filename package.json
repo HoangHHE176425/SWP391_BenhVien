@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@payos/payos-checkout": "^1.0.8",
+    "@tailwindcss/vite": "^4.1.10",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "nodemailer": "^7.0.3",
+    "tailwindcss": "^4.1.10"
+  }
+}

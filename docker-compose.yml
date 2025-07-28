@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  backend:
+    container_name: backend
+    build: ./backend
+    ports:
+      - "9999:9999"
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mongo
+    env_file:
+      - ./backend/.env
+    restart: always
+
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
+    restart: always
+    # ⚠️ Không mount volume nếu dùng Vite để tránh lỗi
+
+  mongo:
+    container_name: mongo
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+volumes:
+  mongo_data:

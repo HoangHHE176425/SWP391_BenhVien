@@ -1,0 +1,44 @@
+/* Table header styling */
+.ant-table-thead > tr > th {
+  background-color: #2196f3 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* Center pagination */
+.ant-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.ant-pagination-item-active {
+  background: linear-gradient(to right, #1976d2, #2196f3) !important;
+  border-color: #1976d2 !important;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.4);
+}
+
+.ant-pagination-item-active a {
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Center pagination */
+.ant-table-wrapper .ant-pagination {
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: 16px;
+}
+
+
+/* Add button primary color override */
+.custom-add-button {
+  background: linear-gradient(to right, #1976d2, #2196f3);
+  border-color: #1976d2;
+  color: white;
+  box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+}
+
+
+

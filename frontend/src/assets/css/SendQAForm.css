@@ -1,0 +1,77 @@
+.qa-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to right, #e0f2ff, #ffffff);
+  padding: 20px;
+}
+
+.qa-form {
+  width: 100%;
+  max-width: 500px;
+  background-color: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.qa-form h2.qa-title {
+  text-align: center;
+  font-size: 24px;
+  color: #1e40af;
+  margin-bottom: 20px;
+}
+
+.qa-form input,
+.qa-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: border 0.3s;
+}
+
+.qa-form input:focus,
+.qa-form textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.qa-form button {
+  width: 100%;
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.qa-form button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.qa-form button:hover:not(:disabled) {
+  background-color: #1e3a8a;
+}
+
+.qa-success {
+  color: green;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: 500;
+}
+
+.qa-error {
+  color: red;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: 500;
+}

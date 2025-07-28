@@ -1,0 +1,28 @@
+/* Tùy chỉnh bảng lịch hẹn cho dễ nhìn */
+.appointment-table {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #eee;
+  overflow: hidden;
+  margin-top: 16px;
+}
+.appointment-table th {
+  background: #3c92e9;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.appointment-table td, .appointment-table th {
+  vertical-align: middle !important;
+}
+.badge {
+  font-size: 1rem;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-weight: 500;
+  letter-spacing: .5px;
+}
+.badge.bg-warning { background: #ffe066; color: #8a7200;}
+.badge.bg-success { background: #a3e635; color: #33691e;}
+.badge.bg-secondary { background: #adb5bd; color: #495057;}
+.badge.bg-info { background: #91d5ff; color: #003a8c;}
