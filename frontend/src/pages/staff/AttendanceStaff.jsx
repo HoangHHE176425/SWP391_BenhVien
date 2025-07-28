@@ -119,8 +119,8 @@ const EmployeeAttendance = () => {
 
   return (
     <Card style={{ maxWidth: 800, margin: "auto", marginTop: 50, textAlign: "center" }}>
-      <Title level={3}>Employee Attendance</Title>
-      <Text strong>Name: {employee.name}</Text>
+      <Title level={3}>Điểm danh nhân viên</Title>
+      <Text strong>Tên: {employee.name}</Text>
       <br /><br />
       <Button
         type="primary"
@@ -139,7 +139,7 @@ const EmployeeAttendance = () => {
       </Button>
       <br /><br />
       
-      <Title level={4}>Attendance History</Title>
+      <Title level={4}>Lịch sử điểm danh</Title>
       {attendanceData.length === 0 ? (
         <Empty description="No attendance history found" /> // Hiển thị khi không có dữ liệu
       ) : (

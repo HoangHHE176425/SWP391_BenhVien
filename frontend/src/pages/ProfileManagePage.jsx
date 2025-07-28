@@ -15,11 +15,7 @@ const ProfileManagerPage = () => {
     });
     const { token } = useAuth();
     const [showMedicalDetails, setShowMedicalDetails] = useState({});
-
-    // State cho lọc và sắp xếp
-    const [searchTerm, setSearchTerm] = useState("");
-    const [genderFilter, setGenderFilter] = useState("All");
-    const [sortBy, setSortBy] = useState("name_asc");
+    const [cccdSearch, setCccdSearch] = useState(""); // State cho tìm kiếm CCCD
 
     // Load profiles
     const fetchProfiles = async () => {
@@ -45,8 +41,33 @@ const ProfileManagerPage = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // NEW: Hàm validate name (không chứa số)
+    const validateName = (name) => {
+        const regex = /^[a-zA-Z\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ\s]+$/; // Chỉ cho phép chữ cái, dấu tiếng Việt, và khoảng trắng
+        return regex.test(name);
+    };
+
+    // NEW: Hàm validate identityNumber
+    const validateIdentityNumber = (identityNumber) => {
+        const regex = /^\d{12}$/; // Chỉ 12 ký tự số, không khoảng trắng/chữ/ký tự đặc biệt
+        return regex.test(identityNumber);
+    };
+
     // Add or update
     const handleSubmit = async () => {
+
+        // NEW: Validate name (không chứa số)
+        if (!validateName(formData.name)) {
+            alert("Tên không được chứa số, chỉ chấp nhận chữ cái và khoảng trắng.");
+            return;
+        }
+
+        // NEW: Validate identityNumber
+        if (!validateIdentityNumber(formData.identityNumber)) {
+            alert("CMND/CCCD phải là 12 ký tự số, không khoảng trắng, chữ hoặc ký tự đặc biệt.");
+            return;
+        }
+
         try {
             if (editingProfile) {
                 await axios.put(`http://localhost:9999/api/profile/update/${editingProfile._id}`, formData, {
@@ -107,27 +128,8 @@ const ProfileManagerPage = () => {
         }));
     };
 
-    // Lọc và sắp xếp profiles
-    const filteredAndSortedProfiles = [...profiles]
-        // Lọc
-        .filter(profile => {
-            const matchesSearch = profile.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesGender = genderFilter === "All" || profile.gender === genderFilter;
-            return matchesSearch && matchesGender;
-        })
-        // Sắp xếp
-        .sort((a, b) => {
-            if (sortBy === "name_asc") {
-                return a.name.localeCompare(b.name);
-            } else if (sortBy === "name_desc") {
-                return b.name.localeCompare(a.name);
-            } else if (sortBy === "dob_asc") {
-                return new Date(a.dateOfBirth) - new Date(b.dateOfBirth);
-            } else if (sortBy === "dob_desc") {
-                return new Date(b.dateOfBirth) - new Date(a.dateOfBirth);
-            }
-            return 0;
-        });
+    // Lọc profiles theo CCCD
+    const filteredProfiles = cccdSearch ? profiles.filter(profile => profile.identityNumber === cccdSearch) : [];
 
     return (
         <div className="container py-4">
@@ -136,46 +138,26 @@ const ProfileManagerPage = () => {
                 + Thêm hồ sơ mới
             </Button>
 
-            {/* UI lọc và sắp xếp */}
+            {/* Thanh tìm kiếm CCCD */}
             <Row className="mt-4 mb-3">
                 <Col md={4}>
                     <Form.Control
                         type="text"
-                        placeholder="Tìm kiếm theo tên..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Tìm kiếm theo CCCD..."
+                        value={cccdSearch}
+                        onChange={(e) => setCccdSearch(e.target.value)}
                     />
-                </Col>
-                <Col md={4}>
-                    <Form.Select
-                        value={genderFilter}
-                        onChange={(e) => setGenderFilter(e.target.value)}
-                    >
-                        <option value="All">Tất cả giới tính</option>
-                        <option value="Male">Nam</option>
-                        <option value="Female">Nữ</option>
-                        <option value="Other">Khác</option>
-                    </Form.Select>
-                </Col>
-                <Col md={4}>
-                    <Form.Select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                    >
-                        <option value="name_asc">Tên (A-Z)</option>
-                        <option value="name_desc">Tên (Z-A)</option>
-                        <option value="dob_asc">Ngày sinh (Cũ nhất)</option>
-                        <option value="dob_desc">Ngày sinh (Mới nhất)</option>
-                    </Form.Select>
                 </Col>
             </Row>
 
             <div className="mt-4">
-                {filteredAndSortedProfiles.length === 0 ? (
-                    <p>Không có hồ sơ nào phù hợp.</p>
+                {cccdSearch === "" ? (
+                    <p>Vui lòng nhập CCCD để tìm kiếm hồ sơ.</p>
+                ) : filteredProfiles.length === 0 ? (
+                    <p>Không tìm thấy hồ sơ nào với CCCD này.</p>
                 ) : (
                     <Row>
-                        {filteredAndSortedProfiles.map((profile) => (
+                        {filteredProfiles.map((profile) => (
                             <Col key={profile._id} md={4} className="mb-3">
                                 <div className="border rounded p-3 h-100">
                                     <h5>{profile.name}</h5>

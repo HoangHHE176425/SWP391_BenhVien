@@ -85,10 +85,6 @@ const ServicePage = () => {
 
         <div className="service-section">
           <div className="service-container">
-            <div className="service-header">
-              <h2 className="service-header-title">Khám Phá Dịch Vụ Của KiwiCare</h2>
-              <p className="service-header-desc">Giải pháp y tế toàn diện, cá nhân hóa cho mọi nhu cầu sức khỏe</p>
-            </div>
             <div className="service-search-bar">
               <h2 className="service-title">Tra cứu tên dịch vụ</h2>
               <div className="search-row">

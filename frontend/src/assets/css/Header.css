@@ -39,8 +39,8 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-left: -70px; /* Pull left edge outward by 30px */
+  gap: 12px;
+  margin-left: -80px; /* Pull left edge outward by 30px */
   padding-left: 0;
 }
 
@@ -51,11 +51,26 @@
   gap: 8px;
   justify-content: flex-end;
   flex-grow: 1;
-  max-width: 70%;
-  margin-right: -70px; /* Pull right edge outward by 30px */
+  max-width: 80%;
+  margin-right: -80px; /* Pull right edge outward by 30px */
 }
 
 /* Button styling in header-left */
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0px; 
+}
+
+.header-left button {
+  margin-right: 0; 
+  padding: 0; 
+}
+
+.header-left .header-logo {
+  margin-left: 0; 
+}
 .header-left .ant-btn {
   display: flex;
   align-items: center;
@@ -219,6 +234,8 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 150px; /* Tăng chiều rộng để nút dài hơn */
+  white-space: nowrap; /* Ngăn chặn ngắt dòng */
 }
 
 .account-button:hover {
@@ -314,6 +331,8 @@
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   margin-left: 12px;
+  width: 150px; /* Tăng chiều rộng để nút dài hơn */
+  white-space: nowrap; /* Ngăn chặn ngắt dòng */
 }
 
 .appointment-button:hover {

@@ -112,41 +112,44 @@ function EmployeeManagement() {
 
   return (
     <div>
-      <h1>Employee Management</h1>
-      {/* Filters */}
+      <h1>Quản Lý Nhân Viên</h1>
+
+      {/* Bộ lọc */}
       <div
         style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}
       >
         <Input
-          placeholder="Search by name"
+          placeholder="Tìm kiếm theo tên"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
         />
         <Select
-          placeholder="Filter by role"
+          placeholder="Lọc theo vai trò"
           onChange={(value) => setRoleFilter(value)}
           allowClear
           style={{ width: 150 }}
         >
-          <Option value="Admin">Admin</Option>
-          <Option value="Staff">Staff</Option>
-          <Option value="Doctor">Doctor</Option>
+          <Option value="Admin">Quản trị viên</Option>
+          <Option value="Staff">Nhân viên</Option>
+          <Option value="Doctor">Bác sĩ</Option>
         </Select>
 
         <Select
-          placeholder="Filter by status"
+          placeholder="Trạng thái"
           onChange={(value) => setStatusFilter(value)}
           allowClear
           style={{ width: 150 }}
         >
-          <Option value="active">Active</Option>
-          <Option value="inactive">Inactive</Option>
+          <Option value="active">Đang hoạt động</Option>
+          <Option value="inactive">Ngưng hoạt động</Option>
         </Select>
+
         <RangePicker
           onChange={(dates) => setDateRange(dates)}
           allowClear
-          format="YYYY-MM-DD"
+          format="DD-MM-YYYY"
+          placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
         />
         <Button
           onClick={() => {
@@ -156,23 +159,23 @@ function EmployeeManagement() {
             setRoleFilter(null);
           }}
         >
-          Reset
+          Đặt lại
         </Button>
         <Button
           type="primary"
           className="custom-add-button"
           onClick={() => setCreateModalVisible(true)}
         >
-          Add Employee
+          Thêm Nhân Viên
         </Button>
       </div>
 
-      {/* Table */}
+      {/* Bảng */}
       <Table
         dataSource={filteredEmployees}
         columns={[
           {
-            title: "Name",
+            title: "Tên",
             dataIndex: "name",
             render: (text, record) => (
               <Button type="link" onClick={() => setViewingEmployee(record)}>
@@ -182,27 +185,29 @@ function EmployeeManagement() {
             sorter: (a, b) => a.name.localeCompare(b.name),
           },
           { title: "Email", dataIndex: "email" },
-          { title: "Role", dataIndex: "role" },
+          { title: "Vai trò", dataIndex: "role" },
           {
-            title: "Status",
+            title: "Trạng thái",
             dataIndex: "status",
             render: (status) => (
-              <Tag color={status === "active" ? "green" : "red"}>{status}</Tag>
+              <Tag color={status === "active" ? "green" : "red"}>
+                {status === "active" ? "Đang hoạt động" : "Ngưng hoạt động"}
+              </Tag>
             ),
           },
           {
-            title: "Created At",
+            title: "Ngày tạo",
             dataIndex: "createdAt",
-            render: (createdAt) => moment(createdAt).format("YYYY-MM-DD HH:mm"),
+            render: (createdAt) => moment(createdAt).format("DD-MM-YYYY HH:mm"),
             sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
           },
           {
-            title: "Actions",
+            title: "Hành động",
             render: (_, record) => (
               <Space>
-                <Button onClick={() => handleEdit(record)}>Edit</Button>
+                <Button onClick={() => handleEdit(record)}>Chỉnh sửa</Button>
                 <Button danger onClick={() => handleDelete(record._id)}>
-                  Delete
+                  Xoá
                 </Button>
               </Space>
             ),
@@ -211,55 +216,56 @@ function EmployeeManagement() {
         rowKey="_id"
       />
 
-      {/* Employee Detail Drawer */}
+      {/* Chi tiết nhân viên */}
       <Drawer
-        title="Employee Details"
+        title="Chi Tiết Nhân Viên"
         open={!!viewingEmployee}
         onClose={() => setViewingEmployee(null)}
         width={400}
       >
         {viewingEmployee && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="Name">
+            <Descriptions.Item label="Tên">
               {viewingEmployee.name}
             </Descriptions.Item>
             <Descriptions.Item label="Email">
               {viewingEmployee.email}
             </Descriptions.Item>
-            <Descriptions.Item label="Role">
+            <Descriptions.Item label="Vai trò">
               {viewingEmployee.role}
             </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              {viewingEmployee.status}
+            <Descriptions.Item label="Trạng thái">
+              {viewingEmployee.status === "active"
+                ? "Đang hoạt động"
+                : "Ngưng hoạt động"}
             </Descriptions.Item>
-            <Descriptions.Item label="Department">
+            <Descriptions.Item label="Phòng ban">
               {viewingEmployee?.department?.name || "—"}
             </Descriptions.Item>
-
-            <Descriptions.Item label="Specialization">
+            <Descriptions.Item label="Chuyên môn">
               {viewingEmployee.specialization || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Phone">
+            <Descriptions.Item label="Số điện thoại">
               {viewingEmployee.phone || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Created At">
+            <Descriptions.Item label="Ngày tạo">
               {moment(viewingEmployee.createdAt).format("YYYY-MM-DD HH:mm")}
             </Descriptions.Item>
           </Descriptions>
         )}
       </Drawer>
 
-      {/* Edit Employee Modal */}
+      {/* Modal chỉnh sửa */}
       <Modal
-        title="Edit Employee"
+        title="Chỉnh Sửa Nhân Viên"
         open={!!editingEmployee}
         onCancel={() => setEditingEmployee(null)}
         onOk={handleEditSubmit}
-        okText="Save"
+        okText="Lưu"
         destroyOnHidden
       >
         <Form form={form} layout="vertical">
-          <Form.Item label="Name" name="name" rules={[{ required: true }]}>
+          <Form.Item label="Tên" name="name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item
@@ -269,25 +275,29 @@ function EmployeeManagement() {
           >
             <Input />
           </Form.Item>
-          <Form.Item label="Role" name="role" rules={[{ required: true }]}>
+          <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
             <Select>
-              <Option value="Admin">Admin</Option>
-              <Option value="Staff">Staff</Option>
-              <Option value="Doctor">Doctor</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="Status" name="status" rules={[{ required: true }]}>
-            <Select>
-              <Option value="active">Active</Option>
-              <Option value="inactive">Inactive</Option>
+              <Option value="Admin">Quản trị viên</Option>
+              <Option value="Staff">Nhân viên</Option>
+              <Option value="Doctor">Bác sĩ</Option>
             </Select>
           </Form.Item>
           <Form.Item
-            label="Department"
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true }]}
+          >
+            <Select>
+              <Option value="active">Đang hoạt động</Option>
+              <Option value="inactive">Ngưng hoạt động</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="Phòng ban"
             name="department"
             rules={[{ required: true }]}
           >
-            <Select placeholder="Select department">
+            <Select placeholder="Chọn phòng ban">
               {departments.map((dept) => (
                 <Option key={dept._id} value={dept._id}>
                   {dept.name}
@@ -295,26 +305,26 @@ function EmployeeManagement() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="Specialization" name="specialization">
+          <Form.Item label="Chuyên môn" name="specialization">
             <Input />
           </Form.Item>
-          <Form.Item label="Phone" name="phone">
+          <Form.Item label="Số điện thoại" name="phone">
             <Input />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* Create Employee Modal */}
+      {/* Modal tạo mới */}
       <Modal
-        title="Add New Employee"
+        title="Thêm Nhân Viên Mới"
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         onOk={handleCreate}
-        okText="Create"
+        okText="Tạo"
         destroyOnHidden
       >
         <Form form={createForm} layout="vertical">
-          <Form.Item label="Name" name="name" rules={[{ required: true }]}>
+          <Form.Item label="Tên" name="name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item
@@ -325,23 +335,27 @@ function EmployeeManagement() {
             <Input />
           </Form.Item>
           <Form.Item
-            label="Password"
+            label="Mật khẩu"
             name="password"
             rules={[{ required: true }]}
           >
             <Input.Password />
           </Form.Item>
-          <Form.Item label="Role" name="role" rules={[{ required: true }]}>
+          <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
             <Select>
-              <Option value="Admin">Admin</Option>
-              <Option value="Staff">Staff</Option>
-              <Option value="Doctor">Doctor</Option>
+              <Option value="Admin">Quản trị viên</Option>
+              <Option value="Staff">Nhân viên</Option>
+              <Option value="Doctor">Bác sĩ</Option>
             </Select>
           </Form.Item>
-          <Form.Item label="Status" name="status" rules={[{ required: true }]}>
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true }]}
+          >
             <Select>
-              <Option value="active">Active</Option>
-              <Option value="inactive">Inactive</Option>
+              <Option value="active">Đang hoạt động</Option>
+              <Option value="inactive">Ngưng hoạt động</Option>
             </Select>
           </Form.Item>
         </Form>

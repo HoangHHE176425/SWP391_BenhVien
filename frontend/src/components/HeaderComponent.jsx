@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
@@ -54,12 +53,12 @@ const Header = ({ onMenuClick, menuOpen }) => {
     {
       key: "login",
       icon: <LoginOutlined />,
-      label: <Link to="/login">Login</Link>,
+      label: <Link to="/login">Đăng Nhập</Link>,
     },
     {
       key: "register",
       icon: <UserAddOutlined />,
-      label: <Link to="/register">Register</Link>,
+      label: <Link to="/register">Đăng Ký</Link>,
     },
   ];
 
@@ -86,35 +85,35 @@ const Header = ({ onMenuClick, menuOpen }) => {
         </div>
         <div className="header-right">
           <Link to="/" className="header-link">
-            <HomeOutlined /> <span>Home</span>
+            <HomeOutlined /> <span>Trang Chủ</span>
           </Link>
           <Link to="/about" className="header-link">
-            <InfoCircleOutlined /> <span>About</span>
+            <InfoCircleOutlined /> <span>Giới Thiệu</span>
           </Link>
           <Dropdown
             menu={{
               items: [
-                { key: "blogs", label: <Link to="/blogs">Blogs</Link> },
-                { key: "news", label: <Link to="/news">News</Link> },
+                { key: "blogs", label: <Link to="/blogs">Bài Viết</Link> },
+                { key: "news", label: <Link to="/news">Tin Tức</Link> },
               ],
             }}
             trigger={["click"]}
           >
             <div className="header-link dropdown-trigger">
-              <BookOutlined /> <span>Post</span>
+              <BookOutlined /> <span>Bài Đăng</span>
             </div>
           </Dropdown>
           <Link to="/department-home" className="header-link">
-            <ApartmentOutlined /> <span>Department</span>
+            <ApartmentOutlined /> <span>Chuyên Khoa</span>
           </Link>
           <Link to="/service-home" className="header-link">
-            <CustomerServiceOutlined /> <span>Services</span>
+            <CustomerServiceOutlined /> <span>Dịch Vụ</span>
           </Link>
           <Link to="/doctor-home" className="header-link">
-            <TeamOutlined /> <span>Doctors</span>
+            <TeamOutlined /> <span>Bác Sĩ</span>
           </Link>
           <Link to="/medicines-home" className="header-link">
-            <MedicineBoxOutlined /> <span>Medicines</span>
+            <MedicineBoxOutlined /> <span>Thuốc</span>
           </Link>
           {user ? (
             <>
@@ -127,7 +126,7 @@ const Header = ({ onMenuClick, menuOpen }) => {
               <div className="account-menu-wrapper">
                 <button className="account-button">
                   <UserOutlined />
-                  <span>Account</span>
+                  <span>Tài Khoản</span>
                   <svg
                     className="dropdown-arrow"
                     fill="currentColor"
@@ -142,16 +141,16 @@ const Header = ({ onMenuClick, menuOpen }) => {
                 </button>
                 <ul className="account-dropdown">
                   <li>
-                    <Link to="/myprofile">Profile</Link>
+                    <Link to="/myprofile">Hồ Sơ</Link>
                   </li>
                   <li>
-                    <Link to="/changepass">Change Password</Link>
+                    <Link to="/changepass">Đổi Mật Khẩu</Link>
                   </li>
                   <li>
                     <hr />
                   </li>
                   <li>
-                    <button onClick={handleLogout}>Log out</button>
+                    <button onClick={handleLogout}>Đăng Xuất</button>
                   </li>
                 </ul>
               </div>
@@ -159,12 +158,12 @@ const Header = ({ onMenuClick, menuOpen }) => {
           ) : (
             <Dropdown menu={{ items: guestMenuItems }} trigger={["click"]}>
               <div className="header-link dropdown-trigger">
-                <UserOutlined /> <span>Account</span>
+                <UserOutlined /> <span>Tài Khoản</span>
               </div>
             </Dropdown>
           )}
           <Link to="/appointment" className="appointment-button">
-            <CalendarOutlined /> <span>Appointment</span>
+            <CalendarOutlined /> <span>Lịch Hẹn</span>
           </Link>
         </div>
       </div>

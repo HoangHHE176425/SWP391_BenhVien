@@ -35,9 +35,9 @@ const ProfileSelectionList = ({ profiles, onSelect }) => (
         ]}>
         <List.Item.Meta
           title={<Text strong>{profile.name}</Text>}
-          description={`Date of Birth: ${dayjs(profile.dateOfBirth).format(
+          description={`Ngày tháng năm sinh : ${dayjs(profile.dateOfBirth).format(
             "DD/MM/YYYY"
-          )} - Gender: ${profile.gender}`}
+          )} - Giới tính : ${profile.gender}`}
         />
       </List.Item>
     )}
@@ -83,7 +83,7 @@ const UserMedicalProfileDetail = () => {
   // 2. Tìm kiếm hồ sơ và mở popup lựa chọn
   const handleSearchAndShowSelection = async () => {
     if (!identityToSearch.trim()) {
-      message.warn("Please enter an Identity Number.")
+      message.warn("Hãy nhập CCCD/CMND của bệnh nhân.")
       return
     }
     setIsSearching(true)
@@ -197,22 +197,45 @@ const UserMedicalProfileDetail = () => {
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: "auto" }}>
-      <Title level={3}>Find Patient Profiles</Title>
+      <Title level={3}>Tìm hồ sơ y tế</Title>
 
-      <Space.Compact style={{ width: "100%" }}>
-        <Input
-          placeholder="Enter Patient's Identity Number (CCCD/CMND)"
-          value={identityToSearch}
-          onChange={(e) => setIdentityToSearch(e.target.value)}
-          onPressEnter={handleSearchAndShowSelection}
-        />
-        <Button
-          type="primary"
-          onClick={handleSearchAndShowSelection}
-          loading={isSearching}>
-          Find Profiles
-        </Button>
-      </Space.Compact>
+      <Form
+        layout="inline"
+        onFinish={handleSearchAndShowSelection}
+        style={{ marginTop: 16, marginBottom: 24 }}
+      >
+        <Form.Item
+          name="identity"
+          validateTrigger="onSubmit"
+          rules={[
+            {
+              required: true,
+              message: "Vui lòng nhập số CMND/CCCD!",
+            },
+            {
+              pattern: /^\d{12}$/,
+              message:
+                "Số CMND/CCCD phải là 12 ký tự số, không chứa chữ, không khoảng trắng và không ký tự đặc biệt!",
+            },
+          ]}
+          style={{ flex: 1 }}
+        >
+          <Input
+            placeholder="Nhập số CMND/CCCD (12 chữ số)"
+            allowClear
+            onChange={(e) => setIdentityToSearch(e.target.value)}
+          />
+        </Form.Item>
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isSearching}
+          >
+            Tìm hồ sơ
+          </Button>
+        </Form.Item>
+      </Form>
 
       <Modal
         open={isModalOpen}
@@ -220,29 +243,29 @@ const UserMedicalProfileDetail = () => {
         width={modalView === "list" ? 600 : 800}
         title={
           modalView === "list"
-            ? "Select a Profile"
-            : `Editing Profile: ${selectedProfile?.name}`
+            ? "Chọn 1 hồ sơ"
+            : `Chỉnh sửa hồ sơ: ${selectedProfile?.name}`
         }
         footer={
           modalView === "list"
             ? [
               <Button key="cancelList" onClick={handleCloseModal}>
-                Cancel
+                Đóng
               </Button>,
             ]
             : [
               <Button key="back" onClick={handleBackToList}>
-                Back to List
+                Quay lại danh sách
               </Button>,
               <Button key="cancelEdit" onClick={handleCloseModal}>
-                Cancel
+                Đóng
               </Button>,
               <Button
                 key="submit"
                 type="primary"
                 loading={isUpdating}
                 onClick={() => modalForm.submit()}>
-                Update Profile
+                Cập nhật hồ sơ
               </Button>,
             ]
         }>
@@ -256,7 +279,7 @@ const UserMedicalProfileDetail = () => {
             form={modalForm}
             layout="vertical"
             onFinish={handleUpdateProfile}>
-            <Form.Item name="doctorName" label="Doctor">
+            <Form.Item name="doctorName" label="Bác sĩ">
               <Input.TextArea
                 rows={1}
                 disabled
@@ -264,7 +287,7 @@ const UserMedicalProfileDetail = () => {
             </Form.Item>
             <Form.Item
               name="service"
-              label="1. Services"
+              label="1. Dịch vụ khám bệnh"
               rules={[
                 {
                   required: true,
@@ -283,13 +306,13 @@ const UserMedicalProfileDetail = () => {
                 </Space>
               </Checkbox.Group>
             </Form.Item>
-            <Form.Item name="result" label="2. Result">
+            <Form.Item name="result" label="2. Kết quả khám bệnh">
               <Input.TextArea
                 rows={2}
-                placeholder="Enter any additional notes..."
+                placeholder="Nhập kết quả khám bệnh..."
               />
             </Form.Item>
-            <Form.Item name="dayTest" label="3. Day Test">
+            <Form.Item name="dayTest" label="3. Ngày khám bệnh">
               <DatePicker defaultValue={dayjs('01/01/2015', 'DD/MM/YYYY')} />
             </Form.Item>
 

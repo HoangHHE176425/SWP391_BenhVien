@@ -25,7 +25,7 @@
 
 /* Nút thêm thuốc */
 .medicine-add-btn {
-  background-color: #2563eb;
+  background-color: #2196f3;
   color: white;
   border: none;
   padding: 10px 18px;
@@ -50,7 +50,7 @@
 }
 
 .medicine-table th {
-  background-color: #2563eb;
+  background-color: #2196f3;
   color: white;
   font-weight: 600;
   padding: 12px 14px;

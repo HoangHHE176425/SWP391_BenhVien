@@ -37,7 +37,7 @@ const WorkSchedulePage = () => {
     },
     {
       title: "Phòng ban",
-      dataIndex: "department",
+      dataIndex: "departmentName",
       key: "department",
     },
     {

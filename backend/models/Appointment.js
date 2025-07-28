@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false, index: true },
@@ -8,7 +8,13 @@ const appointmentSchema = new mongoose.Schema({
   appointmentDate: { type: Date, required: true, index: true },
   type: { type: String, enum: ['Online', 'Offline'], required: true },
   status: { type: String, enum: ['Booked', 'In-Progress', 'Completed', 'Canceled', 'PendingCancel'], default: 'Booked' },
-  reminderSent: { type: Boolean, default: false }
+  reminderSent: { type: Boolean, default: false },
+  timeSlot: {
+    startTime: { type: Date, required: true },
+    endTime: { type: Date, required: true },
+    status: { type: String, enum: ['Available', 'Booked'], default: 'Booked' }
+  }
+
 }, { timestamps: true });
 
 appointmentSchema.index({ doctorId: 1, appointmentDate: 1 });

@@ -30,7 +30,7 @@ const MedicineManagement = () => {
   const [totalMedicines, setTotalMedicines] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [medicinesPerPage] = useState(8);  // Mặc định 5 thuốc mỗi trang
+  const [medicinesPerPage] = useState(8);
   const [showModal, setShowModal] = useState(false);
   const [editMedicine, setEditMedicine] = useState(null);
 

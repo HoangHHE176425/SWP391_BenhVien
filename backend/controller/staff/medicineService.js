@@ -11,7 +11,6 @@ const createMedicine = async (req, res) => {
     //co token
     try {
       const decode = jwt.verify(token, process.env.JWT_SECRET);
-
       console.log("decode", JSON.stringify(decode));
       const payload = { ...req.body, supplierId: decode.id };
       const medicine = await medicineRepo.createMedicine(payload);

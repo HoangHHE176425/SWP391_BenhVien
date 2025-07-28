@@ -136,12 +136,12 @@ const DoctorDetail = () => {
             <Col lg={6} className="wow fadeInUp" data-wow-delay="0.3s">
               <div className="bg-light rounded p-5 h-100">
                 <h2 className="mb-4">Doctor Details</h2>
-                <p><strong>Name:</strong> {doctor.name}</p>
-                <p><strong>Specialty:</strong> {doctor.specialization}</p>
-                <p><strong>Degree:</strong> {doctor.degree}</p>
-                <p><strong>Experience Years:</strong> {doctor.expYear}</p>
-                <p><strong>Description:</strong> {doctor.description}</p>
-                <p><strong>Status:</strong> {doctor.status}</p>
+                <p><strong>Tên:</strong> {doctor.name}</p>
+                <p><strong>Chuyên ngành:</strong> {doctor.specialization}</p>
+                <p><strong>Bằng cấp:</strong> {doctor.degree}</p>
+                <p><strong>Năm kinh nghiệm:</strong> {doctor.expYear}</p>
+                <p><strong>Mô tả:</strong> {doctor.description}</p>
+                <p><strong>Tình trạng:</strong> {doctor.status}</p>
                 <Link to="/doctor-home" className="btn btn-secondary mt-3">Back to Doctor Home</Link>
               </div>
             </Col>

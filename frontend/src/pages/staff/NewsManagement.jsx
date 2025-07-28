@@ -104,7 +104,7 @@ const NewsManagement = () => {
     setLoading(true);
     try {
       const token = getToken();
-      if (!token) throw new Error("No authentication token found");
+      if (!token) throw new Error("Không tìm thấy mã xác thực");
       const response = await axios.get(`${API_BASE_URL}/news`, {
         params: {
           category: filterCategory || undefined,
@@ -119,10 +119,10 @@ const NewsManagement = () => {
       setNewsItems(response.data.data || []);
       setTotalPages(response.data.pagination?.pages || 1);
     } catch (error) {
-      console.error("Error fetching news:", error);
-      const message = error.response?.data?.message || error.message || "Failed to fetch news";
+      console.error("Lỗi khi tải tin tức:", error);
+      const message = error.response?.data?.message || error.message || "Không thể tải tin tức";
       if (error.response?.status === 401) {
-        setErrorMessage("Session expired. Please log in again.");
+        setErrorMessage("Phiên hết hạn. Vui lòng đăng nhập lại.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
@@ -142,7 +142,7 @@ const NewsManagement = () => {
 
     try {
       const token = getToken();
-      if (!token) throw new Error("No authentication token found");
+      if (!token) throw new Error("Không tìm thấy mã xác thực");
 
       const response = await axios.post(
         `${API_BASE_URL}/news/upload`,
@@ -161,10 +161,10 @@ const NewsManagement = () => {
         image: files.image ? (urls[1] || urls[0] || "") : "",
       };
     } catch (error) {
-      console.error("Error uploading images:", error);
-      const message = error.response?.data?.message || error.message || "Failed to upload images";
+      console.error("Lỗi khi tải ảnh lên:", error);
+      const message = error.response?.data?.message || error.message || "Không thể tải ảnh lên";
       if (error.response?.status === 401) {
-        setErrorMessage("Session expired. Please log in again.");
+        setErrorMessage("Phiên hết hạn. Vui lòng đăng nhập lại.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
@@ -178,12 +178,12 @@ const NewsManagement = () => {
   const handleAddNews = async () => {
     setLoading(true);
     try {
-      if (!newNews.title.trim()) throw new Error("Please enter a title.");
-      if (!newNews.content.trim()) throw new Error("Please enter content.");
-      if (!newNews.category) throw new Error("Please select a category.");
-      if (!imageFiles.thumbnail) throw new Error("Please upload a thumbnail.");
-      if (!NEWS_CATEGORIES.includes(newNews.category)) throw new Error("Invalid category selected.");
-      if (!PRIORITIES.includes(newNews.priority)) throw new Error("Invalid priority selected.");
+      if (!newNews.title.trim()) throw new Error("Vui lòng nhập tiêu đề.");
+      if (!newNews.content.trim()) throw new Error("Vui lòng nhập nội dung.");
+      if (!newNews.category) throw new Error("Vui lòng chọn danh mục.");
+      if (!imageFiles.thumbnail) throw new Error("Vui lòng tải ảnh đại diện.");
+      if (!NEWS_CATEGORIES.includes(newNews.category)) throw new Error("Danh mục không hợp lệ.");
+      if (!PRIORITIES.includes(newNews.priority)) throw new Error("Độ ưu tiên không hợp lệ.");
 
       let newsToAdd = {
         title: newNews.title,
@@ -195,7 +195,7 @@ const NewsManagement = () => {
       };
 
       const uploadedUrls = await handleUploadImages(imageFiles);
-      if (!uploadedUrls.thumbnail) throw new Error("Thumbnail upload failed. Please try again.");
+      if (!uploadedUrls.thumbnail) throw new Error("Tải ảnh đại diện thất bại. Vui lòng thử lại.");
 
       newsToAdd = {
         ...newsToAdd,
@@ -204,9 +204,9 @@ const NewsManagement = () => {
       };
 
       const token = getToken();
-      if (!token) throw new Error("No authentication token found");
+      if (!token) throw new Error("Không tìm thấy mã xác thực");
 
-      console.log("News payload:", newsToAdd);
+      console.log("Dữ liệu tin tức:", newsToAdd);
 
       const response = await axios.post(`${API_BASE_URL}/news`, newsToAdd, {
         headers: { Authorization: `Bearer ${token}` },
@@ -223,16 +223,16 @@ const NewsManagement = () => {
       });
       setImageFiles({ thumbnail: null, image: null });
       setOpenAddNews(false);
-      setSuccessMessage("News added successfully!");
+      setSuccessMessage("Thêm tin tức thành công!");
       setPage(1);
     } catch (error) {
-      console.error("Error adding news:", error);
-      let message = error.response?.data?.message || error.message || "Failed to add news";
+      console.error("Lỗi khi thêm tin tức:", error);
+      let message = error.response?.data?.message || error.message || "Không thể thêm tin tức";
       if (message.includes("A news item with this title already exists")) {
-        message = `${message} Try adding a unique identifier to the title (e.g., "Sự Kiện - Tháng 6 2025").`;
+        message = `${message} Hãy thêm một định danh duy nhất vào tiêu đề (ví dụ: "Sự Kiện - Tháng 6 2025").`;
       }
       if (error.response?.status === 401) {
-        setErrorMessage("Session expired. Please log in again.");
+        setErrorMessage("Phiên hết hạn. Vui lòng đăng nhập lại.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
@@ -247,12 +247,12 @@ const NewsManagement = () => {
   const handleUpdateNews = async () => {
     setLoading(true);
     try {
-      if (!editingNews.title.trim()) throw new Error("Please enter a title.");
-      if (!editingNews.content.trim()) throw new Error("Please enter content.");
-      if (!editingNews.category) throw new Error("Please select a category.");
-      if (!imageFiles.thumbnail && !editingNews.thumbnail) throw new Error("Please upload or retain a thumbnail.");
-      if (!NEWS_CATEGORIES.includes(editingNews.category)) throw new Error("Invalid category selected.");
-      if (!PRIORITIES.includes(editingNews.priority)) throw new Error("Invalid priority selected.");
+      if (!editingNews.title.trim()) throw new Error("Vui lòng nhập tiêu đề.");
+      if (!editingNews.content.trim()) throw new Error("Vui lòng nhập nội dung.");
+      if (!editingNews.category) throw new Error("Vui lòng chọn danh mục.");
+      if (!imageFiles.thumbnail && !editingNews.thumbnail) throw new Error("Vui lòng tải hoặc giữ ảnh đại diện.");
+      if (!NEWS_CATEGORIES.includes(editingNews.category)) throw new Error("Danh mục không hợp lệ.");
+      if (!PRIORITIES.includes(editingNews.priority)) throw new Error("Độ ưu tiên không hợp lệ.");
 
       let updatedNews = {
         title: editingNews.title,
@@ -272,9 +272,9 @@ const NewsManagement = () => {
       }
 
       const token = getToken();
-      if (!token) throw new Error("No authentication token found");
+      if (!token) throw new Error("Không tìm thấy mã xác thực");
 
-      console.log("Updating news with payload:", updatedNews);
+      console.log("Cập nhật tin tức với dữ liệu:", updatedNews);
 
       const response = await axios.put(
         `${API_BASE_URL}/news/${editingNews._id}`,
@@ -292,13 +292,13 @@ const NewsManagement = () => {
       setEditingNews(null);
       setOpenEditNews(false);
       setImageFiles({ thumbnail: null, image: null });
-      setSuccessMessage("News updated successfully!");
+      setSuccessMessage("Cập nhật tin tức thành công!");
     } catch (error) {
-      console.error("Error updating news:", error);
-      const message = error.response?.data?.message || error.message || "Failed to update news";
-      console.error("Backend error details:", error.response?.data);
+      console.error("Lỗi khi cập nhật tin tức:", error);
+      const message = error.response?.data?.message || error.message || "Không thể cập nhật tin tức";
+      console.error("Chi tiết lỗi từ backend:", error.response?.data);
       if (error.response?.status === 401) {
-        setErrorMessage("Session expired. Please log in again.");
+        setErrorMessage("Phiên hết hạn. Vui lòng đăng nhập lại.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
@@ -314,22 +314,22 @@ const NewsManagement = () => {
     setLoading(true);
     try {
       const token = getToken();
-      if (!token) throw new Error("No authentication token found");
+      if (!token) throw new Error("Không tìm thấy mã xác thực");
       await axios.delete(`${API_BASE_URL}/news/${newsToDelete._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewsItems(newsItems.filter((news) => news._id !== newsToDelete._id));
       setOpenDeleteNewsConfirm(false);
       setNewsToDelete(null);
-      setSuccessMessage("News deleted successfully!");
+      setSuccessMessage("Xóa tin tức thành công!");
       if (newsItems.length % newsPerPage === 1 && page > 1) {
         setPage(page - 1);
       }
     } catch (error) {
-      console.error("Error deleting news:", error);
-      const message = error.response?.data?.message || error.message || "Failed to delete news";
+      console.error("Lỗi khi xóa tin tức:", error);
+      const message = error.response?.data?.message || error.message || "Không thể xóa tin tức";
       if (error.response?.status === 401) {
-        setErrorMessage("Session expired. Please log in again.");
+        setErrorMessage("Phiên hết hạn. Vui lòng đăng nhập lại.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
@@ -391,7 +391,7 @@ const NewsManagement = () => {
 
   const handleImageChange = (type, file) => {
     if (file && file.size > 5 * 1024 * 1024) {
-      setErrorMessage("File size exceeds 5MB limit.");
+      setErrorMessage("Kích thước tệp vượt quá giới hạn 5MB.");
       return;
     }
     setImageFiles((prev) => ({ ...prev, [type]: file }));
@@ -487,27 +487,29 @@ const NewsManagement = () => {
         disabled={loading}
         sx={{ mb: 2 }}
       >
-        Add News
+        Thêm Tin Tức
       </Button>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Content</TableCell>
-              <TableCell>Thumbnail</TableCell>
-              <TableCell>Image</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Featured</TableCell>
-              <TableCell>Priority</TableCell>
-              <TableCell>Valid Until</TableCell>
+              <TableCell>STT</TableCell>
+              <TableCell>Tiêu Đề</TableCell>
+              <TableCell>Nội Dung</TableCell>
+              <TableCell>Ảnh Đại diện</TableCell>
+              <TableCell>Ảnh bài viết</TableCell>
+              <TableCell>Danh Mục</TableCell>
+              <TableCell>Nổi Bật</TableCell>
+              <TableCell>Độ Ưu Tiên</TableCell>
+              <TableCell>Hiệu Lực Đến</TableCell>
               <TableCell>Slug</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Hành Động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {newsItems.map((news) => (
+            {newsItems.map((news, index) => (
               <TableRow key={news._id}>
+                <TableCell>{index + 1}</TableCell>
                 <TableCell>{news.title}</TableCell>
                 <TableCell className="content-cell">{truncateContent(news.content, 50)}</TableCell>
                 <TableCell>
@@ -535,13 +537,17 @@ const NewsManagement = () => {
                     onClick={() => handleOpenEditNews(news)}
                     startIcon={<EditIcon />}
                     disabled={loading}
-                  />
+                  >
+                    Sửa
+                  </Button>
                   <Button
                     color="secondary"
                     onClick={() => handleOpenDeleteNewsConfirm(news)}
                     startIcon={<DeleteIcon />}
                     disabled={loading}
-                  />
+                  >
+                    Xóa
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -556,7 +562,7 @@ const NewsManagement = () => {
       />
       {/* Edit News Dialog */}
       <Dialog open={openEditNews} onClose={handleCloseEditNews} maxWidth="md" fullWidth>
-        <DialogTitle>Edit News</DialogTitle>
+        <DialogTitle>Sửa Tin Tức</DialogTitle>
         <DialogContent>
           {loading && (
             <div className="custom-loading-overlay">
@@ -676,16 +682,16 @@ const NewsManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEditNews} color="primary" disabled={loading}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={handleUpdateNews} color="primary" disabled={loading}>
-            Update
+            Cập Nhật
           </Button>
         </DialogActions>
       </Dialog>
       {/* Add News Dialog */}
       <Dialog open={openAddNews} onClose={handleCloseAddNews} maxWidth="md" fullWidth>
-        <DialogTitle>Add News</DialogTitle>
+        <DialogTitle>Thêm Tin Tức</DialogTitle>
         <DialogContent>
           {loading && (
             <div className="custom-loading-overlay">
@@ -792,25 +798,25 @@ const NewsManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseAddNews} color="primary" disabled={loading}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={handleAddNews} color="primary" disabled={loading || isAddButtonDisabled}>
-            Add
+            Thêm
           </Button>
         </DialogActions>
       </Dialog>
       {/* Delete News Confirm Dialog */}
       <Dialog open={openDeleteNewsConfirm} onClose={handleCloseDeleteNewsConfirm}>
-        <DialogTitle>Delete News</DialogTitle>
+        <DialogTitle>Xóa Tin Tức</DialogTitle>
         <DialogContent>
           <DialogContentText>Bạn có chắc chắn muốn xóa tin tức này không?</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteNewsConfirm} color="primary" disabled={loading}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={handleDeleteNews} color="secondary" disabled={loading}>
-            Delete
+            Xóa
           </Button>
         </DialogActions>
       </Dialog>

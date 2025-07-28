@@ -1,7 +1,10 @@
 # SWP391_BenhVien
 
-## Tech 
-Frontend: ReactJS, Vite <br> 
+The Hospital Management System streamlines patient records, appointment scheduling, billing, and staff management, minimizing paperwork and improving operational efficiency. The system offers a user-friendly interface that is easy to use for both medical staff and patients.
+
+## Tech
+
+Frontend: ReactJS, Vite <br>
 Backend: NodeJS/Express
 
 **Steps to run** <br>

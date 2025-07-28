@@ -1,7 +1,7 @@
 const Profile = require("../../models/Profile");
 const Service = require("../../models/Service");
 const Employee = require('../../models/Employee');
-const { createLab, updateModel } = require("../labtest/labTestServices")
+const { createLab, updateModel } = require("../doctor/labTestServices")
 
 const findUserByIdentity = async (req, res) => {
   try {
@@ -212,10 +212,12 @@ module.exports.updateProfileById = async (req, res) => {
 };
 
 module.exports.searchByIdentityNumber = async (req, res) => {
-  const { identityNumber } = req.params; // 👈 Lấy từ params chứ không phải query
+  const { identityNumber } = req.params;
 
   try {
-    const profiles = await Profile.find({ identityNumber }).populate("medicine labTestId userId doctorId");
+    const profiles = await Profile.find({ identityNumber })
+      .populate("labTestId userId doctorId")
+      .populate("medicine", "name");
     res.status(200).json({ data: profiles });
   } catch (err) {
     console.error("Search error:", err);

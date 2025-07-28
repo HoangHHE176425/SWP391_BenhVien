@@ -5,7 +5,11 @@ const employeeSchema = new mongoose.Schema({
   password: { type: String, required: true },
   name: { type: String, required: true },
   avatar: { type: String },
-  role: { type: String, enum: ['Doctor', 'Staff', 'Admin'], required: true },
+  role: {
+    type: String,
+    enum: ['Pharmacist', 'Doctor', 'Nurse', 'Accountant', 'Admin'],
+    required: true,
+  },
   degree: { type: String },
   expYear: { type: String },
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
@@ -18,9 +22,8 @@ const employeeSchema = new mongoose.Schema({
   services: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Services' }],
   emailVerificationCode: { type: String },
   verificationExpires: { type: Date },
-
 }, { timestamps: true });
 
-employeeSchema.index({ role: 1, status: 1 }); // Index for doctor queries
+employeeSchema.index({ role: 1, status: 1 });
 
 module.exports = mongoose.model('Employee', employeeSchema);

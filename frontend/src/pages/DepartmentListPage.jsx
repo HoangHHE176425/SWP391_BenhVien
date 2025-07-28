@@ -80,12 +80,6 @@ const DepartmentPage = () => {
         { /* Title */}
         <div className="department-section">
           <div className="department-container">
-            <div className="department-header">
-              <h2 className="department-header-title">Chuyên Khoa Bệnh Viện</h2>
-              <p className="department-header-desc">
-                Danh sách các chuyên khoa, phòng ban hàng đầu tại bệnh viện
-              </p>
-            </div>
             <div className="department-search-bar">
               <h2 className="department-title">Tra cứu tên phòng ban</h2>
               <div className="search-row">

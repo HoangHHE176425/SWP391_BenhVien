@@ -68,40 +68,45 @@ function AccountManagement() {
   }, []);
 
   const filteredUsers = users.filter((user) => {
-  const matchName = user.name.toLowerCase().includes(searchText.toLowerCase());
-  const matchStatus = statusFilter ? user.status === statusFilter : true;
-  const matchDate = dateRange
-    ? new Date(user.createdAt) >= dateRange[0] && new Date(user.createdAt) <= dateRange[1]
-    : true;
-  return matchName && matchStatus && matchDate;
-});
-  
+    const matchName = user.name
+      .toLowerCase()
+      .includes(searchText.toLowerCase());
+    const matchStatus = statusFilter ? user.status === statusFilter : true;
+    const matchDate = dateRange
+      ? new Date(user.createdAt) >= dateRange[0] &&
+        new Date(user.createdAt) <= dateRange[1]
+      : true;
+    return matchName && matchStatus && matchDate;
+  });
 
-console.log(filteredUsers);
+  console.log(filteredUsers);
   return (
     <div>
-      <h1>
-        User Management
-      </h1>
+      <h1>Quản Lý Người Dùng</h1>
       <div
         style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}
       >
         <Input
-          placeholder="Search by name"
+          placeholder="Tìm kiếm theo tên"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
         />
         <Select
-          placeholder="Filter by status"
+          placeholder="Trạng thái"
           onChange={(value) => setStatusFilter(value)}
           allowClear
           style={{ width: 150 }}
         >
-          <Option value="active">Active</Option>
-          <Option value="inactive">Inactive</Option>
+          <Option value="active">Đang hoạt động</Option>
+          <Option value="inactive">Đã bị khóa</Option>
         </Select>
-        <RangePicker onChange={(dates) => setDateRange(dates)} allowClear format="YYYY-MM-DD"/>
+        <RangePicker
+          onChange={(dates) => setDateRange(dates)}
+          allowClear
+          format="DD/MM/YYYY"
+          placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
+        />
         <Button
           onClick={() => {
             setSearchText("");
@@ -109,7 +114,7 @@ console.log(filteredUsers);
             setDateRange(null);
           }}
         >
-          Reset Filters
+          Đặt lại bộ lọc
         </Button>
       </div>
 
@@ -117,26 +122,28 @@ console.log(filteredUsers);
         dataSource={filteredUsers}
         columns={[
           {
-            title: "Name",
+            title: "Tên",
             dataIndex: "name",
             sorter: (a, b) => a.name.localeCompare(b.name),
           },
           { title: "Email", dataIndex: "email" },
           {
-            title: "Status",
+            title: "Trạng Thái",
             dataIndex: "status",
             render: (status) => (
-              <Tag color={status === "active" ? "green" : "red"}>{status}</Tag>
+              <Tag color={status === "active" ? "green" : "red"}>
+                {status === "active" ? "Đang hoạt động" : "Đã bị khóa"}
+              </Tag>
             ),
           },
           {
-            title: "Created At",
+            title: "Ngày Tạo",
             dataIndex: "createdAt",
-            render: (createdAt) => moment(createdAt).format("YYYY-MM-DD HH:mm"),
+            render: (createdAt) => moment(createdAt).format("DD-MM-YYYY HH:mm"),
             sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
           },
           {
-            title: "Actions",
+            title: "Hành Động",
             render: (_, record) => (
               <Space>
                 <Button
@@ -144,10 +151,10 @@ console.log(filteredUsers);
                   danger={record.status === "active"}
                   onClick={() => handleChangeStatus(record._id)}
                 >
-                  {record.status === "active" ? "Deactivate" : "Activate"}
+                  {record.status === "active" ? "Khóa" : "Kích hoạt"}
                 </Button>
                 <Button danger onClick={() => handleDelete(record._id)}>
-                  Delete
+                  Xóa
                 </Button>
               </Space>
             ),

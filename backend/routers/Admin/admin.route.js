@@ -22,6 +22,8 @@ const {
   getUserGrowthStats,
   getEmployeeStats,
 } = require("../../controller/admin/statisService");
+const { getAllAttendance, updateNote, createAttendance, getAttendConfig, updateAttendConfig } = require("../../controller/admin/attendanceService");
+const { get } = require("mongoose");
 
 // Admin - user manage
 adminRouter.get("/users", getUserAccs);
@@ -45,5 +47,16 @@ adminRouter.get("/revenue-methods", getRevenueByMethod);
 adminRouter.get("/summaries", getDashboardSummaries);
 adminRouter.get("/user-growth-stats", getUserGrowthStats);
 adminRouter.get("/employee-stats", getEmployeeStats);
+
+// Admin - attendance management
+
+adminRouter.get('/attend', getAllAttendance);
+adminRouter.put('/attend/note/:id', updateNote);
+adminRouter.post('/createAttend', createAttendance);
+
+
+adminRouter.get('/attend-config', getAttendConfig);
+adminRouter.put('/upd-config', updateAttendConfig)
+
 
 module.exports = adminRouter;

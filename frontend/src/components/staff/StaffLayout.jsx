@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout, Menu } from "antd";
 import {
   FileTextOutlined,
@@ -15,21 +15,54 @@ import {
   BellOutlined,
   UserOutlined,
   PlusCircleOutlined,
-  CheckCircleOutlined, // Icon for Attendance
+  CheckCircleOutlined,
 } from "@ant-design/icons";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 
 const { Header, Sider, Content } = Layout;
 
 const StaffLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [selectedKey, setSelectedKey] = useState("1");
 
+  // Map routes to menu keys
+  const menuItems = [
+    { key: "1", path: "/staff/blogs", icon: <FileTextOutlined />, label: "Quản Lý Bài Viết" },
+    { key: "2", path: "/staff/services", icon: <AppstoreOutlined />, label: "Quản Lý Dịch Vụ" },
+    { key: "3", path: "/staff/departments", icon: <AppstoreOutlined />, label: "Quản Lý Khoa Phòng" },
+    { key: "6", path: "/staff/appointments", icon: <CalendarOutlined />, label: "Lịch Hẹn" },
+    { key: "7", path: "/staff/notifications", icon: <BellOutlined />, label: "Quản Lý Thông Báo" },
+    { key: "8", path: "/staff/users", icon: <UserOutlined />, label: "Quản Lý Người Dùng" },
+    { key: "9", path: "/staff/medicalrecord", icon: <FileTextOutlined />, label: "Hồ Sơ Y Tế" },
+    { key: "10", path: "/staff/medicines", icon: <PlusCircleOutlined />, label: "Quản Lý Thuốc" },
+    { key: "11", path: "/staff/invoices", icon: <DollarOutlined />, label: "Quản Lý Hóa Đơn" },
+    { key: "12", path: "/staff/payments", icon: <DollarOutlined />, label: "Quản Lý Thanh Toán" },
+    { key: "13", path: "/staff/news", icon: <NotificationOutlined />, label: "Quản Lý Tin Tức" },
+    { key: "14", path: "/staff/feedback", icon: <CommentOutlined />, label: "Quản Lý Feedback" },
+    { key: "15", path: "/staff/qna", icon: <QuestionCircleOutlined />, label: "Q/A" },
+    { key: "16", path: "/staff/schedule", icon: <QuestionCircleOutlined />, label: "Quản Lý Lịch Trình" },
+    { key: "19", path: "/staff/attendance", icon: <CheckCircleOutlined />, label: "Điểm Danh" },
+    { key: "18", path: "/staff/profile", icon: <QuestionCircleOutlined />, label: "Hồ Sơ Cá Nhân" },
+    { key: "17", path: null, icon: <LogoutOutlined />, label: "Đăng Xuất", onClick: () => handleLogout() },
+  ];
+
+  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     navigate("/login");
+    window.location.reload(); // Force reload to update Header
   };
+
+  // Update selected key based on current route
+  useEffect(() => {
+    const currentItem = menuItems.find((item) => item.path === location.pathname);
+    if (currentItem && currentItem.key !== selectedKey) {
+      setSelectedKey(currentItem.key);
+    }
+  }, [location.pathname]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -47,65 +80,12 @@ const StaffLayout = () => {
         >
           {collapsed ? "KC" : "KiwiCare"}
         </div>
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={["1"]}>
-          <Menu.Item key="1" icon={<FileTextOutlined />}>
-            <Link to="/staff/blogs">Manage Blogs</Link>
-          </Menu.Item>
-          <Menu.Item key="2" icon={<AppstoreOutlined />}>
-            <Link to="/staff/services">Manage Service</Link>
-          </Menu.Item>
-          <Menu.Item key="3" icon={<AppstoreOutlined />}>
-            <Link to="/staff/departments">Manage Department</Link>
-          </Menu.Item>
-          <Menu.Item key="4" icon={<AppstoreOutlined />}>
-            <Link to="/staff/view/medicalrecords">Manage Records</Link>
-          </Menu.Item>
-          <Menu.Item key="6" icon={<CalendarOutlined />}>
-            <Link to="/staff/appointments">Appointment Schedule</Link>
-          </Menu.Item>
-          <Menu.Item key="7" icon={<BellOutlined />}>
-            <Link to="/staff/notifications">Manage Notifications</Link>
-          </Menu.Item>
-          <Menu.Item key="8" icon={<UserOutlined />}>
-            <Link to="/staff/users">Manage Users</Link>
-          </Menu.Item>
-          <Menu.Item key="9" icon={<FileTextOutlined />}>
-            <Link to="/staff/medicalrecord">Medical Record</Link>
-          </Menu.Item>
-          <Menu.Item key="10" icon={<PlusCircleOutlined />}>
-            <Link to="/staff/medicines">Manage Medicines</Link>
-          </Menu.Item>
-          <Menu.Item key="11" icon={<DollarOutlined />}>
-            <Link to="/staff/invoices">Manage Invoices</Link>
-          </Menu.Item>
-          <Menu.Item key="12" icon={<DollarOutlined />}>
-            <Link to="/staff/payments">View Payment</Link>
-          </Menu.Item>
-          <Menu.Item key="13" icon={<NotificationOutlined />}>
-            <Link to="/staff/news">Manage News</Link>
-          </Menu.Item>
-          <Menu.Item key="14" icon={<CommentOutlined />}>
-            <Link to="/staff/feedback">Manage Feedback</Link>
-          </Menu.Item>
-          <Menu.Item key="15" icon={<QuestionCircleOutlined />}>
-            <Link to="/staff/qna">View Q&A</Link>
-          </Menu.Item>
-
-          <Menu.Item key="18" icon={<QuestionCircleOutlined />}>
-            <Link to="/staff/profile">Profile</Link>
-          </Menu.Item>
-
-          <Menu.Item key="16" icon={<QuestionCircleOutlined />}>
-            <Link to="/staff/schedule">Manage Schedule</Link>
-          </Menu.Item>
-
-          <Menu.Item key="19" icon={<CheckCircleOutlined />}>
-            <Link to="/staff/attendance">Attendance</Link>
-          </Menu.Item>
-
-          <Menu.Item key="17" icon={<LogoutOutlined />} onClick={handleLogout}>
-            Logout
-          </Menu.Item>
+        <Menu theme="dark" mode="inline" selectedKeys={[selectedKey]}>
+          {menuItems.map((item) => (
+            <Menu.Item key={item.key} icon={item.icon} onClick={item.onClick || undefined}>
+              {item.path ? <Link to={item.path}>{item.label}</Link> : item.label}
+            </Menu.Item>
+          ))}
         </Menu>
       </Sider>
       <Layout>

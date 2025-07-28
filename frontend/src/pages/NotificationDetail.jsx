@@ -3,8 +3,8 @@ import { Descriptions, Tag, Spin, Card, Button, Typography } from "antd";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
-import "../assets/css/NotificationPages.css"
-
+import "../assets/css/NotificationPages.css";
+import dayjs from "dayjs";
 const { Paragraph, Title } = Typography;
 
 const NotificationDetail = () => {
@@ -20,9 +20,13 @@ const NotificationDetail = () => {
     const found = res.data.notifications.find((n) => n._id === id);
     if (found) {
       setNotify(found);
-      await axios.put(`/api/user/markRead/${id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `/api/user/markRead/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
     }
   };
 
@@ -36,7 +40,13 @@ const NotificationDetail = () => {
     );
 
   return (
-    <div style={{ padding: "40px 20px", display: "flex", justifyContent: "center" }}>
+    <div
+      style={{
+        padding: "40px 20px",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
       <Card
         className="fade-in"
         title={
@@ -46,24 +56,29 @@ const NotificationDetail = () => {
         }
         extra={
           <Button type="primary" onClick={() => navigate("/notifications")}>
-            Back
+            Quay lại
           </Button>
         }
         style={{ width: "100%", maxWidth: 1000 }}
       >
-        <Descriptions bordered column={1} labelStyle={{ fontWeight: 600 }}>
-          <Descriptions.Item label="Content">
+        <Descriptions
+          bordered
+          column={1}
+          labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
+          contentStyle={{ fontSize: 16 }}
+        >
+          <Descriptions.Item label="Nội dung">
             <Paragraph style={{ fontSize: 16 }}>{notify.content}</Paragraph>
           </Descriptions.Item>
-          <Descriptions.Item label="Urgency">
+          <Descriptions.Item label="Mức độ ưu tiên">
             {notify.isUrgent ? (
-              <Tag color="red">URGENT</Tag>
+              <Tag color="red">KHẨN CẤP</Tag>
             ) : (
-              <Tag color="blue">Normal</Tag>
+              <Tag color="blue">Bình thường</Tag>
             )}
           </Descriptions.Item>
-          <Descriptions.Item label="Created At">
-            {new Date(notify.createdAt).toLocaleString()}
+          <Descriptions.Item label="Thời gian tạo">
+            {dayjs().format("DD-MM-YYYY HH:mm")}
           </Descriptions.Item>
         </Descriptions>
       </Card>

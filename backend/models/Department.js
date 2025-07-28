@@ -17,8 +17,11 @@ const departmentSchema = new mongoose.Schema(
     },
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee"
-      
+      ref: "Employee",
+    },
+    image: {
+      type: String,
+      trim: true,
     },
   },
   {

@@ -12,18 +12,24 @@ const mongoose = require("mongoose");
 // Lấy danh sách lịch hẹn có kèm tên bác sĩ, người dùng, số điện thoại và user_code với phân trang
 exports.getAllAppointments = async (req, res) => {
   try {
-    const { search = "", page = 1, limit = 10, status, department, startDate, endDate } = req.query;
+    const {
+      search = "",
+      page = 1,
+      limit = 10,
+      status,
+      department,
+      startDate,
+      endDate
+    } = req.query;
+
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     let query = {};
-    if (status) {
-      query.status = status;
-    }
-    if (department) {
-      query.department = department;
-    }
+    if (status) query.status = status;
+    if (department) query.department = department;
+
     if (startDate || endDate) {
       query.appointmentDate = {};
       if (startDate && !isNaN(new Date(startDate).getTime())) {
@@ -34,77 +40,70 @@ exports.getAllAppointments = async (req, res) => {
       }
     }
 
-    const totalAppointments = await Appointment.countDocuments(query);
+    // Fetch appointments with profile reference for later enrich
     const appointments = await Appointment.find(query)
-        .sort({ createdAt: -1 }) // sắp xếp theo thời gian tạo, mới nhất trước
-        .populate("profileId", "name")
-        .skip(skip)
-        .limit(limitNum);
+      .sort({ createdAt: -1 })
+      .populate("profileId", "name identityNumber")
+      .skip(skip)
+      .limit(limitNum);
 
+    const doctorIds = [...new Set(appointments.map(a => a.doctorId?.toString()).filter(Boolean))];
+    const userIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
 
-    const doctorIds = [...new Set(appointments.map(a => a.doctorId?.toString()))];
-    const userIds = [...new Set(appointments.map(a => a.userId?.toString()))];
+    const [doctors, users] = await Promise.all([
+      Employee.find({ _id: { $in: doctorIds } }, { _id: 1, name: 1 }),
+      User.find({ _id: { $in: userIds } }, { _id: 1, name: 1, phone: 1, user_code: 1 })
+    ]);
 
-    const doctors = await Employee.find({ _id: { $in: doctorIds } }, { _id: 1, name: 1 });
-    const users = await User.find({ _id: { $in: userIds } }, { _id: 1, name: 1, phone: 1, user_code: 1 });
-
-    const doctorMap = doctors.reduce((acc, doc) => {
-      acc[doc._id.toString()] = doc.name;
-      return acc;
-    }, {});
-    const userMap = users.reduce((acc, user) => {
-      acc[user._id.toString()] = { name: user.name, phone: user.phone || "N/A", user_code: user.user_code || "N/A" };
-      return acc;
-    }, {});
+    const doctorMap = Object.fromEntries(doctors.map(doc => [doc._id.toString(), doc.name]));
+    const userMap = Object.fromEntries(users.map(user => [
+      user._id.toString(),
+      {
+        name: user.name,
+        phone: user.phone || "N/A",
+        user_code: user.user_code || "N/A",
+      },
+    ]));
 
     let enrichedAppointments = appointments.map(a => ({
-    ...a._doc,
-    doctorName: doctorMap[a.doctorId?.toString()] || "Unknown Doctor",
-    userName: userMap[a.userId?.toString()]?.name || "Unknown User",
-    userPhone: userMap[a.userId?.toString()]?.phone || "N/A",
-    userCode: userMap[a.userId?.toString()]?.user_code || "N/A",
-    profileName: a.profileId?.name || "N/A"
-  }));
+      ...a._doc,
+      doctorName: doctorMap[a.doctorId?.toString()] || "Unknown Doctor",
+      userName: userMap[a.userId?.toString()]?.name || "Unknown User",
+      userPhone: userMap[a.userId?.toString()]?.phone || "N/A",
+      userCode: userMap[a.userId?.toString()]?.user_code || "N/A",
+      profileName: a.profileId?.name || "N/A",
+      identityNumber: a.profileId?.identityNumber || "",
+    }));
 
-
-    if (search.trim() !== "") {
+    // ✅ Gộp tất cả logic tìm kiếm vào đây
+    if (search.trim()) {
       const searchLower = search.toLowerCase();
       enrichedAppointments = enrichedAppointments.filter(a =>
-        (a.doctorName && a.doctorName.toLowerCase().includes(searchLower)) ||
-        (a.userName && a.userName.toLowerCase().includes(searchLower)) ||
-        (a.userPhone && a.userPhone.toLowerCase().includes(searchLower)) ||
-        (a.userCode && a.userCode.toLowerCase().includes(searchLower)) ||
-        (a.status && a.status.toLowerCase().includes(searchLower))
+        a.doctorName?.toLowerCase().includes(searchLower) ||
+        a.userName?.toLowerCase().includes(searchLower) ||
+        a.userPhone?.toLowerCase().includes(searchLower) ||
+        a.userCode?.toLowerCase().includes(searchLower) ||
+        a.status?.toLowerCase().includes(searchLower) ||
+        a.identityNumber?.toLowerCase().includes(searchLower) // ✅ Gộp identityNumber
       );
-    } else if (startDate || endDate) {
-      enrichedAppointments = enrichedAppointments.filter(a => {
-        const appointmentDate = new Date(a.appointmentDate);
-        let matchesDateRange = true;
-        if (startDate && appointmentDate < new Date(startDate)) {
-          matchesDateRange = false;
-        }
-        if (endDate && appointmentDate > new Date(new Date(endDate).setHours(23, 59, 59, 999))) {
-          matchesDateRange = false;
-        }
-        return matchesDateRange;
-      });
     }
 
-    const response = {
+    res.status(200).json({
       appointments: enrichedAppointments,
       pagination: {
-        total: totalAppointments,
+        total: enrichedAppointments.length,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(totalAppointments / limitNum)
-      }
-    };
-    res.status(200).json(response);
+        totalPages: Math.ceil(enrichedAppointments.length / limitNum),
+      },
+    });
   } catch (error) {
     console.error("Error in getAllAppointments:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 
 exports.getProfileDetail = async (req, res) => {
   try {
@@ -127,79 +126,88 @@ exports.getProfileDetail = async (req, res) => {
   }
 };
 
-
-
-// Tạo cuộc hẹn mới
 // Tạo cuộc hẹn mới
 exports.createAppointment = async (req, res) => {
   try {
-    const data = { ...req.body };
+      const data = { ...req.body };
 
-    // Kiểm tra bắt buộc phải có profileId
-    if (!data.profileId || data.profileId === "null" || data.profileId === "") {
-      return res.status(400).json({ message: "Missing profileId. Please resolve profile by identity number first." });
+      if (!data.timeSlot || !data.timeSlot.startTime || !data.timeSlot.endTime) {
+        return res.status(400).json({ message: "Missing timeSlot or invalid structure." });
+      }
+    // ✅ Log kiểm tra
+    //console.log("👨‍⚕️ doctorId:", data.doctorId);
+    //console.log("📅 Ngày hẹn:", data.appointmentDate);
+
+    // ✅ Kiểm tra doctorId hợp lệ
+    if (!mongoose.Types.ObjectId.isValid(data.doctorId)) {
+      return res.status(400).json({ message: "Invalid doctorId format." });
     }
 
-    // Kiểm tra profile có tồn tại không
-    const profileExists = await Profile.findById(data.profileId);
-    if (!profileExists) {
-      return res.status(404).json({ message: "Profile not found with provided profileId." });
-    }
-
-    // Kiểm tra ngày đặt lịch (Không được là ngày trước đó)
+    // ✅ Chuẩn hóa ngày tìm schedule
     const appointmentDate = new Date(data.appointmentDate);
-    const today = new Date();
+    const y = appointmentDate.getFullYear();
+    const m = appointmentDate.getMonth();
+    const d = appointmentDate.getDate();
 
-    today.setHours(0, 0, 0, 0); // Reset time to midnight for today
-    appointmentDate.setHours(0, 0, 0, 0); // Reset time to midnight for appointment date
+    const startOfDay = new Date(y, m, d, 0, 0, 0, 0);
+    const endOfDay = new Date(y, m, d, 23, 59, 59, 999);
 
-    if (appointmentDate < today) {
-      return res.status(400).json({
-        message: "You cannot book an appointment for a past date. Please select today or a future date.",
+
+    // ✅ Tìm schedule chính xác
+    const doctorSchedule = await Schedule.findOne({
+      employeeId: new mongoose.Types.ObjectId(data.doctorId),
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    //console.log("📅 Schedule tìm được:", doctorSchedule?.date);
+    if (doctorSchedule) {
+      doctorSchedule.timeSlots.forEach((slot, i) => {
+        //console.log(`⏰ Slot ${i + 1}:`, slot.startTime, "-", slot.endTime, "|", slot.status);
       });
     }
 
-    // Check if the selected time slot is available in the doctor's schedule
-    const doctorSchedule = await Schedule.findOne({ employeeId: data.doctorId, date: appointmentDate });
+    const selectedSlot = doctorSchedule?.timeSlots.find(slot =>
+      new Date(slot.startTime).getTime() === new Date(data.timeSlot.startTime).getTime() &&
+      new Date(slot.endTime).getTime() === new Date(data.timeSlot.endTime).getTime()
+    );
 
-    if (doctorSchedule) {
-      // Find the selected time slot in the schedule
-      const selectedSlot = doctorSchedule.timeSlots.find(
-        slot => slot.startTime === data.timeSlot.startTime && slot.endTime === data.timeSlot.endTime
-      );
-
-      if (selectedSlot) {
-        // Check if the time slot is already booked
-        if (selectedSlot.status === 'Booked') {
-          return res.status(400).json({
-            message: "The selected time slot is already booked. Please choose another time."
-          });
-        }
-
-        // Mark the selected time slot as 'Booked'
-        selectedSlot.status = 'Booked';
-        
-        // Save the updated schedule
-        await doctorSchedule.save();
+    if (!selectedSlot) {
+      console.warn("❌ Không tìm thấy slot tương ứng trong Schedule.");
+    } else {
+      if (selectedSlot.status === 'Booked') {
+        return res.status(400).json({
+          message: "The selected time slot is already booked. Please choose another time."
+        });
       }
+
+      // ✅ Đánh dấu đã đặt
+      selectedSlot.status = 'Booked';
+      await doctorSchedule.save();
+      //console.log("✅ Đã cập nhật status = Booked cho slot.");
     }
 
-    // Tạo cuộc hẹn mới
-    const newAppointment = new Appointment({
-      appointmentDate: data.appointmentDate,
-      department: data.department,
-      doctorId: data.doctorId,
-      timeSlot: data.timeSlot,
-      type: data.type || "Offline",
-      status: data.status || "Booked",
-      reminderSent: data.reminderSent || false,
-      profileId: data.profileId,
-    });
+    // ✅ Tạo cuộc hẹn như cũ
+// ✅ Tạo cuộc hẹn
+const newAppointment = new Appointment({
+  appointmentDate: data.appointmentDate,
+  department: data.department,
+  doctorId: data.doctorId,
+  timeSlot: {
+    startTime: data.timeSlot.startTime,
+    endTime: data.timeSlot.endTime,
+    status: 'Booked',
+  },
+  type: data.type || "Offline",
+  status: data.status || "Booked",
+  reminderSent: data.reminderSent || false,
+  profileId: data.profileId,
+  userId: data.userId,
+});
 
-    // Save the new appointment
+
     await newAppointment.save();
-
     res.status(201).json(newAppointment);
+
   } catch (error) {
     console.error("Lỗi tạo appointment:", error);
     res.status(500).json({ message: "Lỗi server", error: error.message });
@@ -212,34 +220,154 @@ exports.createAppointment = async (req, res) => {
 
 
 
-
 // Cập nhật lịch hẹn
 exports.updateAppointment = async (req, res) => {
   try {
-    const data = { ...req.body };
-    if (!data.profileId || data.profileId === "null" || data.profileId.trim() === "") {
-      delete data.profileId;
+    const appointmentId = req.params.id;
+    const newData = { ...req.body };
+
+    const existingAppointment = await Appointment.findById(appointmentId);
+    if (!existingAppointment) {
+      return res.status(404).json({ message: "Appointment not found" });
     }
-    const updated = await Appointment.findByIdAndUpdate(req.params.id, data, { new: true });
-    if (!updated) return res.status(404).json({ message: "Appointment not found" });
+
+    console.log("✏️ Updating appointment:", appointmentId);
+    console.log("📅 New appointment date:", newData.appointmentDate);
+    console.log("⏰ New timeSlot:", newData.timeSlot);
+
+    // ✅ BƯỚC 1: Trả lại slot cũ (nếu có timeSlot cũ)
+    if (existingAppointment.timeSlot?.startTime && existingAppointment.timeSlot?.endTime) {
+      const oldDate = new Date(existingAppointment.appointmentDate);
+      const startOfOldDay = new Date(oldDate.setHours(0, 0, 0, 0));
+      const endOfOldDay = new Date(oldDate.setHours(23, 59, 59, 999));
+
+      const oldSchedule = await Schedule.findOne({
+        employeeId: existingAppointment.doctorId,
+        date: { $gte: startOfOldDay, $lte: endOfOldDay },
+      });
+
+      if (oldSchedule) {
+        const oldSlot = oldSchedule.timeSlots.find(
+          slot =>
+            new Date(slot.startTime).getTime() === new Date(existingAppointment.timeSlot.startTime).getTime() &&
+            new Date(slot.endTime).getTime() === new Date(existingAppointment.timeSlot.endTime).getTime()
+        );
+        if (oldSlot) {
+          oldSlot.status = "Available";
+          await oldSchedule.save();
+          console.log("🔄 Slot cũ đã chuyển về Available");
+        }
+      }
+    }
+
+    // ✅ BƯỚC 2: Đánh dấu slot mới là Booked
+    if (newData.timeSlot?.startTime && newData.timeSlot?.endTime) {
+      const newDate = new Date(newData.appointmentDate);
+      const startOfNewDay = new Date(newDate.setHours(0, 0, 0, 0));
+      const endOfNewDay = new Date(newDate.setHours(23, 59, 59, 999));
+
+      const newSchedule = await Schedule.findOne({
+        employeeId: newData.doctorId || existingAppointment.doctorId,
+        date: { $gte: startOfNewDay, $lte: endOfNewDay },
+      });
+
+      if (newSchedule) {
+        const newSlot = newSchedule.timeSlots.find(
+          slot =>
+            new Date(slot.startTime).getTime() === new Date(newData.timeSlot.startTime).getTime() &&
+            new Date(slot.endTime).getTime() === new Date(newData.timeSlot.endTime).getTime()
+        );
+        if (newSlot) {
+          if (newSlot.status === "Booked") {
+            return res.status(400).json({ message: "The selected time slot is already booked." });
+          }
+          newSlot.status = "Booked";
+          await newSchedule.save();
+          console.log("✅ Slot mới đã được đánh dấu là Booked");
+        } else {
+          console.warn("⚠️ Không tìm thấy slot mới trong Schedule.");
+        }
+      } else {
+        console.warn("⚠️ Không tìm thấy Schedule tương ứng cho ngày mới.");
+      }
+    }
+
+    // ✅ BƯỚC 3: Cập nhật thông tin appointment
+    const updated = await Appointment.findByIdAndUpdate(appointmentId, newData, { new: true });
+
     res.json(updated);
   } catch (error) {
+    console.error("❌ Lỗi khi cập nhật cuộc hẹn:", error);
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
 
-// Xóa lịch hẹn
+
+// Xóa lịch hẹn và cập nhật lại trạng thái slot
 exports.deleteAppointment = async (req, res) => {
   try {
-    const deleted = await Appointment.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Appointment not found" });
-    res.json({ message: "Appointment deleted successfully" });
+    const appointmentId = req.params.id;
+    //console.log("🗑 Deleting appointment:", appointmentId);
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+
+    // ✅ Log chi tiết appointment
+    //console.log("👨‍⚕️ Doctor ID:", appointment.doctorId);
+    //console.log("📅 Appointment date:", appointment.appointmentDate);
+    //console.log("📄 Appointment full object:\n", appointment);
+
+    const { doctorId, appointmentDate, timeSlot } = appointment;
+
+    if (!timeSlot || !timeSlot.startTime || !timeSlot.endTime) {
+      console.warn("⚠️ Không có thông tin timeSlot để cập nhật.");
+    } else {
+      // ✅ Xác định ngày để tìm Schedule
+      const dateObj = new Date(appointmentDate);
+      const startOfDay = new Date(dateObj.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(dateObj.setHours(23, 59, 59, 999));
+
+      const schedule = await Schedule.findOne({
+        employeeId: doctorId,
+        date: { $gte: startOfDay, $lte: endOfDay },
+      });
+
+      if (schedule) {
+        const slotToUpdate = schedule.timeSlots.find(
+          (slot) =>
+            new Date(slot.startTime).getTime() === new Date(timeSlot.startTime).getTime() &&
+            new Date(slot.endTime).getTime() === new Date(timeSlot.endTime).getTime()
+        );
+
+        if (slotToUpdate) {
+          slotToUpdate.status = "Available";
+          await schedule.save();
+          //console.log("✅ Slot status set back to 'Available'");
+        } else {
+          console.warn("⚠️ Không tìm thấy slot tương ứng trong Schedule.");
+        }
+      } else {
+        console.warn("⚠️ Không tìm thấy Schedule tương ứng.");
+      }
+    }
+
+    // ✅ Xóa appointment
+    await Appointment.findByIdAndDelete(appointmentId);
+    //console.log("🗑 Appointment đã bị xóa.");
+    res.json({ message: "Appointment deleted and schedule updated successfully" });
   } catch (error) {
+    console.error("❌ Lỗi khi xóa cuộc hẹn:", error);
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
 
-// Lấy tất cả bác sĩ có role = 'Doctor' và thêm department, lọc theo department và ngày nếu có
+
+
+
+
+
+
+
 // Lấy tất cả bác sĩ có role = 'Doctor' và thêm department, lọc theo department và ngày nếu có
 exports.getAllDoctors = async (req, res) => {
   try {

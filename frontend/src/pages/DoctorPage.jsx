@@ -15,7 +15,7 @@ const DoctorPage = () => {
   const [allDoctors, setAllDoctors] = useState([]);
   const [totalDoctors, setTotalDoctors] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [doctorsPerPage] = useState(10); // Số bác sĩ mỗi trang
+  const [doctorsPerPage] = useState(11); // Số bác sĩ mỗi trang
 
   useEffect(() => {
     const fetchDoctors = async () => {

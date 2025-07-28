@@ -34,18 +34,29 @@ function MedicalRecord() {
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
 
+  // Hàm kiểm tra số CMND/CCCD
+  const validateIdentityNumber = (_, value) => {
+    if (!value) {
+      return Promise.reject(new Error("Vui lòng nhập số CMND/CCCD!"));
+    }
+    const identityNumberRegex = /^[0-9]{12}$/;
+    if (!identityNumberRegex.test(value)) {
+      return Promise.reject(new Error("Số CMND/CCCD phải là 12 ký tự số, không chứa chữ, không khoảng trắng và không ký tự đặc biệt!"));
+    }
+    return Promise.resolve();
+  };
+
   const fetchProfiles = async () => {
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const res = await axios.get("http://localhost:9999/api/staff/profiles", config);
-      // Sort profiles by updatedAt in descending order (newest first)
       const sortedProfiles = (res.data.data || []).sort(
         (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
       );
       setProfiles(sortedProfiles);
     } catch (err) {
-      message.error("Failed to fetch patient profiles");
+      message.error("Không thể tải hồ sơ bệnh nhân");
     }
   };
 
@@ -56,7 +67,7 @@ function MedicalRecord() {
       const res = await axios.get("http://localhost:9999/api/staff/doctors", config);
       setDoctors(res.data.data || []);
     } catch (err) {
-      message.error("Failed to fetch doctors");
+      message.error("Không thể tải danh sách bác sĩ");
     }
   };
 
@@ -67,7 +78,7 @@ function MedicalRecord() {
       const res = await axios.get("http://localhost:9999/api/staff/medicines", config);
       setMedicines(res.data.data || []);
     } catch (err) {
-      message.error("Failed to fetch medicines");
+      message.error("Không thể tải danh sách thuốc");
     }
   };
 
@@ -78,7 +89,7 @@ function MedicalRecord() {
       const res = await axios.get("http://localhost:9999/api/staff/services", config);
       setServices(res.data.data || []);
     } catch (err) {
-      message.error("Failed to fetch services");
+      message.error("Không thể tải danh sách dịch vụ");
     }
   };
 
@@ -86,7 +97,7 @@ function MedicalRecord() {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     if (!token || !user || user.role !== "Staff") {
-      message.error("Unauthorized access");
+      message.error("Truy cập không được phép");
       window.location.href = "/";
       return;
     }
@@ -102,10 +113,10 @@ function MedicalRecord() {
       await axios.delete(`http://localhost:9999/api/staff/profiles/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      message.success("Patient profile deleted");
+      message.success("Đã xóa hồ sơ bệnh nhân");
       setProfiles((prev) => prev.filter((profile) => profile._id !== id));
     } catch (err) {
-      message.error("Delete failed");
+      message.error("Xóa thất bại");
     }
   };
 
@@ -132,11 +143,11 @@ function MedicalRecord() {
       await axios.put(`http://localhost:9999/api/staff/profiles/${editingProfile._id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      notification.success({ message: "Patient profile updated" });
+      notification.success({ message: "Đã cập nhật hồ sơ bệnh nhân" });
       setEditingProfile(null);
       fetchProfiles();
     } catch (err) {
-      notification.error({ message: "Update failed" });
+      notification.error({ message: "Cập nhật thất bại" });
     }
   };
 
@@ -153,12 +164,12 @@ function MedicalRecord() {
       await axios.post("http://localhost:9999/api/staff/profiles", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      notification.success({ message: "Patient profile created" });
+      notification.success({ message: "Đã tạo hồ sơ bệnh nhân" });
       setCreateModalVisible(false);
       createForm.resetFields();
       fetchProfiles();
     } catch (err) {
-      notification.error({ message: "Create failed" });
+      notification.error({ message: "Tạo hồ sơ thất bại" });
     }
   };
 
@@ -175,26 +186,26 @@ function MedicalRecord() {
 
   return (
     <div>
-      <h1>Patient Management</h1>
+      <h1>Quản Lý Bệnh Nhân</h1>
       {/* Filters */}
       <div
         style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}
       >
         <Input
-          placeholder="Search by profile name or identity number"
+          placeholder="Tìm kiếm theo tên hoặc số CMND/CCCD"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
         />
         <Select
-          placeholder="Filter by gender"
+          placeholder="Lọc theo giới tính"
           onChange={(value) => setGenderFilter(value)}
           allowClear
           style={{ width: 150 }}
         >
-          <Option value="Male">Male</Option>
-          <Option value="Female">Female</Option>
-          <Option value="Other">Other</Option>
+          <Option value="Male">Nam</Option>
+          <Option value="Female">Nữ</Option>
+          <Option value="Other">Khác</Option>
         </Select>
         <RangePicker
           onChange={(dates) => setDateRange(dates)}
@@ -208,14 +219,14 @@ function MedicalRecord() {
             setDateRange(null);
           }}
         >
-          Reset
+          Đặt Lại
         </Button>
         <Button
           type="primary"
           className="custom-add-button"
           onClick={() => setCreateModalVisible(true)}
         >
-          Add Patient
+          Thêm Bệnh Nhân
         </Button>
       </div>
 
@@ -224,7 +235,12 @@ function MedicalRecord() {
         dataSource={filteredProfiles}
         columns={[
           {
-            title: "Profile Name",
+            title: "STT",
+            render: (_, __, index) => index + 1,
+            width: 70,
+          },
+          {
+            title: "Tên Bệnh Nhân",
             dataIndex: "name",
             render: (text, record) => (
               <Button type="link" onClick={() => setViewingProfile(record)}>
@@ -233,21 +249,26 @@ function MedicalRecord() {
             ),
             sorter: (a, b) => a.name.localeCompare(b.name),
           },
-          { title: "Identity Number", dataIndex: "identityNumber" },
-          { title: "Gender", dataIndex: "gender" },
+          { title: "Số CMND/CCCD", dataIndex: "identityNumber" },
+          { title: "Giới Tính", dataIndex: "gender", render: (gender) => ({
+              Male: "Nam",
+              Female: "Nữ",
+              Other: "Khác",
+            }[gender] || gender)
+          },
           {
-            title: "Date of Birth",
+            title: "Ngày Sinh",
             dataIndex: "dateOfBirth",
             render: (date) => moment(date).format("YYYY-MM-DD"),
             sorter: (a, b) => new Date(a.dateOfBirth) - new Date(b.dateOfBirth),
           },
           {
-            title: "Actions",
+            title: "Hành Động",
             render: (_, record) => (
               <Space>
-                <Button onClick={() => handleEdit(record)}>Edit</Button>
+                <Button onClick={() => handleEdit(record)}>Sửa</Button>
                 <Button danger onClick={() => handleDelete(record._id)}>
-                  Delete
+                  Xóa
                 </Button>
               </Space>
             ),
@@ -258,44 +279,48 @@ function MedicalRecord() {
 
       {/* Patient Detail Drawer */}
       <Drawer
-        title="Patient Details"
+        title="Chi Tiết Bệnh Nhân"
         open={!!viewingProfile}
         onClose={() => setViewingProfile(null)}
         width={400}
       >
         {viewingProfile && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="Profile Name">
+            <Descriptions.Item label="Tên Bệnh Nhân">
               {viewingProfile.name}
             </Descriptions.Item>
-            <Descriptions.Item label="Identity Number">
+            <Descriptions.Item label="Số CMND/CCCD">
               {viewingProfile.identityNumber}
             </Descriptions.Item>
-            <Descriptions.Item label="Gender">
-              {viewingProfile.gender}
+            <Descriptions.Item label="Giới Tính">
+              {{
+                Male: "Nam",
+                Female: "Nữ",
+                Other: "Khác",
+              }[viewingProfile.gender] || viewingProfile.gender}
             </Descriptions.Item>
-            <Descriptions.Item label="Date of Birth">
+            <Descriptions.Item label="Ngày Sinh">
               {moment(viewingProfile.dateOfBirth).format("YYYY-MM-DD")}
             </Descriptions.Item>
-            <Descriptions.Item label="Diagnosis">
+            <Descriptions.Item label="Chẩn Đoán">
               {viewingProfile.diagnose || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Note">
+            <Descriptions.Item label="Ghi Chú">
               {viewingProfile.note || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Issues">
+            <Descriptions.Item label="Vấn Đề">
               {viewingProfile.issues || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Doctor">
+            <Descriptions.Item label="Bác Sĩ">
               {viewingProfile.doctor?.name || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Medicines">
+            <Descriptions.Item label="Thuốc">
               {viewingProfile.medicines?.length > 0 ? (
                 <List
                   dataSource={viewingProfile.medicines}
                   renderItem={(item) => (
                     <List.Item>
-                      {item.name} (Type: {item.type}, Price: {item.unitPrice})
+                      {item.name} (Loại: {item.type}, Giá: {item.unitPrice})
                     </List.Item>
                   )}
                 />
@@ -303,13 +328,13 @@ function MedicalRecord() {
                 "—"
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Services">
+            <Descriptions.Item label="Dịch Vụ">
               {viewingProfile.services?.length > 0 ? (
                 <List
                   dataSource={viewingProfile.services}
                   renderItem={(item) => (
                     <List.Item>
-                      {item.name} (Price: {item.price})
+                      {item.name} (Giá: {item.price})
                     </List.Item>
                   )}
                 />
@@ -317,20 +342,20 @@ function MedicalRecord() {
                 "—"
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Lab Test">
+            <Descriptions.Item label="Xét Nghiệm">
               {viewingProfile.labTest ? (
                 <>
-                  Result: {viewingProfile.labTest.result || "—"}<br />
-                  Date: {viewingProfile.labTest.dayTest ? moment(viewingProfile.labTest.dayTest).format("YYYY-MM-DD") : "—"}
+                  Kết quả: {viewingProfile.labTest.result || "—"}<br />
+                  Ngày: {viewingProfile.labTest.dayTest ? moment(viewingProfile.labTest.dayTest).format("YYYY-MM-DD") : "—"}
                 </>
               ) : (
                 "—"
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Created At">
+            <Descriptions.Item label="Ngày Tạo">
               {moment(viewingProfile.createdAt).format("YYYY-MM-DD HH:mm")}
             </Descriptions.Item>
-            <Descriptions.Item label="Updated At">
+            <Descriptions.Item label="Ngày Cập Nhật">
               {moment(viewingProfile.updatedAt).format("YYYY-MM-DD HH:mm")}
             </Descriptions.Item>
           </Descriptions>
@@ -339,43 +364,46 @@ function MedicalRecord() {
 
       {/* Edit Patient Modal */}
       <Modal
-        title="Edit Patient Profile"
+        title="Sửa Hồ Sơ Bệnh Nhân"
         open={!!editingProfile}
         onCancel={() => setEditingProfile(null)}
         onOk={handleEditSubmit}
-        okText="Save"
+        okText="Lưu"
         destroyOnClose
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="Profile Name"
+            label="Tên Bệnh Nhân"
             name="name"
-            rules={[{ required: true, message: "Please input the profile name!" }]}
+            rules={[{ required: true, message: "Vui lòng nhập tên bệnh nhân!" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Identity Number"
+            label="Số CMND/CCCD"
             name="identityNumber"
-            rules={[{ required: true, message: "Please input the identity number!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập số CMND/CCCD!" },
+              { validator: validateIdentityNumber },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Gender"
+            label="Giới Tính"
             name="gender"
-            rules={[{ required: true, message: "Please select the gender!" }]}
+            rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
           >
             <Select>
-              <Option value="Male">Male</Option>
-              <Option value="Female">Female</Option>
-              <Option value="Other">Other</Option>
+              <Option value="Male">Nam</Option>
+              <Option value="Female">Nữ</Option>
+              <Option value="Other">Khác</Option>
             </Select>
           </Form.Item>
           <Form.Item
-            label="Date of Birth"
+            label="Ngày Sinh"
             name="dateOfBirth"
-            rules={[{ required: true, message: "Please select the date of birth!" }]}
+            rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
           >
             <DatePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
           </Form.Item>
@@ -384,43 +412,46 @@ function MedicalRecord() {
 
       {/* Create Patient Modal */}
       <Modal
-        title="Add New Patient"
+        title="Thêm Bệnh Nhân Mới"
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         onOk={handleCreate}
-        okText="Create"
+        okText="Tạo"
         destroyOnClose
       >
         <Form form={createForm} layout="vertical">
           <Form.Item
-            label="Profile Name"
+            label="Tên Bệnh Nhân"
             name="name"
-            rules={[{ required: true, message: "Please input the profile name!" }]}
+            rules={[{ required: true, message: "Vui lòng nhập tên bệnh nhân!" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Identity Number"
+            label="Số CMND/CCCD"
             name="identityNumber"
-            rules={[{ required: true, message: "Please input the identity number!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập số CMND/CCCD!" },
+              { validator: validateIdentityNumber },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Gender"
+            label="Giới Tính"
             name="gender"
-            rules={[{ required: true, message: "Please select the gender!" }]}
+            rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
           >
             <Select>
-              <Option value="Male">Male</Option>
-              <Option value="Female">Female</Option>
-              <Option value="Other">Other</Option>
+              <Option value="Male">Nam</Option>
+              <Option value="Female">Nữ</Option>
+              <Option value="Other">Khác</Option>
             </Select>
           </Form.Item>
           <Form.Item
-            label="Date of Birth"
+            label="Ngày Sinh"
             name="dateOfBirth"
-            rules={[{ required: true, message: "Please select the date of birth!" }]}
+            rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
           >
             <DatePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
           </Form.Item>

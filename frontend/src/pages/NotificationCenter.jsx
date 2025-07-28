@@ -69,40 +69,47 @@ const NotificationCenter = () => {
 
   const columns = [
     {
-      title: "Title",
+      title: "Tiêu đề",
       dataIndex: "title",
       render: (text, record) => {
         const isUnread = !record.isReadBy.includes(user._id);
         return (
-          <Link to={`/notifications/${record._id}` } style={{ textDecoration: "none" }}>
+          <Link
+            to={`/notifications/${record._id}`}
+            style={{ textDecoration: "none" }}
+          >
             <span style={{ fontWeight: isUnread ? "bold" : "normal" }}>
               {text}
-              {isUnread && <Tag color="processing" style={{ marginLeft: 8 }}>Unread</Tag>}
+              {isUnread && (
+                <Tag color="processing" style={{ marginLeft: 8 }}>
+                  Chưa đọc
+                </Tag>
+              )}
             </span>
           </Link>
         );
       },
     },
     {
-      title: "Urgency",
+      title: "Mức độ khẩn",
       dataIndex: "isUrgent",
       render: (urgent) =>
-        urgent ? <Tag color="red">URGENT</Tag> : <Tag>Normal</Tag>,
+        urgent ? <Tag color="red">KHẨN CẤP</Tag> : <Tag>Bình thường</Tag>,
     },
     {
-      title: "Created At",
+      title: "Ngày tạo",
       dataIndex: "createdAt",
-      render: (text) => new Date(text).toLocaleString(),
+      render: (text) => dayjs(text).format("DD-MM-YYYY HH:mm"),
     },
   ];
 
   return (
     <div style={{ padding: 24 }}>
-      <Title level={3}>🛎️ Notification Center</Title>
+      <Title level={3}>🛎️ Trung Tâm Thông Báo</Title>
 
       <Space style={{ marginBottom: 16 }} wrap>
         <Search
-          placeholder="🔍 Search by title"
+          placeholder="🔍 Tìm theo tiêu đề"
           allowClear
           onChange={(e) => setSearch(e.target.value)}
           style={{ width: 230 }}
@@ -113,9 +120,9 @@ const NotificationCenter = () => {
           onChange={setUrgencyFilter}
           style={{ width: 140 }}
         >
-          <Option value="all">All Urgencies</Option>
-          <Option value="urgent">Urgent</Option>
-          <Option value="normal">Normal</Option>
+          <Option value="all">Tất cả mức độ</Option>
+          <Option value="urgent">Khẩn cấp</Option>
+          <Option value="normal">Bình thường</Option>
         </Select>
 
         <Select
@@ -123,16 +130,16 @@ const NotificationCenter = () => {
           onChange={setReadFilter}
           style={{ width: 140 }}
         >
-          <Option value="all">All Read Status</Option>
-          <Option value="read">Read</Option>
-          <Option value="unread">Unread</Option>
+          <Option value="all">Tất cả trạng thái</Option>
+          <Option value="read">Đã đọc</Option>
+          <Option value="unread">Chưa đọc</Option>
         </Select>
 
         <RangePicker
           value={dateRange}
           onChange={(val) => setDateRange(val || [])}
           style={{ width: 280 }}
-          placeholder={["Start date", "End date"]}
+          placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
         />
 
         <Button
@@ -143,7 +150,7 @@ const NotificationCenter = () => {
             setDateRange([]);
           }}
         >
-          Reset Filters
+          Đặt lại bộ lọc
         </Button>
       </Space>
 
@@ -154,7 +161,7 @@ const NotificationCenter = () => {
         rowClassName={(record) =>
           !record.isReadBy.includes(user._id) ? "unread-row" : ""
         }
-        pagination={{ pageSize: 6 }}
+        pagination={{ pageSize: 10 }}
       />
     </div>
   );

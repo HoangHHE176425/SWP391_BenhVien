@@ -1,179 +1,339 @@
 /* General styling for the news management page */
 .news-list-page {
   padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  min-height: 100vh;
   font-family: 'Roboto', sans-serif;
 }
 
 .news-list-page h1 {
   font-size: 2rem;
-  font-weight: 500;
-  color: #1976d2;
+  color: #333;
   margin-bottom: 20px;
   text-align: center;
+  font-weight: 600;
 }
 
-/* Filter and search container */
+/* Search and Add Button Container */
 .filter-search-container {
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 10px;
 }
 
-/* Style for FormControl and Select to match TextField */
-.MuiFormControl-root {
-  min-width: 200px;
-  flex: 1;
+.filter-search-container .MuiTextField-root,
+.filter-search-container .MuiFormControl-root {
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.MuiInputLabel-outlined {
-  background-color: white;
-  padding: 0 4px;
-  transform: translate(14px, 16px) scale(1);
-  transition: transform 200ms cubic-bezier(0.0, 0, 0.2, 1), font-size 200ms cubic-bezier(0.0, 0, 0.2, 1);
+.filter-search-container .MuiButton-containedPrimary {
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  color: #ffffff;
+  text-transform: none;
+  font-weight: 500;
+  padding: 10px 20px;
+  margin-left: 10px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.MuiInputLabel-outlined.MuiInputLabel-shrink {
-  transform: translate(14px, -6px) scale(0.75);
-  background-color: white;
-  padding: 0 4px;
+.filter-search-container .MuiButton-containedPrimary:hover {
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
-/* Ensure the border doesn't overlap the label */
-.MuiOutlinedInput-root {
-  border-radius: 4px;
+.filter-search-container .MuiButton-containedPrimary:disabled {
+  background: #b0bec5;
+  color: #ffffff;
+  cursor: not-allowed;
 }
 
-.MuiOutlinedInput-notchedOutline {
-  top: 0;
-}
-
-.MuiOutlinedInput-notchedOutline legend {
-  width: auto;
-  max-width: 0.01px;
-}
-
-.MuiSelect-outlined {
-  padding-top: 14px;
-  padding-bottom: 14px;
-}
-
-/* Table container */
+/* Table Styles */
 .MuiTableContainer-root {
   margin-top: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
 }
 
-/* Table header */
 .MuiTableHead-root {
   background: linear-gradient(90deg, #1976d2, #42a5f5);
 }
 
-.MuiTableCell-head {
-  font-weight: 600;
+.MuiTableHead-root .MuiTableCell-root {
   color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Table body */
-.MuiTableCell-body {
-  font-size: 0.9rem;
+.MuiTableBody-root .MuiTableRow-root {
+  transition: background-color 0.2s ease;
+}
+
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background: linear-gradient(90deg, rgba(25, 118, 210, 0.1), rgba(66, 165, 245, 0.1));
+}
+
+.MuiTableCell-root {
+  font-size: 0.85rem;
+  padding: 12px;
   color: #4b5563;
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* Preserve line breaks in content cell */
-.MuiTableCell-body.content-cell {
-  white-space: pre-wrap;
-  max-width: 300px;
-  overflow-wrap: break-word;
+.MuiTableCell-root .MuiButton-root {
+  min-width: 40px;
+  padding: 6px;
+  font-size: 12px;
+  text-transform: none;
+  border-radius: 6px;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.MuiTableCell-root .MuiButton-colorPrimary {
+  color: #1976d2;
+}
+
+.MuiTableCell-root .MuiButton-colorSecondary {
+  color: #d32f2f;
 }
 
 /* Image styling in table */
-.MuiTableCell-body img {
+.MuiTableCell-root img {
   width: 50px;
   height: auto;
   border-radius: 4px;
   object-fit: cover;
+  background: linear-gradient(90deg, #1976d2, #42a5f5); /* Match table header */
+  padding: 2px;
 }
 
-/* Button styling */
-.MuiButton-root {
-  text-transform: none;
+/* Dialog Styles */
+.MuiDialog-root .MuiDialogTitle-root {
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  color: #ffffff;
+  font-size: 1.2rem;
+  padding: 16px 24px;
   font-weight: 500;
 }
 
-.MuiButton-containedPrimary {
-  background: linear-gradient(90deg, #1976d2, #42a5f5);
-  color: #ffffff;
+.MuiDialogContent-root {
+  padding: 24px;
+  background-color: #fff;
 }
 
-.MuiButton-containedPrimary:hover {
-  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+.MuiDialogContent-root .MuiTextField-root,
+.MuiDialogContent-root .MuiFormControl-root {
+  margin-bottom: 20px;
 }
 
-.MuiButton-containedSecondary {
-  background-color: #d32f2f;
-  color: #ffffff;
+.MuiDialogContent-root .MuiTextField-root .MuiInputBase-root,
+.MuiDialogContent-root .MuiSelect-root {
+  background-color: #fafafa;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
 }
 
-.MuiButton-containedSecondary:hover {
-  background-color: #b71c1c;
+.MuiDialogContent-root .MuiTextField-root .MuiInputBase-root:hover,
+.MuiDialogContent-root .MuiSelect-root:hover {
+  background-color: #f0f0f0;
 }
 
-.MuiButton-colorSecondary {
+.MuiDialogContent-root .MuiTextField-root.Mui-error .MuiInputBase-root {
+  background-color: #fff5f5;
+}
+
+.MuiDialogActions-root {
+  padding: 16px 24px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e7eb;
+}
+
+.MuiDialogActions-root .MuiButton-root {
+  text-transform: none;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.MuiDialogActions-root .MuiButton-colorPrimary {
+  color: #1976d2;
+}
+
+.MuiDialogActions-root .MuiButton-colorPrimary:hover {
+  background-color: rgba(25, 118, 210, 0.12);
+}
+
+.MuiDialogActions-root .MuiButton-colorSecondary {
   color: #d32f2f;
 }
 
-/* Table row hover */
-.MuiTableRow-root:hover {
-  background: linear-gradient(90deg, rgba(25, 118, 210, 0.1), rgba(66, 165, 245, 0.1));
+.MuiDialogActions-root .MuiButton-colorSecondary:hover {
+  background-color: rgba(211, 47, 47, 0.12);
 }
 
-/* Loading overlay */
+/* Loading Overlay */
 .custom-loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-/* Dialog styling */
-.MuiDialogTitle-root {
-  font-size: 1.5rem;
-  font-weight: 500;
+/* Snackbar Styles */
+.MuiSnackbar-root .MuiAlert-root {
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.MuiSnackbar-root .MuiAlert-success {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.MuiSnackbar-root .MuiAlert-error {
+  background-color: #d32f2f;
+  color: #ffffff;
+}
+
+/* Pagination Styles */
+.MuiPagination-root {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.MuiPaginationItem-root {
+  font-size: 0.9rem;
+  margin: 0 4px;
+  padding: 8px 12px;
+  background-color: #fff;
   color: #1976d2;
+  border: 1px solid #1976d2;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.MuiDialogContent-root {
-  padding: 20px;
+.MuiPaginationItem-root:hover {
+  background-color: #1976d2;
+  color: #ffffff;
 }
 
-.MuiDialogActions-root {
-  padding: 10px 20px;
+.MuiPaginationItem-root.Mui-selected {
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  color: #ffffff;
+  border-color: transparent;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
+.MuiPaginationItem-root.Mui-disabled {
+  background-color: #e0e0e0;
+  color: #999;
+  border-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .news-list-page {
+    padding: 16px;
+  }
+
+  .news-list-page h1 {
+    font-size: 1.6rem;
+    margin-bottom: 16px;
+  }
+
   .filter-search-container {
-    flex-direction: column;
+    padding: 12px;
   }
 
-  .MuiFormControl-root,
-  .MuiTextField-root {
-    min-width: 100%;
-  }
-
-  .MuiTableCell-body {
+  .MuiTableCell-root {
     font-size: 0.8rem;
+    padding: 10px;
   }
 
-  .MuiTableCell-body.content-cell {
-    max-width: 200px;
+  .MuiTableHead-root .MuiTableCell-root {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+
+  .filter-search-container .MuiTextField-root,
+  .filter-search-container .MuiFormControl-root {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .filter-search-container .MuiButton-containedPrimary {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 12px;
+  }
+
+  .MuiDialogContent-root {
+    padding: 16px;
+  }
+
+  .MuiDialogContent-root .MuiTextField-root,
+  .MuiDialogContent-root .MuiFormControl-root {
+    margin-bottom: 16px;
+  }
+
+  .MuiDialogActions-root {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .MuiDialogActions-root .MuiButton-root {
+    width: 100%;
+  }
+
+  .MuiPagination-root {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-list-page h1 {
+    font-size: 1.4rem;
+  }
+
+  .MuiTableCell-root {
+    font-size: 0.75rem;
+    padding: 8px;
+  }
+
+  .MuiTableCell-root .MuiButton-root {
+    min-width: 36px;
+    padding: 4px;
+    font-size: 11px;
+  }
+
+  .MuiDialogTitle-root {
+    font-size: 1.1rem;
+    padding: 12px 16px;
   }
 }

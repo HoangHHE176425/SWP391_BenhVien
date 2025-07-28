@@ -114,6 +114,7 @@ const NotificationManagement = () => {
   };
 
   const handleCreate = async (values) => {
+    console.log("Creating notification with:", values);
     await axios.post("http://localhost:9999/api/staff/createNoti", values, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -134,21 +135,22 @@ const NotificationManagement = () => {
 
   const columns = [
     {
-      title: "Title",
+      title: "Tiêu đề",
       dataIndex: "title",
     },
     {
-      title: "Content",
+      title: "Nội dung",
       dataIndex: "content",
       ellipsis: true,
     },
     {
-      title: "Receiver",
+      title: "Người nhận",
       dataIndex: ["receiver", "email"],
-      render: (email, record) => email || <Tag color="blue">All users</Tag>,
+      render: (email, record) =>
+        email || <Tag color="blue">Tất cả người dùng</Tag>,
     },
     {
-      title: "Urgent",
+      title: "Khẩn cấp",
       dataIndex: "isUrgent",
       render: (isUrgent, record) => (
         <Switch
@@ -158,15 +160,15 @@ const NotificationManagement = () => {
       ),
     },
     {
-      title: "Created At",
+      title: "Ngày tạo",
       dataIndex: "createdAt",
       render: (date) => moment(date).format("YYYY-MM-DD HH:mm"),
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       render: (_, record) => (
         <Button danger onClick={() => handleDelete(record._id)}>
-          Delete
+          Xóa
         </Button>
       ),
     },
@@ -174,38 +176,37 @@ const NotificationManagement = () => {
 
   return (
     <div>
-      <h2>Notification Management</h2>
+      <h2>Quản lý thông báo</h2>
       <Form
         layout="inline"
         onFinish={handleSearch}
-        onValuesChange={(_, values) => handleSearch(values)} // instant update on any change
+        onValuesChange={(_, values) => handleSearch(values)}
       >
-        {/* search fields */}
         <Form.Item name="title">
-          <Input placeholder="Search Title" allowClear />
+          <Input placeholder="Tìm theo tiêu đề" allowClear />
         </Form.Item>
         <Form.Item name="receiver">
-          <Input placeholder="Receiver Email / all" allowClear />
+          <Input placeholder="Email người nhận / all" allowClear />
         </Form.Item>
         <Form.Item name="dateRange">
-          <RangePicker placeholder={["Start date", "End date"]} />
+          <RangePicker placeholder={["Ngày bắt đầu", "Ngày kết thúc"]} />
         </Form.Item>
         <Form.Item name="isUrgent" valuePropName="checked">
-          <Switch checkedChildren="Urgent" unCheckedChildren="Normal" />
+          <Switch checkedChildren="Khẩn cấp" unCheckedChildren="Bình thường" />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit">
-            Search
+            Tìm kiếm
           </Button>
         </Form.Item>
         <Form.Item>
           <Button
             onClick={() => {
               form.resetFields();
-              setFiltered(notifications); // reset table to all notifications
+              setFiltered(notifications);
             }}
           >
-            Reset
+            Đặt lại
           </Button>
         </Form.Item>
         <Form.Item>
@@ -216,7 +217,7 @@ const NotificationManagement = () => {
               fetchUserEmails();
             }}
           >
-            New Notification
+            Tạo thông báo
           </Button>
         </Form.Item>
       </Form>
@@ -230,23 +231,23 @@ const NotificationManagement = () => {
       />
 
       <Modal
-        title="Create Notification"
+        title="Tạo thông báo"
         open={showModal}
         onCancel={() => setShowModal(false)}
         onOk={() => form.submit()}
       >
         <Form form={form} onFinish={handleCreate} layout="vertical">
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item
             name="content"
-            label="Content"
+            label="Nội dung"
             rules={[{ required: true }]}
           >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="receiverEmail" label="Receiver Email (optional)">
+          <Form.Item name="receiverEmail" label="Email người nhận (tùy chọn)">
             <AutoComplete
               options={filteredOptions}
               onSearch={(value) => {
@@ -261,12 +262,15 @@ const NotificationManagement = () => {
                   setFilteredOptions([]);
                 }
               }}
-              placeholder="Type email — leave empty for all"
+              placeholder="Nhập email — để trống nếu gửi cho tất cả"
             />
           </Form.Item>
 
           <Form.Item name="isUrgent" valuePropName="checked">
-            <Switch checkedChildren="Urgent" unCheckedChildren="Normal" />
+            <Switch
+              checkedChildren="Khẩn cấp"
+              unCheckedChildren="Bình thường"
+            />
           </Form.Item>
         </Form>
       </Modal>

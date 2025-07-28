@@ -22,50 +22,50 @@ const Dashboard = () => {
     dayjs(),
   ]);
   const fetchStats = async (startDate, endDate) => {
-      const query = `?start=${startDate}&end=${endDate}`;
-      const [
-        userRes,
-        appointmentRes,
-        revenueRes,
-        typeRes,
-        methodRes,
-        summaryRes,
-        employeeRes,
-      ] = await Promise.all([
-        axios.get(`/api/admin/user-registrations${query}`),
-        axios.get(`/api/admin/appointments${query}`),
-        axios.get(`/api/admin/revenue${query}`),
-        axios.get(`/api/admin/appointment-types${query}`),
-        axios.get(`/api/admin/revenue-methods${query}`),
-        axios.get(`/api/admin/summaries${query}`),
-        axios.get(`/api/admin/employee-stats${query}`),
-      ]);
+    const query = `?start=${startDate}&end=${endDate}`;
+    const [
+      userRes,
+      appointmentRes,
+      revenueRes,
+      typeRes,
+      methodRes,
+      summaryRes,
+      employeeRes,
+    ] = await Promise.all([
+      axios.get(`/api/admin/user-registrations${query}`),
+      axios.get(`/api/admin/appointments${query}`),
+      axios.get(`/api/admin/revenue${query}`),
+      axios.get(`/api/admin/appointment-types${query}`),
+      axios.get(`/api/admin/revenue-methods${query}`),
+      axios.get(`/api/admin/summaries${query}`),
+      axios.get(`/api/admin/employee-stats${query}`),
+    ]);
 
-      setUserData(
-        userRes.data.map((item) => ({ date: item._id, count: item.count }))
-      );
-      setAppointmentData(
-        appointmentRes.data.map((item) => ({
-          date: item._id,
-          count: item.count,
-        }))
-      );
-      setRevenueData(
-        revenueRes.data.map((item) => ({
-          date: item._id,
-          revenue: item.totalRevenue,
-        }))
-      );
-      setAppointmentTypes(
-        typeRes.data.map((item) => ({ type: item._id, count: item.count }))
-      );
-      setRevenueMethods(
-        methodRes.data.map((item) => ({ method: item._id, total: item.total }))
-      );
-      setSummaries(summaryRes.data);
+    setUserData(
+      userRes.data.map((item) => ({ date: item._id, count: item.count }))
+    );
+    setAppointmentData(
+      appointmentRes.data.map((item) => ({
+        date: item._id,
+        count: item.count,
+      }))
+    );
+    setRevenueData(
+      revenueRes.data.map((item) => ({
+        date: item._id,
+        revenue: item.totalRevenue,
+      }))
+    );
+    setAppointmentTypes(
+      typeRes.data.map((item) => ({ type: item._id, count: item.count }))
+    );
+    setRevenueMethods(
+      methodRes.data.map((item) => ({ method: item._id, total: item.total }))
+    );
+    setSummaries(summaryRes.data);
 
-      setEmployeeStats(employeeRes.data);
-    };
+    setEmployeeStats(employeeRes.data);
+  };
 
   useEffect(() => {
     const [start, end] = dateRange;
@@ -125,33 +125,35 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Typography.Title level={2}>Admin Dashboard</Typography.Title>
-      <div style={{ marginBottom: "20px" }}>
-        <RangePicker
-          value={dateRange}
-          onChange={(dates) => {
-            if (!dates) return;
-            setDateRange(dates);
-          }}
-          style={{ marginBottom: "20px" }}
-        />
-      </div>
+      <Typography.Title level={2}>Bảng Điều Khiển Quản Trị</Typography.Title>
+
+      {/*
+  <div style={{ marginBottom: "20px" }}>
+    <RangePicker
+      value={dateRange}
+      onChange={(dates) => {
+        if (!dates) return;
+        setDateRange(dates);
+      }}
+      style={{ marginBottom: "20px" }}
+    />
+  </div> */}
 
       <Row gutter={[16, 16]}>
         <Col span={6}>
-          <Card title="Total Users">{summaries.totalUsers}</Card>
+          <Card title="Tổng Số Người Dùng">{summaries.totalUsers}</Card>
         </Col>
         <Col span={6}>
-          <Card title="Total Appointments">{summaries.totalAppointments}</Card>
+          <Card title="Tổng Lịch Hẹn">{summaries.totalAppointments}</Card>
         </Col>
         <Col span={6}>
-          <Card title="Total Revenue">
+          <Card title="Tổng Doanh Thu">
             {(summaries.totalRevenue || 0).toLocaleString()} VND
           </Card>
         </Col>
         <Col span={6}>
-          <Card title="Employee Statistics">
-            <p>Total Employees: {employeeStats.totalEmployees}</p>
+          <Card title="Thống Kê Nhân Viên">
+            <p>Tổng Nhân Viên: {employeeStats.totalEmployees}</p>
             <ul>
               {employeeStats.roles.map((role) => (
                 <li key={role._id}>
@@ -165,12 +167,12 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
         <Col span={12}>
-          <Card title="User Growth Over Time (30 Days)">
+          <Card title="Tăng Trưởng Người Dùng (30 Ngày)">
             <Line {...userConfig} />
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="Appointments Over Time (30 Days)">
+          <Card title="Số Lịch Hẹn Theo Thời Gian (30 Ngày)">
             <Line {...appointmentConfig} />
           </Card>
         </Col>
@@ -178,12 +180,12 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
         <Col span={12}>
-          <Card title="Revenue Trend (30 Days)">
+          <Card title="Xu Hướng Doanh Thu (30 Ngày)">
             <Line {...revenueConfig} />
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="Appointment Types (30 Days)">
+          <Card title="Loại Lịch Hẹn (30 Ngày)">
             <Bar {...barConfig} />
           </Card>
         </Col>
@@ -191,21 +193,20 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
         <Col span={12}>
-          <Card title="Appointments per Day (Bar)">
+          <Card title="Số Lịch Hẹn Mỗi Ngày">
             <Bar {...appointmentBarConfig} />
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="Revenue by Payment Method (Pie)">
+          <Card title="Doanh Thu Theo Phương Thức Thanh Toán">
             <Pie
               data={revenueMethods}
               angleField="total"
               colorField="method"
               radius={0.9}
               legend={{ position: "bottom" }}
-              label={false} // Hide pie slice labels
+              label={false} // Ẩn nhãn lát pie
             />
-
             <List
               size="small"
               bordered={false}

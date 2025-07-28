@@ -22,13 +22,13 @@ const DRAWER_WIDTH = 240;
 const menuByRole = (role) => {
   const menus = {
     patient: [
-      { title: "Profile Manage", path: "/profilemanage", icon: <UserOutlined /> },
-      { title: "My Appointments", path: "/myappointments", icon: <CalendarOutlined /> },
+      { title: "Quản Lý Hồ Sơ", path: "/profilemanage", icon: <UserOutlined /> },
+      { title: "Lịch hẹn của tôi", path: "/myappointments", icon: <CalendarOutlined /> },
       { title: "Foods", path: "/health/food", icon: <HeartOutlined /> },
       { title: "BMI", path: "/health/calculator", icon: <FileTextOutlined /> },
       { title: "Q/A", path: "/qa", icon: <BookOutlined /> },
-      { title: "Q/A History", path: "/qahistory", icon: <ClockCircleOutlined /> },
-      { title: "Invoice", path: "/invoice", icon: <DollarOutlined /> },
+      { title: "Lịch Sử Q/A", path: "/qahistory", icon: <ClockCircleOutlined /> },
+      { title: "Hóa đơn", path: "/invoice", icon: <DollarOutlined /> },
       { title: "FAQ", path: "/faq", icon: <QuestionCircleOutlined /> },
     ],
   };

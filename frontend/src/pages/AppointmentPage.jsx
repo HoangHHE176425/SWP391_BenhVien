@@ -80,9 +80,35 @@ const AppointmentPage = () => {
     fetchDepartments();
   }, []);
 
+  // NEW: Hàm validate name (không chứa số)
+    const validateName = (name) => {
+        const regex = /^[a-zA-Z\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ\s]+$/; // Chỉ cho phép chữ cái, dấu tiếng Việt, và khoảng trắng
+        return regex.test(name);
+    };
+
+  // NEW: Hàm validate identityNumber
+  const validateIdentityNumber = (identityNumber) => {
+    const regex = /^\d{12}$/; // Chỉ 12 ký tự số, không khoảng trắng/chữ/ký tự đặc biệt
+    return regex.test(identityNumber);
+  };
+
   const handleCreateProfile = async () => {
     setLoading(true);
     setError(null);
+
+    // NEW: Validate name (không chứa số)
+    if (!validateName(profileName)) {
+      setError("Tên không được chứa số, chỉ chấp nhận chữ cái và khoảng trắng.");
+      setLoading(false);
+      return;
+    }
+
+    // NEW: Validate identityNumber
+    if (!validateIdentityNumber(profileIdentityNumber)) {
+      setError("CMND/CCCD phải là 12 ký tự số, không khoảng trắng, chữ hoặc ký tự đặc biệt.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await axios.post(
@@ -536,7 +562,7 @@ const AppointmentPage = () => {
     }
   };
 
-   return (
+  return (
     <>
       <div className="bg-light py-3 px-5 d-none d-lg-block border-bottom shadow-sm">
         <Row className="align-items-center justify-content-between">

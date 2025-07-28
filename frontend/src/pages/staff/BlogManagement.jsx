@@ -64,12 +64,6 @@ const BlogManagement = () => {
     contentImages: {},
   });
   const [blogToDelete, setBlogToDelete] = useState(null);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [newCategory, setNewCategory] = useState({ name: "" });
-  const [openEditCategory, setOpenEditCategory] = useState(false);
-  const [openAddCategory, setOpenAddCategory] = useState(false);
-  const [openDeleteCategoryConfirm, setOpenDeleteCategoryConfirm] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -99,7 +93,7 @@ const BlogManagement = () => {
     } catch (error) {
       console.error("Error fetching blogs:", error);
       alert(
-        "Failed to fetch blogs: " +
+        "Thất bại khi lấy danh sách bài viết: " +
           (error.response?.data?.message || error.message)
       );
     }
@@ -114,7 +108,7 @@ const BlogManagement = () => {
     } catch (error) {
       console.error("Error fetching categories:", error);
       alert(
-        "Failed to fetch categories: " +
+        "Thất bại khi lấy danh sách danh mục: " +
           (error.response?.data?.message || error.message)
       );
     }
@@ -126,7 +120,7 @@ const BlogManagement = () => {
       (files.mainImage ? 1 : 0) + Object.keys(files.contentImages).length;
     if (totalImages === 0) return [];
     if (totalImages > 10) {
-      alert("Cannot upload more than 10 images (main image + content images).");
+      alert("Không thể tải lên quá 10 hình ảnh (hình ảnh chính + hình ảnh nội dung).");
       return [];
     }
     if (files.mainImage) formData.append("mainImage", files.mainImage);
@@ -148,7 +142,7 @@ const BlogManagement = () => {
     } catch (error) {
       console.error("Error uploading images:", error.response?.data || error);
       alert(
-        "Failed to upload images: " +
+        "Tải hình ảnh thất bại: " +
           (error.response?.data?.message || error.message)
       );
       return [];
@@ -160,17 +154,17 @@ const BlogManagement = () => {
     try {
       let blogToAdd = { ...newBlog };
       if (!newBlog.title.trim()) {
-        alert("Please enter a title.");
+        alert("Vui lòng nhập tiêu đề.");
         setLoading(false);
         return;
       }
       if (!newBlog.categoryId) {
-        alert("Please select a category.");
+        alert("Vui lòng chọn danh mục.");
         setLoading(false);
         return;
       }
       if (!newBlog.content.length) {
-        alert("Please add at least one content item.");
+        alert("Vui lòng thêm ít nhất một nội dung.");
         setLoading(false);
         return;
       }
@@ -190,7 +184,7 @@ const BlogManagement = () => {
           uploadedUrls.length === 0 &&
           (uploadedContentImages > 0 || imageFiles.mainImage)
         ) {
-          alert("Image upload failed. Please try again.");
+          alert("Tải hình ảnh thất bại. Vui lòng thử lại.");
           setLoading(false);
           return;
         }
@@ -239,12 +233,12 @@ const BlogManagement = () => {
       });
       setImageFiles({ mainImage: null, contentImages: {} });
       setOpenAddBlog(false);
-      setSuccessMessage("Blog added successfully!");
+      setSuccessMessage("Thêm bài viết thành công!");
       setPage(Math.ceil((blogs.length + 1) / blogsPerPage));
     } catch (error) {
       console.error("Error adding blog:", error.response?.data || error);
       alert(
-        "Failed to add blog: " +
+        "Thêm bài viết thất bại: " +
           (error.response?.data?.message || error.message)
       );
     } finally {
@@ -257,17 +251,17 @@ const BlogManagement = () => {
     try {
       let updatedBlog = { ...editingBlog };
       if (!updatedBlog.title.trim()) {
-        alert("Please enter a title.");
+        alert("Vui lòng nhập tiêu đề.");
         setLoading(false);
         return;
       }
       if (!updatedBlog.categoryId) {
-        alert("Please select a category.");
+        alert("Vui lòng chọn danh mục.");
         setLoading(false);
         return;
       }
       if (!updatedBlog.content.length) {
-        alert("Please add at least one content item.");
+        alert("Vui lòng thêm ít nhất một nội dung.");
         setLoading(false);
         return;
       }
@@ -287,7 +281,7 @@ const BlogManagement = () => {
           uploadedUrls.length === 0 &&
           (uploadedContentImages > 0 || imageFiles.mainImage)
         ) {
-          alert("Image upload failed. Please try again.");
+          alert("Tải hình ảnh thất bại. Vui lòng thử lại.");
           setLoading(false);
           return;
         }
@@ -326,11 +320,11 @@ const BlogManagement = () => {
       setEditingBlog(null);
       setOpenEditBlog(false);
       setImageFiles({ mainImage: null, contentImages: {} });
-      setSuccessMessage("Blog updated successfully!");
+      setSuccessMessage("Cập nhật bài viết thành công!");
     } catch (error) {
       console.error("Error updating blog:", error.response?.data || error);
       alert(
-        "Failed to update blog: " +
+        "Cập nhật bài viết thất bại: " +
           (error.response?.data?.message || error.message)
       );
     } finally {
@@ -350,104 +344,14 @@ const BlogManagement = () => {
       setBlogs(blogs.filter((blog) => blog._id !== blogToDelete._id));
       setOpenDeleteBlogConfirm(false);
       setBlogToDelete(null);
-      setSuccessMessage("Blog deleted successfully!");
+      setSuccessMessage("Xóa bài viết thành công!");
       if (filteredBlogs.length % blogsPerPage === 1 && page > 1) {
         setPage(page - 1);
       }
     } catch (error) {
       console.error("Error deleting blog:", error);
       alert(
-        "Failed to delete blog: " +
-          (error.response?.data?.message || error.message)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddCategory = async () => {
-    setLoading(true);
-    try {
-      if (!newCategory.name.trim()) {
-        alert("Please enter a category name.");
-        setLoading(false);
-        return;
-      }
-      const response = await axios.post(
-        "http://localhost:9999/api/staff/categories",
-        { name: newCategory.name },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      setCategories([...categories, response.data]);
-      setNewCategory({ name: "" });
-      setOpenAddCategory(false);
-      setSuccessMessage("Category added successfully!");
-    } catch (error) {
-      console.error("Error adding category:", error);
-      alert(
-        "Failed to add category: " +
-          (error.response?.data?.message || error.message)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateCategory = async () => {
-    setLoading(true);
-    try {
-      if (!editingCategory.name.trim()) {
-        alert("Please enter a category name.");
-        setLoading(false);
-        return;
-      }
-      const response = await axios.put(
-        `http://localhost:9999/api/staff/categories/${editingCategory._id}`,
-        { name: editingCategory.name },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      setCategories(
-        categories.map((category) =>
-          category._id === editingCategory._id ? response.data : category
-        )
-      );
-      setEditingCategory(null);
-      setOpenEditCategory(false);
-      setSuccessMessage("Category updated successfully!");
-    } catch (error) {
-      console.error("Error updating category:", error);
-      alert(
-        "Failed to update category: " +
-          (error.response?.data?.message || error.message)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteCategory = async () => {
-    setLoading(true);
-    try {
-      await axios.delete(
-        `http://localhost:9999/api/staff/categories/${categoryToDelete._id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      setCategories(
-        categories.filter((category) => category._id !== categoryToDelete._id)
-      );
-      setOpenDeleteCategoryConfirm(false);
-      setCategoryToDelete(null);
-      setSuccessMessage("Category deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      alert(
-        "Failed to delete category: " +
+        "Xóa bài viết thất bại: " +
           (error.response?.data?.message || error.message)
       );
     } finally {
@@ -515,41 +419,15 @@ const BlogManagement = () => {
     setBlogToDelete(null);
   };
 
-  const handleOpenEditCategory = (category) => {
-    setEditingCategory({ _id: category._id, name: category.name });
-    setOpenEditCategory(true);
-  };
-
-  const handleCloseEditCategory = () => {
-    setOpenEditCategory(false);
-    setEditingCategory(null);
-  };
-
-  const handleOpenAddCategory = () => {
-    setOpenAddCategory(true);
-  };
-
-  const handleCloseAddCategory = () => {
-    setOpenAddCategory(false);
-    setNewCategory({ name: "" });
-  };
-
-  const handleOpenDeleteCategoryConfirm = (category) => {
-    setCategoryToDelete(category);
-    setOpenDeleteCategoryConfirm(true);
-  };
-
-  const handleCloseDeleteCategoryConfirm = () => {
-    setOpenDeleteCategoryConfirm(false);
-    setCategoryToDelete(null);
-  };
-
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    if (newValue === 1) {
+      navigate("/staff/category-management");
+    }
   };
 
   const handleAddContentItem = (type) => {
-    if (tabValue === 0 && (openEditBlog || openAddBlog)) {
+    if (openEditBlog || openAddBlog) {
       const targetState = openEditBlog ? setEditingBlog : setNewBlog;
       targetState((prev) => ({
         ...prev,
@@ -569,7 +447,7 @@ const BlogManagement = () => {
   };
 
   const handleRemoveContentItem = (index) => {
-    if (tabValue === 0 && (openEditBlog || openAddBlog)) {
+    if (openEditBlog || openAddBlog) {
       const targetState = openEditBlog ? setEditingBlog : setNewBlog;
       targetState((prev) => ({
         ...prev,
@@ -584,7 +462,7 @@ const BlogManagement = () => {
   };
 
   const handleContentChange = (index, field, value) => {
-    if (tabValue === 0 && (openEditBlog || openAddBlog)) {
+    if (openEditBlog || openAddBlog) {
       const targetState = openEditBlog ? setEditingBlog : setNewBlog;
       targetState((prev) => ({
         ...prev,
@@ -631,31 +509,292 @@ const BlogManagement = () => {
 
   return (
     <div className="blog-list-page">
-      <h1>Blog Management</h1>
+      <h1>Quản lý Bài viết</h1>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
           aria-label="admin tabs"
         >
-          <Tab label="Manage Blogs" />
-          <Tab label="Manage Categories" />
+          <Tab label="Quản lý Bài viết" />
+          <Tab label="Quản lý Danh mục" />
         </Tabs>
       </Box>
-      {tabValue === 0 && (
-        <>
-          <Box className="filter-search-container" sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
-            <FormControl variant="outlined" sx={{ minWidth: 200, flex: 1 }}>
-              <InputLabel id="filter-category-label">Filter by Category</InputLabel>
-              <Select
-                labelId="filter-category-label"
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                label="Filter by Category"
+      <Box className="filter-search-container" sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
+        <FormControl variant="outlined" sx={{ minWidth: 200, flex: 1 }}>
+          <InputLabel id="filter-category-label">Lọc theo Danh mục</InputLabel>
+          <Select
+            labelId="filter-category-label"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            label="Lọc theo Danh mục"
+          >
+            <MenuItem value="">
+              <em>Tất cả Danh mục</em>
+            </MenuItem>
+            {categories.map((category) => (
+              <MenuItem key={category._id} value={category._id}>
+                {category.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TextField
+          label="Tìm kiếm theo Tiêu đề"
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+          sx={{ flex: 1, minWidth: 200 }}
+        />
+      </Box>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<AddIcon />}
+        onClick={handleOpenAddBlog}
+        disabled={loading}
+        sx={{ mb: 2 }}
+      >
+        Thêm Bài viết
+      </Button>
+      <TableContainer component={Paper}>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell className="stt">STT</TableCell> {/* Thêm cột STT */}
+        <TableCell className="title">Tiêu đề</TableCell>
+        <TableCell className="content">Nội dung</TableCell>
+        <TableCell>Hình ảnh</TableCell>
+        <TableCell className="category">Danh mục</TableCell>
+        <TableCell className="slug">Slug</TableCell>
+        <TableCell className="actions">Hành động</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {paginatedBlogs.map((blog, index) => {
+        const categoryIdValue =
+          blog.categoryId?._id || blog.categoryId;
+        const categoryName =
+          blog.categoryId?.name ||
+          categories.find((cat) => cat._id === categoryIdValue)
+            ?.name ||
+          "N/A";
+        // Tính số thứ tự dựa trên page và index
+        const stt = (page - 1) * blogsPerPage + index + 1;
+        return (
+          <TableRow key={blog._id}>
+            <TableCell className="stt">{stt}</TableCell> {/* Hiển thị STT */}
+            <TableCell className="title">{blog.title}</TableCell>
+            <TableCell className="content">
+              {blog.content
+                ?.map(
+                  (item) =>
+                    `${item.type}: ${item.text || item.url || "N/A"}`
+                )
+                .join(", ") || "N/A"}
+            </TableCell>
+            <TableCell>
+              {blog.image && (
+                <img
+                  src={blog.image}
+                  alt={blog.title}
+                  style={{ width: "50px" }}
+                />
+              )}
+            </TableCell>
+            <TableCell className="category">{categoryName}</TableCell>
+            <TableCell className="slug">{blog.slug}</TableCell>
+            <TableCell className="actions">
+              <Button
+                color="primary"
+                onClick={() => handleOpenEditBlog(blog)}
+                startIcon={<EditIcon />}
+                disabled={loading}
+              />
+              <Button
+                color="secondary"
+                onClick={() => handleOpenDeleteBlogConfirm(blog)}
+                startIcon={<DeleteIcon />}
+                disabled={loading}
+              />
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
+</TableContainer>
+      <Pagination
+        count={Math.ceil(filteredBlogs.length / blogsPerPage)}
+        page={page}
+        onChange={handlePageChange}
+        sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
+      />
+      {/* Edit Blog Dialog */}
+      <Dialog
+        open={openEditBlog}
+        onClose={handleCloseEditBlog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Chỉnh sửa Bài viết</DialogTitle>
+        <DialogContent>
+          {loading && (
+            <div className="custom-loading-overlay">
+              <CircularProgress />
+            </div>
+          )}
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Tiêu đề"
+              type="text"
+              fullWidth
+              value={editingBlog?.title || ""}
+              onChange={(e) =>
+                setEditingBlog({ ...editingBlog, title: e.target.value })
+              }
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            {editingBlog?.content?.map((item, index) => (
+              <Box
+                key={index}
+                className="custom-edit-section"
+                sx={{ mb: 2, p: 2, borderRadius: 4 }}
               >
-                <MenuItem value="">
-                  <em>All Categories</em>
-                </MenuItem>
+                <FormControl fullWidth margin="dense" variant="outlined">
+                  <InputLabel id={`edit-content-type-${index}`}>Loại</InputLabel>
+                  <Select
+                    labelId={`edit-content-type-${index}`}
+                    value={item.type}
+                    onChange={(e) =>
+                      handleContentChange(index, "type", e.target.value)
+                    }
+                    label="Loại"
+                  >
+                    <MenuItem value="paragraph">Đoạn văn</MenuItem>
+                    <MenuItem value="bullet">Có chấm câu đầu dòng</MenuItem>
+                    <MenuItem value="image">Hình ảnh</MenuItem>
+                  </Select>
+                </FormControl>
+                {item.type !== "image" ? (
+                  <>
+                    <TextField
+                      margin="dense"
+                      label="Nội dung"
+                      type="text"
+                      fullWidth
+                      value={item.text || ""}
+                      onChange={(e) =>
+                        handleContentChange(index, "text", e.target.value)
+                      }
+                      sx={{ mt: 1 }}
+                      variant="outlined"
+                    />
+                    <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.bold || false}
+                            onChange={(e) =>
+                              handleContentChange(
+                                index,
+                                "bold",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        }
+                        label="Đậm"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.italic || false}
+                            onChange={(e) =>
+                              handleContentChange(
+                                index,
+                                "italic",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        }
+                        label="Nghiêng"
+                      />
+                    </Box>
+                    <FormControl fullWidth margin="dense" sx={{ mt: 1 }} variant="outlined">
+                      <InputLabel id={`edit-font-size-${index}`}>Kích thước chữ</InputLabel>
+                      <Select
+                        labelId={`edit-font-size-${index}`}
+                        value={item.fontSize || "medium"}
+                        onChange={(e) =>
+                          handleContentChange(
+                            index,
+                            "fontSize",
+                            e.target.value
+                          )
+                        }
+                        label="Kích thước chữ"
+                      >
+                        <MenuItem value="small">Nhỏ</MenuItem>
+                        <MenuItem value="medium">Trung bình</MenuItem>
+                        <MenuItem value="large">Lớn</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </>
+                ) : (
+                  <Box sx={{ mt: 1 }}>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={(e) =>
+                        handleImageChange(index, e.target.files[0])
+                      }
+                    />
+                    {item.url && (
+                      <img
+                        src={item.url}
+                        alt={`Hình ảnh ${index}`}
+                        style={{ width: "100px", marginTop: "10px" }}
+                      />
+                    )}
+                  </Box>
+                )}
+                <IconButton
+                  color="secondary"
+                  onClick={() => handleRemoveContentItem(index)}
+                  sx={{ mt: 1 }}
+                >
+                  <RemoveIcon />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  onClick={() => handleAddContentItem("paragraph")}
+                  sx={{ mt: 1, ml: 1 }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <FormControl fullWidth margin="dense" variant="outlined">
+              <InputLabel id="edit-category-label">Danh mục</InputLabel>
+              <Select
+                labelId="edit-category-label"
+                value={editingBlog?.categoryId || ""}
+                onChange={(e) =>
+                  setEditingBlog({
+                    ...editingBlog,
+                    categoryId: e.target.value,
+                  })
+                }
+                label="Danh mục"
+              >
                 {categories.map((category) => (
                   <MenuItem key={category._id} value={category._id}>
                     {category.name}
@@ -663,679 +802,271 @@ const BlogManagement = () => {
                 ))}
               </Select>
             </FormControl>
+          </Box>
+          <Box>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              onChange={(e) => handleMainImageChange(e.target.files[0])}
+              disabled={loading}
+            />
+            {editingBlog?.image && (
+              <img
+                src={editingBlog.image}
+                alt="Hình ảnh chính"
+                style={{ width: "100px", marginTop: "10px" }}
+              />
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseEditBlog}
+            color="primary"
+            disabled={loading}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleUpdateBlog}
+            color="primary"
+            disabled={loading}
+          >
+            Cập nhật
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Add Blog Dialog */}
+      <Dialog
+        open={openAddBlog}
+        onClose={handleCloseAddBlog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Thêm Bài viết</DialogTitle>
+        <DialogContent>
+          {loading && (
+            <div className="custom-loading-overlay">
+              <CircularProgress />
+            </div>
+          )}
+          <Box sx={{ mb: 2 }}>
             <TextField
-              label="Search by Title"
+              autoFocus
+              margin="dense"
+              label="Tiêu đề"
+              type="text"
+              fullWidth
+              value={newBlog.title}
+              onChange={(e) =>
+                setNewBlog({ ...newBlog, title: e.target.value })
+              }
               variant="outlined"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
-              sx={{ flex: 1, minWidth: 200 }}
             />
           </Box>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddBlog}
-            disabled={loading}
-            sx={{ mb: 2 }}
-          >
-            Add Blog
-          </Button>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell className="title">Title</TableCell>
-                  <TableCell className="content">Content</TableCell>
-                  <TableCell>Image</TableCell>
-                  <TableCell className="category">Category</TableCell>
-                  <TableCell className="slug">Slug</TableCell>
-                  <TableCell className="actions">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {paginatedBlogs.map((blog) => {
-                  const categoryIdValue =
-                    blog.categoryId?._id || blog.categoryId;
-                  const categoryName =
-                    blog.categoryId?.name ||
-                    categories.find((cat) => cat._id === categoryIdValue)
-                      ?.name ||
-                    "N/A";
-                  return (
-                    <TableRow key={blog._id}>
-                      <TableCell className="title">{blog.title}</TableCell>
-                      <TableCell className="content">
-                        {blog.content
-                          ?.map(
-                            (item) =>
-                              `${item.type}: ${item.text || item.url || "N/A"}`
+          <Box sx={{ mb: 2 }}>
+            {newBlog.content.map((item, index) => (
+              <Box
+                key={index}
+                className="custom-edit-section"
+                sx={{ mb: 2, p: 2, borderRadius: 4 }}
+              >
+                <FormControl fullWidth margin="dense" variant="outlined">
+                  <InputLabel id={`add-content-type-${index}`}>Loại</InputLabel>
+                  <Select
+                    labelId={`add-content-type-${index}`}
+                    value={item.type}
+                    onChange={(e) =>
+                      handleContentChange(index, "type", e.target.value)
+                    }
+                    label="Loại"
+                  >
+                    <MenuItem value="paragraph">Đoạn văn</MenuItem>
+                    <MenuItem value="bullet">Có chấm câu đầu dòng</MenuItem>
+                    <MenuItem value="image">Hình ảnh</MenuItem>
+                  </Select>
+                </FormControl>
+                {item.type !== "image" ? (
+                  <>
+                    <TextField
+                      margin="dense"
+                      label="Nội dung"
+                      type="text"
+                      fullWidth
+                      value={item.text || ""}
+                      onChange={(e) =>
+                        handleContentChange(index, "text", e.target.value)
+                      }
+                      sx={{ mt: 1 }}
+                      variant="outlined"
+                    />
+                    <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.bold || false}
+                            onChange={(e) =>
+                              handleContentChange(
+                                index,
+                                "bold",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        }
+                        label="Đậm"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.italic || false}
+                            onChange={(e) =>
+                              handleContentChange(
+                                index,
+                                "italic",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        }
+                        label="Nghiêng"
+                      />
+                    </Box>
+                    <FormControl fullWidth margin="dense" sx={{ mt: 1 }} variant="outlined">
+                      <InputLabel id={`add-font-size-${index}`}>Kích thước chữ</InputLabel>
+                      <Select
+                        labelId={`add-font-size-${index}`}
+                        value={item.fontSize || "medium"}
+                        onChange={(e) =>
+                          handleContentChange(
+                            index,
+                            "fontSize",
+                            e.target.value
                           )
-                          .join(", ") || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {blog.image && (
-                          <img
-                            src={blog.image}
-                            alt={blog.title}
-                            style={{ width: "50px" }}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="category">{categoryName}</TableCell>
-                      <TableCell className="slug">{blog.slug}</TableCell>
-                      <TableCell className="actions">
-                        <Button
-                          color="primary"
-                          onClick={() => handleOpenEditBlog(blog)}
-                          startIcon={<EditIcon />}
-                          disabled={loading}
-                        />
-                        <Button
-                          color="secondary"
-                          onClick={() => handleOpenDeleteBlogConfirm(blog)}
-                          startIcon={<DeleteIcon />}
-                          disabled={loading}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Pagination
-            count={Math.ceil(filteredBlogs.length / blogsPerPage)}
-            page={page}
-            onChange={handlePageChange}
-            sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
-          />
-          {/* Edit Blog Dialog */}
-          <Dialog
-            open={openEditBlog}
-            onClose={handleCloseEditBlog}
-            maxWidth="md"
-            fullWidth
-          >
-            <DialogTitle>Edit Blog</DialogTitle>
-            <DialogContent>
-              {loading && (
-                <div className="custom-loading-overlay">
-                  <CircularProgress />
-                </div>
-              )}
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="Title"
-                  type="text"
-                  fullWidth
-                  value={editingBlog?.title || ""}
-                  onChange={(e) =>
-                    setEditingBlog({ ...editingBlog, title: e.target.value })
-                  }
-                  variant="outlined"
-                />
-              </Box>
-              <Box sx={{ mb: 2 }}>
-                {editingBlog?.content?.map((item, index) => (
-                  <Box
-                    key={index}
-                    className="custom-edit-section"
-                    sx={{ mb: 2, p: 2, borderRadius: 4 }}
-                  >
-                    <FormControl fullWidth margin="dense" variant="outlined">
-                      <InputLabel id={`edit-content-type-${index}`}>Type</InputLabel>
-                      <Select
-                        labelId={`edit-content-type-${index}`}
-                        value={item.type}
-                        onChange={(e) =>
-                          handleContentChange(index, "type", e.target.value)
                         }
-                        label="Type"
+                        label="Kích thước chữ"
                       >
-                        <MenuItem value="paragraph">Paragraph</MenuItem>
-                        <MenuItem value="bullet">Bullet</MenuItem>
-                        <MenuItem value="image">Image</MenuItem>
+                        <MenuItem value="small">Nhỏ</MenuItem>
+                        <MenuItem value="medium">Trung bình</MenuItem>
+                        <MenuItem value="large">Lớn</MenuItem>
                       </Select>
                     </FormControl>
-                    {item.type !== "image" ? (
-                      <>
-                        <TextField
-                          margin="dense"
-                          label="Text"
-                          type="text"
-                          fullWidth
-                          value={item.text || ""}
-                          onChange={(e) =>
-                            handleContentChange(index, "text", e.target.value)
-                          }
-                          sx={{ mt: 1 }}
-                          variant="outlined"
-                        />
-                        <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={item.bold || false}
-                                onChange={(e) =>
-                                  handleContentChange(
-                                    index,
-                                    "bold",
-                                    e.target.checked
-                                  )
-                                }
-                              />
-                            }
-                            label="Bold"
-                          />
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={item.italic || false}
-                                onChange={(e) =>
-                                  handleContentChange(
-                                    index,
-                                    "italic",
-                                    e.target.checked
-                                  )
-                                }
-                              />
-                            }
-                            label="Italic"
-                          />
-                        </Box>
-                        <FormControl fullWidth margin="dense" sx={{ mt: 1 }} variant="outlined">
-                          <InputLabel id={`edit-font-size-${index}`}>Font Size</InputLabel>
-                          <Select
-                            labelId={`edit-font-size-${index}`}
-                            value={item.fontSize || "medium"}
-                            onChange={(e) =>
-                              handleContentChange(
-                                index,
-                                "fontSize",
-                                e.target.value
-                              )
-                            }
-                            label="Font Size"
-                          >
-                            <MenuItem value="small">Small</MenuItem>
-                            <MenuItem value="medium">Medium</MenuItem>
-                            <MenuItem value="large">Large</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </>
-                    ) : (
-                      <Box sx={{ mt: 1 }}>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png"
-                          onChange={(e) =>
-                            handleImageChange(index, e.target.files[0])
-                          }
-                        />
-                        {item.url && (
-                          <img
-                            src={item.url}
-                            alt={`Image ${index}`}
-                            style={{ width: "100px", marginTop: "10px" }}
-                          />
-                        )}
-                      </Box>
+                  </>
+                ) : (
+                  <Box sx={{ mt: 1 }}>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={(e) =>
+                        handleImageChange(index, e.target.files[0])
+                      }
+                    />
+                    {item.url && (
+                      <img
+                        src={item.url}
+                        alt={`Hình ảnh ${index}`}
+                        style={{ width: "100px", marginTop: "10px" }}
+                      />
                     )}
-                    <IconButton
-                      color="secondary"
-                      onClick={() => handleRemoveContentItem(index)}
-                      sx={{ mt: 1 }}
-                    >
-                      <RemoveIcon />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleAddContentItem("paragraph")}
-                      sx={{ mt: 1, ml: 1 }}
-                    >
-                      <AddIcon />
-                    </IconButton>
                   </Box>
-                ))}
-              </Box>
-              <Box sx={{ mb: 2 }}>
-                <FormControl fullWidth margin="dense" variant="outlined">
-                  <InputLabel id="edit-category-label">Category</InputLabel>
-                  <Select
-                    labelId="edit-category-label"
-                    value={editingBlog?.categoryId || ""}
-                    onChange={(e) =>
-                      setEditingBlog({
-                        ...editingBlog,
-                        categoryId: e.target.value,
-                      })
-                    }
-                    label="Category"
-                  >
-                    {categories.map((category) => (
-                      <MenuItem key={category._id} value={category._id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png"
-                  onChange={(e) => handleMainImageChange(e.target.files[0])}
-                  disabled={loading}
-                />
-                {editingBlog?.image && (
-                  <img
-                    src={editingBlog.image}
-                    alt="Main Image"
-                    style={{ width: "100px", marginTop: "10px" }}
-                  />
                 )}
+                <IconButton
+                  color="secondary"
+                  onClick={() => handleRemoveContentItem(index)}
+                  sx={{ mt: 1 }}
+                >
+                  <RemoveIcon />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  onClick={() => handleAddContentItem("paragraph")}
+                  sx={{ mt: 1, ml: 1 }}
+                >
+                  <AddIcon />
+                </IconButton>
               </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={handleCloseEditBlog}
-                color="primary"
-                disabled={loading}
+            ))}
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <FormControl fullWidth margin="dense" variant="outlined">
+              <InputLabel id="add-category-label">Danh mục</InputLabel>
+              <Select
+                labelId="add-category-label"
+                value={newBlog.categoryId}
+                onChange={(e) =>
+                  setNewBlog({ ...newBlog, categoryId: e.target.value })
+                }
+                label="Danh mục"
               >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUpdateBlog}
-                color="primary"
-                disabled={loading}
-              >
-                Update
-              </Button>
-            </DialogActions>
-          </Dialog>
-          {/* Add Blog Dialog */}
-          <Dialog
-            open={openAddBlog}
-            onClose={handleCloseAddBlog}
-            maxWidth="md"
-            fullWidth
-          >
-            <DialogTitle>Add Blog</DialogTitle>
-            <DialogContent>
-              {loading && (
-                <div className="custom-loading-overlay">
-                  <CircularProgress />
-                </div>
-              )}
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="Title"
-                  type="text"
-                  fullWidth
-                  value={newBlog.title}
-                  onChange={(e) =>
-                    setNewBlog({ ...newBlog, title: e.target.value })
-                  }
-                  variant="outlined"
-                />
-              </Box>
-              <Box sx={{ mb: 2 }}>
-                {newBlog.content.map((item, index) => (
-                  <Box
-                    key={index}
-                    className="custom-edit-section"
-                    sx={{ mb: 2, p: 2, borderRadius: 4 }}
-                  >
-                    <FormControl fullWidth margin="dense" variant="outlined">
-                      <InputLabel id={`add-content-type-${index}`}>Type</InputLabel>
-                      <Select
-                        labelId={`add-content-type-${index}`}
-                        value={item.type}
-                        onChange={(e) =>
-                          handleContentChange(index, "type", e.target.value)
-                        }
-                        label="Type"
-                      >
-                        <MenuItem value="paragraph">Paragraph</MenuItem>
-                        <MenuItem value="bullet">Bullet</MenuItem>
-                        <MenuItem value="image">Image</MenuItem>
-                      </Select>
-                    </FormControl>
-                    {item.type !== "image" ? (
-                      <>
-                        <TextField
-                          margin="dense"
-                          label="Text"
-                          type="text"
-                          fullWidth
-                          value={item.text || ""}
-                          onChange={(e) =>
-                            handleContentChange(index, "text", e.target.value)
-                          }
-                          sx={{ mt: 1 }}
-                          variant="outlined"
-                        />
-                        <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={item.bold || false}
-                                onChange={(e) =>
-                                  handleContentChange(
-                                    index,
-                                    "bold",
-                                    e.target.checked
-                                  )
-                                }
-                              />
-                            }
-                            label="Bold"
-                          />
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={item.italic || false}
-                                onChange={(e) =>
-                                  handleContentChange(
-                                    index,
-                                    "italic",
-                                    e.target.checked
-                                  )
-                                }
-                              />
-                            }
-                            label="Italic"
-                          />
-                        </Box>
-                        <FormControl fullWidth margin="dense" sx={{ mt: 1 }} variant="outlined">
-                          <InputLabel id={`add-font-size-${index}`}>Font Size</InputLabel>
-                          <Select
-                            labelId={`add-font-size-${index}`}
-                            value={item.fontSize || "medium"}
-                            onChange={(e) =>
-                              handleContentChange(
-                                index,
-                                "fontSize",
-                                e.target.value
-                              )
-                            }
-                            label="Font Size"
-                          >
-                            <MenuItem value="small">Small</MenuItem>
-                            <MenuItem value="medium">Medium</MenuItem>
-                            <MenuItem value="large">Large</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </>
-                    ) : (
-                      <Box sx={{ mt: 1 }}>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png"
-                          onChange={(e) =>
-                            handleImageChange(index, e.target.files[0])
-                          }
-                        />
-                        {item.url && (
-                          <img
-                            src={item.url}
-                            alt={`Image ${index}`}
-                            style={{ width: "100px", marginTop: "10px" }}
-                          />
-                        )}
-                      </Box>
-                    )}
-                    <IconButton
-                      color="secondary"
-                      onClick={() => handleRemoveContentItem(index)}
-                      sx={{ mt: 1 }}
-                    >
-                      <RemoveIcon />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleAddContentItem("paragraph")}
-                      sx={{ mt: 1, ml: 1 }}
-                    >
-                      <AddIcon />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-              <Box sx={{ mb: 2 }}>
-                <FormControl fullWidth margin="dense" variant="outlined">
-                  <InputLabel id="add-category-label">Category</InputLabel>
-                  <Select
-                    labelId="add-category-label"
-                    value={newBlog.categoryId}
-                    onChange={(e) =>
-                      setNewBlog({ ...newBlog, categoryId: e.target.value })
-                    }
-                    label="Category"
-                  >
-                    {categories.map((category) => (
-                      <MenuItem key={category._id} value={category._id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png"
-                  onChange={(e) => handleMainImageChange(e.target.files[0])}
-                  disabled={loading}
-                />
-                {newBlog.image && (
-                  <img
-                    src={newBlog.image}
-                    alt="Main Image"
-                    style={{ width: "100px", marginTop: "10px" }}
-                  />
-                )}
-              </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={handleCloseAddBlog}
-                color="primary"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddBlog}
-                color="primary"
-                disabled={loading}
-              >
-                Add
-              </Button>
-            </DialogActions>
-          </Dialog>
-          {/* Delete Blog Confirm Dialog */}
-          <Dialog
-            open={openDeleteBlogConfirm}
-            onClose={handleCloseDeleteBlogConfirm}
-          >
-            <DialogTitle>Delete Blog</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Are you sure you want to delete this blog?
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={handleCloseDeleteBlogConfirm}
-                color="primary"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteBlog}
-                color="secondary"
-                disabled={loading}
-              >
-                Delete
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </>
-      )}
-      {tabValue === 1 && (
-        <>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddCategory}
-            disabled={loading}
-            sx={{ mb: 2 }}
-          >
-            Add Category
-          </Button>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
                 {categories.map((category) => (
-                  <TableRow key={category._id}>
-                    <TableCell>{category.name}</TableCell>
-                    <TableCell>
-                      <Button
-                        color="primary"
-                        onClick={() => handleOpenEditCategory(category)}
-                        startIcon={<EditIcon />}
-                        disabled={loading}
-                      />
-                      <Button
-                        color="secondary"
-                        onClick={() =>
-                          handleOpenDeleteCategoryConfirm(category)
-                        }
-                        startIcon={<DeleteIcon />}
-                        disabled={loading}
-                      />
-                    </TableCell>
-                  </TableRow>
+                  <MenuItem key={category._id} value={category._id}>
+                    {category.name}
+                  </MenuItem>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {/* Edit Category Dialog */}
-          <Dialog open={openEditCategory} onClose={handleCloseEditCategory}>
-            <DialogTitle>Edit Category</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Category Name"
-                type="text"
-                fullWidth
-                value={editingCategory?.name || ""}
-                onChange={(e) =>
-                  setEditingCategory({
-                    ...editingCategory,
-                    name: e.target.value,
-                  })
-                }
-                variant="outlined"
+              </Select>
+            </FormControl>
+          </Box>
+          <Box>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              onChange={(e) => handleMainImageChange(e.target.files[0])}
+              disabled={loading}
+            />
+            {newBlog.image && (
+              <img
+                src={newBlog.image}
+                alt="Hình ảnh chính"
+                style={{ width: "100px", marginTop: "10px" }}
               />
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={handleCloseEditCategory}
-                color="primary"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUpdateCategory}
-                color="primary"
-                disabled={loading}
-              >
-                Update
-              </Button>
-            </DialogActions>
-          </Dialog>
-          {/* Add Category Dialog */}
-          <Dialog open={openAddCategory} onClose={handleCloseAddCategory}>
-            <DialogTitle>Add Category</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Category Name"
-                type="text"
-                fullWidth
-                value={newCategory.name}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, name: e.target.value })
-                }
-                variant="outlined"
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={handleCloseAddCategory}
-                color="primary"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddCategory}
-                color="primary"
-                disabled={loading}
-              >
-                Add
-              </Button>
-            </DialogActions>
-          </Dialog>
-          {/* Delete Category Confirm Dialog */}
-          <Dialog
-            open={openDeleteCategoryConfirm}
-            onClose={handleCloseDeleteCategoryConfirm}
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseAddBlog}
+            color="primary"
+            disabled={loading}
           >
-            <DialogTitle>Delete Category</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Are you sure you want to delete this category? This will also
-                clear its association with blogs.
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={handleCloseDeleteCategoryConfirm}
-                color="primary"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteCategory}
-                color="secondary"
-                disabled={loading}
-              >
-                Delete
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </>
-      )}
+            Hủy
+          </Button>
+          <Button
+            onClick={handleAddBlog}
+            color="primary"
+            disabled={loading}
+          >
+            Thêm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Delete Blog Confirm Dialog */}
+      <Dialog
+        open={openDeleteBlogConfirm}
+        onClose={handleCloseDeleteBlogConfirm}
+      >
+        <DialogTitle>Xóa Bài viết</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Bạn có chắc chắn muốn xóa bài viết này không?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDeleteBlogConfirm}
+            color="primary"
+            disabled={loading}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDeleteBlog}
+            color="secondary"
+            disabled={loading}
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={!!successMessage}
         autoHideDuration={3000}
