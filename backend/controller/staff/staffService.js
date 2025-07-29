@@ -251,18 +251,24 @@ const deleteSchedule = async (req, res) => {
   }
 };
 
-const getFeedbacksForStaff = async (req, res) => {
+const getFeedbacks = async (req, res) => {
   try {
     const feedbacks = await Feedback.find()
-      .populate('userId', 'name')
+      .populate('userId', 'name') 
       .populate({
         path: 'appointmentId',
-        populate: { path: 'doctorId', select: 'name' }, // Populate nested để lấy tên bác sĩ
+        populate: { path: 'doctorId', select: 'name' }, 
         select: 'appointmentDate doctorId'
-      });
+      })
+      .select('userId appointmentId content rating createdAt'); 
+
+    if (feedbacks.length === 0) {
+      return res.status(200).json({ message: 'No feedbacks found' }); // Không coi là lỗi, return 200 với message
+    }
+
     res.json(feedbacks);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch feedbacks' });
+    res.status(500).json({ error: 'Failed to fetch feedbacks', details: err.message });
   }
 };
 
@@ -311,7 +317,7 @@ module.exports = {
   getSchedules,
   updateSchedule,
   deleteSchedule,
-  getFeedbacksForStaff,
+  getFeedbacks,
   getAllFAQ,
   markAsFAQ,
   approveCancellation,

@@ -81,6 +81,7 @@ const {
   getAppointmentsByUser,
   cancelAppointment,
   createFeedback,
+  createGuestFeedback,
 } = require("../../controller/user/userService");
 const { getAllFAQ, markAsFAQ } = require("../../controller/staff/staffService");
 
@@ -118,6 +119,7 @@ userRouter.post("/create", authMiddleware, createAppointment);
 userRouter.get("/user", authMiddleware, getAppointmentsByUser);
 userRouter.post("/cancel/:id", authMiddleware, cancelAppointment);
 userRouter.post('/createFeedback', authMiddleware, createFeedback);
+userRouter.post('/feedback/guest', createGuestFeedback);
 
 userRouter.get('/doctor', userService.getAllDoctors);
 userRouter.get('/doctor/:doctorId', userService.getDoctorById);

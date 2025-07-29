@@ -8,7 +8,7 @@ const {
   deleteNotification,
   getAllUserEmails,
 } = require("../../controller/staff/notificationService");
-const { getAllQA, replyQA, createCheckup, createSchedule, getSchedules, updateSchedule, deleteSchedule, getFeedbacksForStaff, approveCancellation } = require('../../controller/staff/staffService');
+const { getAllQA, replyQA, createCheckup, createSchedule, getSchedules, updateSchedule, deleteSchedule, getFeedbacks, approveCancellation } = require('../../controller/staff/staffService');
 const { getAllServices, createService, deleteService, getServiceById, updateService } = require('../../controller/staff/servicesControlelr');
 const staffController = require('../../controller/staff/staffService');
 staffRouter.post('/qa/:id/mark-as-faq',staffController.markAsFAQ); // them api moi
@@ -61,7 +61,7 @@ staffRouter.get('/qa',getAllQA);
 staffRouter.put('/qa/:id',replyQA);
 
 // Feedback
-staffRouter.get('/feedback', getFeedbacksForStaff);
+staffRouter.get('/feedback', getFeedbacks);
 staffRouter.post('/:id/approve', authStaffMiddleware, approveCancellation);
 
 module.exports = staffRouter;
