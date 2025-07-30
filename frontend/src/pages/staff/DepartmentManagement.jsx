@@ -37,6 +37,8 @@ const DepartmentManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteDepartmentId, setDeleteDepartmentId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [showLogModal, setShowLogModal] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -57,7 +59,7 @@ const DepartmentManagement = () => {
       const token = localStorage.getItem("token");
       const response = await axios.get("http://localhost:9999/api/departments", {
         params: {
-          search: searchQuery.trim(),
+          search: searchQuery.trim(), // ✅ truyền 1 search string
           page: currentPage,
           limit: paginationLimit,
         },
@@ -92,6 +94,19 @@ const DepartmentManagement = () => {
     setForm({ name: "", description: "" });
     setImageFile(null);
     setShowModal(true);
+  };
+  const handleViewLogs = async (departmentId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`http://localhost:9999/api/departments/${departmentId}/logs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setLogs(response.data.logs || []);
+      setShowLogModal(true);
+    } catch (err) {
+      message.error("Không thể tải log");
+    }
   };
 
   const handleEdit = (department) => {
@@ -211,30 +226,41 @@ const DepartmentManagement = () => {
       <Card className="shadow-lg border-0 rounded-3">
         <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
           <h4 className="mb-0">Quản lý khoa</h4>
-          <Button variant="success" onClick={handleAddNew} className="rounded-pill px-4">
-            <FaPlus className="me-2" /> Thêm khoa
-          </Button>
         </Card.Header>
         <Card.Body>
-          <Row className="mb-4">
-            <Col md={4}>
-              <InputGroup className="rounded-pill overflow-hidden shadow-sm">
-                <InputGroup.Text className="bg-white border-0"><FaSearch /></InputGroup.Text>
-                <FormControl
-                  placeholder="Tìm theo tên hoặc mô tả..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="border-0"
-                />
-                {searchQuery && (
-                  <InputGroup.Text className="bg-white border-0" onClick={handleClearFilters} style={{ cursor: 'pointer' }}>
-                    <FaTimes />
-                  </InputGroup.Text>
-                )}
-              </InputGroup>
+          <Row className="mb-4 align-items-center">
+  <Col md={6}>
+    <InputGroup className="rounded-pill overflow-hidden shadow-sm">
+      <InputGroup.Text className="bg-white border-0"><FaSearch /></InputGroup.Text>
+      <FormControl
+        placeholder="Tìm theo tên, mô tả hoặc mã khoa..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        className="border-0"
+      />
+      {searchQuery && (
+        <InputGroup.Text
+          className="bg-white border-0"
+          onClick={handleClearFilters}
+          style={{ cursor: 'pointer' }}
+        >
+          <FaTimes />
+        </InputGroup.Text>
+      )}
+    </InputGroup>
+  </Col>
+          <Col md="auto" className="mt-2 mt-md-0">
+          <Button
+            variant="success"
+            onClick={handleAddNew}
+            size="sm"
+            className="d-flex align-items-center gap-1 rounded-pill shadow-sm px-3 py-1"
+          >
+            <FaPlus /> <span className="d-none d-md-inline">Thêm khoa</span>
+          </Button>
+
             </Col>
           </Row>
-
           {loading ? (
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" />
@@ -306,6 +332,14 @@ const DepartmentManagement = () => {
                           }}
                         >
                           {department.status === 'active' ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
+                        </Button>
+                        <Button
+                          variant="outline-dark"
+                          size="sm"
+                          onClick={() => handleViewLogs(department._id)}
+                          className="me-2"
+                        >
+                          Xem Log
                         </Button>
                       </td>
                     </tr>
@@ -414,6 +448,29 @@ const DepartmentManagement = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <Modal show={showLogModal} onHide={() => setShowLogModal(false)} size="lg" centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Lịch sử thao tác</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    {logs.length === 0 ? (
+      <p className="text-muted">Chưa có log nào cho phòng ban này.</p>
+    ) : (
+      <ul className="list-group">
+        {logs.map((log) => (
+          <li key={log._id} className="list-group-item">
+            <strong>{log.action.toUpperCase()}</strong> - {log.description} <br />
+            <small className="text-muted">
+              Thực hiện bởi: {log.performedBy?.name}
+              {log.performedBy?.employeeCode ? ` (${log.performedBy.employeeCode})` : ""} | {new Date(log.createdAt).toLocaleString()}
+            </small>
+          </li>
+        ))}
+      </ul>
+    )}
+  </Modal.Body>
+</Modal>
+
     </Container>
   );
 };
