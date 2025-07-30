@@ -21,7 +21,6 @@ const getAllDoctors = async (req, res) => {
         });
     }
 };
-
 // Tìm kiếm bác sĩ theo tên
 const searchDoctorsByName = async (req, res) => {
     try {
