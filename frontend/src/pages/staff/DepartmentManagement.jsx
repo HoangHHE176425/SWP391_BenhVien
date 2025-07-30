@@ -19,6 +19,7 @@ import {
 import { FaEdit, FaTrash, FaPlus, FaSearch, FaTimes } from "react-icons/fa";
 import { message } from "antd";
 import "../../assets/css/Homepage.css";
+import { FaToggleOn, FaToggleOff } from "react-icons/fa";
 
 const DepartmentManagement = () => {
   const [departments, setDepartments] = useState([]);
@@ -110,6 +111,32 @@ const DepartmentManagement = () => {
       [name]: value,
     }));
   };
+    const toggleStatus = async (department) => {
+    try {
+      const token = localStorage.getItem("token");
+      const newStatus = department.status === "active" ? "inactive" : "active";
+
+      await axios.put(
+        `http://localhost:9999/api/departments/${department._id}`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      message.success(
+        `Đã chuyển trạng thái khoa sang ${newStatus === "active" ? "hoạt động" : "không hoạt động"}`
+      );
+      fetchDepartments();
+    } catch (error) {
+      console.error("Lỗi chuyển trạng thái:", error);
+      message.error("Không thể chuyển trạng thái.");
+    }
+  };
+
+
 
   const handleSubmit = async () => {
     try {
@@ -219,43 +246,71 @@ const DepartmentManagement = () => {
               <div className="table-responsive">
                 <Table striped hover className="table-align-middle">
                   <thead className="table-primary">
-                    <tr>
-                      <th>STT</th>
-                      <th>Tên</th>
-                      <th>Mô tả</th>
-                      <th>Hình ảnh</th>
-                      <th>Hành động</th>
+                  <tr>
+                    <th>STT</th>
+                    <th>Mã khoa</th>
+                    <th>Tên</th>
+                    <th>Mô tả</th>
+                    <th>Hình ảnh</th>
+                    <th>Trạng thái</th> {/* ✅ thêm cột */}
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {departments.map((department, index) => (
+                    <tr key={department._id}>
+                      <td>{(currentPage - 1) * paginationLimit + index + 1}</td>
+                      <td>{department.departmentCode || "N/A"}</td>
+                      <td>{department.name}</td>
+                      <td className="text-muted">{department.description || "Không có"}</td>
+                      <td>
+                        {department.image ? (
+                          <img
+                            src={department.image}
+                            alt="Ảnh phòng ban"
+                            className="rounded-circle shadow-sm"
+                            style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <Badge bg="secondary">Không có</Badge>
+                        )}
+                      </td>
+                      <td>
+                        <Badge bg={department.status === 'active' ? 'success' : 'secondary'}>
+                          {department.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleEdit(department)}
+                        >
+                          <FaEdit />
+                        </Button>
+
+                        <Button
+                          variant="light"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => toggleStatus(department)}
+                          title={
+                            department.status === 'active'
+                              ? 'Chuyển sang không hoạt động'
+                              : 'Kích hoạt khoa'
+                          }
+                          style={{
+                            color: department.status === 'active' ? 'green' : 'gray',
+                            borderColor: department.status === 'active' ? 'green' : 'gray',
+                          }}
+                        >
+                          {department.status === 'active' ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
+                        </Button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {departments.map((department, index) => (
-                      <tr key={department._id}>
-                        <td>{(currentPage - 1) * paginationLimit + index + 1}</td>
-                        <td>{department.name}</td>
-                        <td className="text-muted">{department.description || "Không có"}</td>
-                        <td>
-                          {department.image ? (
-                            <img
-                              src={department.image}
-                              alt="Ảnh phòng ban"
-                              className="rounded-circle shadow-sm"
-                              style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                            />
-                          ) : (
-                            <Badge bg="secondary">Không có</Badge>
-                          )}
-                        </td>
-                        <td>
-                          <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(department)}>
-                            <FaEdit />
-                          </Button>
-                          <Button variant="outline-danger" size="sm" onClick={() => handleDeleteClick(department._id)}>
-                            <FaTrash />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  ))}
+                </tbody>
                 </Table>
               </div>
 
