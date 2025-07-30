@@ -43,7 +43,6 @@ const StaffLayout = () => {
     { key: "14", path: "/staff/feedback", icon: <CommentOutlined />, label: "Quản Lý Feedback" },
     { key: "15", path: "/staff/qna", icon: <QuestionCircleOutlined />, label: "Q/A" },
     { key: "16", path: "/staff/schedule", icon: <QuestionCircleOutlined />, label: "Quản Lý Lịch Làm Việc" },
-    { key: "19", path: "/staff/attendance", icon: <CheckCircleOutlined />, label: "Điểm Danh" },
     { key: "18", path: "/staff/profile", icon: <QuestionCircleOutlined />, label: "Hồ Sơ Cá Nhân" },
     { key: "17", path: null, icon: <LogoutOutlined />, label: "Đăng Xuất", onClick: () => handleLogout() },
   ];
