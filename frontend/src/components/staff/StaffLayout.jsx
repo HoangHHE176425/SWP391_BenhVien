@@ -31,7 +31,7 @@ const StaffLayout = () => {
   const menuItems = [
     { key: "1", path: "/staff/blogs", icon: <FileTextOutlined />, label: "Quản Lý Bài Viết" },
     { key: "2", path: "/staff/services", icon: <AppstoreOutlined />, label: "Quản Lý Dịch Vụ" },
-    { key: "3", path: "/staff/departments", icon: <AppstoreOutlined />, label: "Quản Lý Khoa Phòng" },
+    { key: "3", path: "/staff/departments", icon: <AppstoreOutlined />, label: "Quản Lý Khoa" },
     { key: "6", path: "/staff/appointments", icon: <CalendarOutlined />, label: "Lịch Hẹn" },
     { key: "7", path: "/staff/notifications", icon: <BellOutlined />, label: "Quản Lý Thông Báo" },
     { key: "8", path: "/staff/users", icon: <UserOutlined />, label: "Quản Lý Người Dùng" },
@@ -42,7 +42,7 @@ const StaffLayout = () => {
     { key: "13", path: "/staff/news", icon: <NotificationOutlined />, label: "Quản Lý Tin Tức" },
     { key: "14", path: "/staff/feedback", icon: <CommentOutlined />, label: "Quản Lý Feedback" },
     { key: "15", path: "/staff/qna", icon: <QuestionCircleOutlined />, label: "Q/A" },
-    { key: "16", path: "/staff/schedule", icon: <QuestionCircleOutlined />, label: "Quản Lý Lịch Trình" },
+    { key: "16", path: "/staff/schedule", icon: <QuestionCircleOutlined />, label: "Quản Lý Lịch Làm Việc" },
     { key: "19", path: "/staff/attendance", icon: <CheckCircleOutlined />, label: "Điểm Danh" },
     { key: "18", path: "/staff/profile", icon: <QuestionCircleOutlined />, label: "Hồ Sơ Cá Nhân" },
     { key: "17", path: null, icon: <LogoutOutlined />, label: "Đăng Xuất", onClick: () => handleLogout() },
@@ -78,7 +78,7 @@ const StaffLayout = () => {
             fontWeight: "bold",
           }}
         >
-          {collapsed ? "KC" : "KiwiCare"}
+          {collapsed ? "KC" : "Lễ tân"}
         </div>
         <Menu theme="dark" mode="inline" selectedKeys={[selectedKey]}>
           {menuItems.map((item) => (
