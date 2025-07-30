@@ -28,8 +28,13 @@ const validateDepartment = (data) => {
     errors.push("Mô tả không được vượt quá 500 ký tự");
   }
 
+  if (data.status && !["active", "inactive"].includes(data.status)) {
+    errors.push("Trạng thái phải là 'active' hoặc 'inactive'");
+  }
+
   return errors.length > 0 ? errors.join(", ") : null;
 };
+
 
 // Validate query parameters
 const validateQueryParams = (page, limit, search) => {
@@ -154,54 +159,71 @@ exports.createDepartment = async (req, res) => {
 // Cập nhật khoa
 exports.updateDepartment = async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    const { id } = req.params;
+
+    // 1. Validate ObjectId
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ message: "ID khoa không hợp lệ" });
     }
 
-    const validationError = validateDepartment(req.body);
-    if (validationError) {
-      return res.status(400).json({ message: `Dữ liệu không hợp lệ: ${validationError}` });
+    const { name, description, status } = req.body;
+
+    // 2. Kiểm tra trùng tên (nếu có name gửi lên)
+    if (name) {
+      const existing = await Department.findOne({
+        name,
+        _id: { $ne: id },
+      });
+      if (existing) {
+        return res.status(400).json({ message: "Tên khoa đã tồn tại" });
+      }
     }
 
-    const { name, description } = req.body;
+    // 3. Chuẩn bị dữ liệu cập nhật
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
 
-    const existing = await Department.findOne({
-      name,
-      _id: { $ne: req.params.id },
-    });
-    if (existing) {
-      return res.status(400).json({ message: "Tên khoa đã tồn tại" });
+    // ✅ Xử lý status
+    if (status && ['active', 'inactive'].includes(status)) {
+      updateData.status = status;
     }
 
-    const updateData = {
-      name,
-      description,
-    };
-
+    // ✅ Xử lý ảnh nếu có file upload
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: "departments",
       });
       updateData.image = result.secure_url;
+
+      // Xoá file tạm
       await fs.unlink(req.file.path).catch(() => {});
     }
 
+    // 4. Cập nhật trong DB
     const updated = await Department.findByIdAndUpdate(
-      req.params.id,
+      id,
       { $set: updateData },
       { new: true, runValidators: true }
     );
 
     if (!updated) {
-      return res.status(404).json({ message: "Không tìm thấy khoa" });
+      return res.status(404).json({ message: "Không tìm thấy khoa để cập nhật" });
     }
 
-    res.status(200).json({ message: "Cập nhật thành công", department: updated });
+    return res.status(200).json({
+      message: "Cập nhật khoa thành công",
+      department: updated,
+    });
   } catch (error) {
-    console.error("Lỗi cập nhật khoa:", error);
-    res.status(500).json({ message: "Lỗi server", error: error.message });
+    console.error("❌ Lỗi khi cập nhật khoa:", error);
+    res.status(500).json({
+      message: "Lỗi server",
+      error: error.message,
+    });
   }
 };
+
 
 
 
