@@ -257,10 +257,21 @@ useEffect(() => {
         if (!employee) return 'N/A';
 
         return (
-          <Button type="link" onClick={() => {
-            setSelectedEmployee(employee);
-            setDetailModalVisible(true);
-          }}>
+          <Button
+            type="link"
+            onClick={() => {
+              const departmentObject = departments.find(dep =>
+                dep._id === (employee.department?._id || employee.department)
+              );
+
+              setSelectedEmployee({
+                ...employee,
+                department: departmentObject || employee.department,
+              });
+
+              setDetailModalVisible(true);
+            }}
+          >
             {employee.employeeCode || employee._id}
           </Button>
         );
@@ -621,12 +632,11 @@ useEffect(() => {
     <div>
       <p><strong>Tên:</strong> {selectedEmployee.name}</p>
       <p><strong>Email:</strong> {selectedEmployee.email}</p>
-      <p><strong>Số điện thoại:</strong> {selectedEmployee.phone}</p>
-      <p><strong>Chuyên môn:</strong> {selectedEmployee.specialization}</p>
-      <p><strong>Bằng cấp:</strong> {selectedEmployee.degree}</p>
-      <p><strong>Năm kinh nghiệm:</strong> {selectedEmployee.expYear}</p>
       <p><strong>Vai trò:</strong> {selectedEmployee.role}</p>
       <p><strong>Trạng thái:</strong> {selectedEmployee.status}</p>
+      <p><strong>Khoa:</strong> {selectedEmployee.department?.name || 'Không rõ'}</p>
+      <p><strong>Chuyên môn:</strong> {selectedEmployee.specialization}</p>
+      <p><strong>Số điện thoại:</strong> {selectedEmployee.phone}</p>
     </div>
   ) : (
     <p>Đang tải...</p>
