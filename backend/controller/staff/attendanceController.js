@@ -1,51 +1,56 @@
-const Attendance = require("../../models/Attendance"); // Mô hình Attendance
-const Employee = require("../../models/Employee"); // Mô hình Employee
+const Attendance = require("../../models/Attendance");
+const Employee = require("../../models/Employee");
 
-// Check-in
+// Check-in: Tạo bản ghi mới mỗi lần
 exports.checkIn = async (req, res) => {
-  try {
-    const { employeeId } = req.body; // Lấy ID nhân viên từ body request
+  console.log("🚀 Check-in API hit");  // <--- Dòng test
 
-    // Tạo bản ghi chấm công mới
+  try {
+    const { employeeId } = req.body;
+    console.log("📥 Request body:", req.body);
+
+    // (Đảm bảo không có logic "already checked in" ở đây)
+
     const newAttendance = new Attendance({
       employeeId,
       checkInTime: new Date(),
     });
 
     await newAttendance.save();
-    return res.status(201).json({ message: "Checked in successfully" });
+    return res.status(201).json({ message: "Checked in successfully", attendance: newAttendance });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Check-in error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-// Check-out
+
+
+// Check-out: Tìm bản ghi chưa có checkOutTime gần nhất
 exports.checkOut = async (req, res) => {
   try {
-    const { employeeId } = req.body; // Lấy ID nhân viên từ body request
+    const { employeeId } = req.body;
 
-    // Tìm bản ghi chấm công chưa có check-out
     const attendance = await Attendance.findOne({
       employeeId,
       checkOutTime: { $exists: false },
-    });
+    }).sort({ checkInTime: -1 }); // tìm bản gần nhất chưa checkout
 
     if (!attendance) {
-      return res.status(404).json({ message: "No check-in record found" });
+      return res.status(404).json({ message: "No check-in record found to check out" });
     }
 
-    // Cập nhật thời gian check-out
     attendance.checkOutTime = new Date();
     await attendance.save();
-    return res.status(200).json({ message: "Checked out successfully" });
+
+    return res.status(200).json({ message: "Checked out successfully", attendance });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-// Lấy chấm công của nhân viên theo ID
+// Lấy chấm công của một nhân viên
 exports.getAttendanceByEmployee = async (req, res) => {
   try {
     const { employeeId } = req.params;
@@ -63,7 +68,7 @@ exports.getAttendanceByEmployee = async (req, res) => {
   }
 };
 
-// Lấy tất cả các bản ghi chấm công
+// Lấy toàn bộ dữ liệu chấm công
 exports.getAllAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find();
@@ -79,13 +84,12 @@ exports.getAllAttendance = async (req, res) => {
   }
 };
 
-// Lịch sử chấm công của nhân viên
+// Lịch sử chấm công của một nhân viên (mới nhất -> cũ)
 exports.getAttendanceHistory = async (req, res) => {
   try {
     const { employeeId } = req.params;
 
-    // Lấy lịch sử chấm công của nhân viên
-    const attendanceHistory = await Attendance.find({ employeeId: employeeId }).sort({ checkInTime: -1 });
+    const attendanceHistory = await Attendance.find({ employeeId }).sort({ checkInTime: -1 });
 
     if (!attendanceHistory || attendanceHistory.length === 0) {
       return res.status(404).json({ message: "No attendance history found" });
