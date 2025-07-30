@@ -62,6 +62,7 @@ const UserMedicalProfileDetail = () => {
   const [services, setServices] = useState([])
   const [medicines, setMedicines] = useState([])
   const [isMedicineLoading, setIsMedicineLoading] = useState(false)
+  const [appointments, setAppointments] = useState([]);
 
   // --- I. HÀM GỌI API ---
 

@@ -1,22 +1,24 @@
 // File: UserMedicalProfileDetail.js
 // --- BẮT ĐẦU CODE ---
 
-import { useState, useEffect } from "react";
 import {
+  Button,
   Form,
   Input,
-  Button,
-  List, // Sử dụng List để hiển thị danh sách gọn gàng hơn
-  Space,
-  Typography,
+  List,
   message,
   Modal,
   Select,
-  Checkbox,
+  Space,
   Spin,
-  DatePicker,
+  Tag,
+  Typography,
 } from "antd";
+import axios from "axios";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import "../assets/css/UserMedicalProfile.css";
+import Record from "../components/Record";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -63,6 +65,10 @@ const UserMedicalProfileDetail = () => {
   const [services, setServices] = useState([]);
   const [medicines, setMedicines] = useState([]);
   const [isMedicineLoading, setIsMedicineLoading] = useState(false);
+  const doctor = JSON.parse(localStorage.getItem("user"));
+  const [appointments, setAppointments] = useState([]);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // --- I. HÀM GỌI API ---
 
@@ -80,6 +86,23 @@ const UserMedicalProfileDetail = () => {
     };
     fetchServices();
   }, []);
+
+  useEffect(() => {
+    if (doctor?._id) fetchAppointments(doctor._id);
+  }, []);
+
+  const fetchAppointments = async (doctorId) => {
+    try {
+      const res = await axios.get(`/api/appointments`, {
+        params: { doctorId, status: ['pending_clinical', 'waiting_for_doctor'], increaseSort: 1 },
+      });
+      setAppointments(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 2. Tìm kiếm hồ sơ và mở popup lựa chọn
   const handleSearchAndShowSelection = async () => {
@@ -206,6 +229,40 @@ const UserMedicalProfileDetail = () => {
     // Không reset identityToSearch để người dùng có thể thấy số họ vừa tìm
   };
 
+  // Xử lý chọn appointment từ danh sách chờ
+  const handleSelectAppointment = (appointment) => {
+    setSelectedAppointment(appointment);
+  };
+
+  // Xử lý lưu phiếu khám
+  const handleSaveMedicalRecord = async (values) => {
+    try {
+      await axios.post(`/api/record`, {
+        ...values,
+        appointmentId: selectedAppointment._id,
+        doctorId: doctor._id,
+        profileId: selectedAppointment.profileId._id,
+      });
+      message.success("Phiếu khám đã được lưu thành công!");
+      await fetchAppointments(doctor._id, 'waiting_for_doctor');
+      // setSelectedAppointment(null);
+    } catch (error) {
+      console.error("Lỗi khi lưu phiếu khám:", error);
+      message.error("Có lỗi xảy ra khi lưu phiếu khám!");
+    }
+  };
+
+  const handleUpdateRecord = async (values) => {
+    try {
+      await axios.put(`/api/record/${values._id}`, values);
+      await fetchAppointments(doctor._id, 'waiting_for_doctor');
+      message.success("Phiếu khám đã được cập nhật thành công!");
+    } catch (error) {
+      console.error("Lỗi khi cập nhật phiếu khám:", error);
+      message.error("Có lỗi xảy ra khi cập nhật phiếu khám!");
+    }
+  };
+
   // --- III. RENDER COMPONENT ---
 
   return (
@@ -249,6 +306,64 @@ const UserMedicalProfileDetail = () => {
           </Button>
         </Form.Item>
       </Form>
+
+      {/* Khung danh sách chờ */}
+      <div className="flex gap-10">
+      <div className="khung-ds-cho max-h-[500px] overflow-y-auto w-1/3">
+        <Title level={4}>Danh sách chờ khám</Title>
+        {loading ? <div className="appointment-list">
+          <Spin />
+        </div> : <div className="appointment-list">
+          {appointments.length > 0 ? (
+            appointments.map((appointment) => (
+              <div
+                key={appointment._id}
+                className={`appointment-item ${selectedAppointment?._id === appointment._id ? 'selected' : ''}`}
+                onClick={() => handleSelectAppointment(appointment)}
+              >
+                <div className="appointment-header">
+                  <div className="appointment-time">
+                    {dayjs(appointment.appointmentDate).format('DD/MM/YYYY HH:mm')}
+                  </div>
+                  <Tag
+                    className={`appointment-status ${
+                      appointment.status === 'pending_clinical' ? 'status-pending' : 'status-booked'
+                    }`}
+                  >
+                    {appointment.status === 'pending_clinical' ? 'Chờ xét nghiệm' : 'Chờ khám'}
+                  </Tag>
+                </div>
+                <div className="appointment-info">
+                  <div>
+                    <span>Bệnh nhân:</span> <strong>{appointment.profileId?.name || 'N/A'}</strong>
+                  </div>
+                  <div>
+                    <span>Loại khám:</span> <strong>{appointment.type}</strong>
+                  </div>
+                  <div>
+                    <span>Triệu chứng:</span> <strong>{appointment.symptoms || 'Không có'}</strong>
+                  </div>
+                  <div>
+                    <span>Phòng:</span> <strong>{appointment.room || 'Chưa phân công'}</strong>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+              Không có lịch hẹn nào trong danh sách chờ
+            </div>
+          )}
+        </div>}
+      </div>
+
+      {/* Component Record */}
+      <Record 
+        selectedAppointment={selectedAppointment}
+        onSaveRecord={handleSaveMedicalRecord}
+        onUpdateRecord={handleUpdateRecord}
+      />
+      </div>
 
 
 
