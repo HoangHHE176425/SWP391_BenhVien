@@ -169,7 +169,7 @@ const ProfileStaff = () => {
                   value={formData.fullname}
                   onChange={handleInputChange}
                   className="form-control"
-                  required
+                  disabled
                 />
               </div>
 
@@ -184,17 +184,10 @@ const ProfileStaff = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   className="form-control"
+                  disabled
                 />
               </div>
             </div>
-
-            <button type="submit" className="btn btn-primary mt-3" disabled={loading}>
-              {loading ? "Đang Lưu..." : "Lưu Thay Đổi"}
-            </button>
-            <br></br>
-            <button type="button" onClick={() => navigate("/changepass")} className="btn btn-primary mt-3">
-              Change password
-            </button>
           </form>
         </div>
       </div>
