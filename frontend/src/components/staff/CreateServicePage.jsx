@@ -15,19 +15,55 @@ const CreateServicePage = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post(`${API}/create/services`, form);
-            navigate('/staff/services');
-        } catch (err) {
-            if (err.response?.data?.message) {
-                setError(err.response.data.message);
-            } else {
-                setError('Lỗi khi tạo dịch vụ');
-            }
-            console.error(err);
+    e.preventDefault();
+    const { name, description, price } = form;
+
+    // ✅ Validate mô tả
+    if (description.length > 250) {
+        setError("Mô tả không được vượt quá 250 ký tự");
+        return;
+    }
+
+    // ✅ Validate giá
+    const parsedPrice = parseFloat(price);
+
+    if (isNaN(parsedPrice)) {
+        setError("Giá phải là một số hợp lệ");
+        return;
+    }
+
+    if (!Number.isInteger(parsedPrice)) {
+        setError("Giá phải là số nguyên (không chứa số thập phân)");
+        return;
+    }
+
+    if (parsedPrice <= 1000) {
+        setError("Giá phải lớn hơn 1.000₫");
+        return;
+    }
+
+    if (parsedPrice > 1000000000) {
+        setError("Giá không được vượt quá 1 tỷ đồng");
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem("token");
+        await axios.post(`${API}/create/services`, { name, description, price: parsedPrice }, {
+        headers: { Authorization: `Bearer ${token}` },
+        });
+        navigate('/staff/services');
+    } catch (err) {
+        if (err.response?.data?.message) {
+        setError(err.response.data.message);
+        } else {
+        setError('Lỗi khi tạo dịch vụ');
         }
+        console.error(err);
+    }
     };
+
+
 
     return (
         <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
