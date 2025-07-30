@@ -7,6 +7,16 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  scheduleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Schedule',
+    required: true,
+    index: true,
+  },
+  department: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+  },
   checkInTime: {
     type: Date,
     required: true,
@@ -20,14 +30,25 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  timeSlots: [
+    {
+      startTime: Date,
+      endTime: Date,
+      status: {
+        type: String,
+        enum: ['Available', 'Booked', 'Unavailable'],
+        default: 'Available',
+      },
+    },
+  ],
   type: {
     type: String,
-    enum: ['Regular', 'Overtime'], // ✅ phân biệt ca chính / tăng ca
+    enum: ['Regular', 'Overtime'],
     default: 'Regular',
   },
   slot: {
     type: String,
-    enum: ['Morning', 'Afternoon', 'Evening', 'Overtime'], // ✅ chia ca nếu cần
+    enum: ['Morning', 'Afternoon', 'Evening', 'Overtime'],
   },
   status: {
     type: String,
@@ -37,8 +58,17 @@ const attendanceSchema = new mongoose.Schema({
   notes: {
     type: String,
   },
+  ipAddress: {
+    type: String,
+  },
+  location: {
+    type: {
+      latitude: Number,
+      longitude: Number,
+      address: String, // địa chỉ cụ thể nếu frontend cung cấp
+    },
+  },
 }, { timestamps: true });
-
 
 // ✅ Tự động set "date" từ "checkInTime"
 attendanceSchema.pre('save', function (next) {
