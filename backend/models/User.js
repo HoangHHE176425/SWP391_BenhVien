@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   emailVerificationCode: { type: String, default: null },
   verificationExpires: { type: Date, default: null },
   user_code: { type: String, unique: true, index: true }, // Tự động sinh
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 }, { timestamps: true });
 
 // Middleware để tạo user_code tự động và an toàn
@@ -25,7 +27,6 @@ userSchema.pre('save', async function (next) {
 
       const newCode = `KC_${String(counter.seq).padStart(3, '0')}`;
       this.user_code = newCode;
-
       next();
     } catch (err) {
       next(err);
