@@ -1,57 +1,41 @@
 const medicineRepo = require('../../repository/medicine.repository');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+//  Tạo thuốc mới
 const createMedicine = async (req, res) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-
     if (!token) {
-      return res.status(401).json({ message: "fel" });
+      return res.status(401).json({ message: "Unauthorized: No token" });
     }
-    //co token
-    try {
-      const decode = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("decode", JSON.stringify(decode));
-      const payload = { ...req.body, supplierId: decode.id };
-      const medicine = await medicineRepo.createMedicine(payload);
-      res.status(201).json({ message: "Created", medicine });
-    } catch (error) {
-      console.log("error", error)
-      return res.status(401).json({ message: "fel1" });
-    }
+
+    const decode = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = { ...req.body, supplier: decode.id, isActive: true };
+    const medicine = await medicineRepo.createMedicine(payload);
+    res.status(201).json({ message: "Created", medicine });
 
   } catch (err) {
-    res.status(400).json({ message: "Error", error: err.message });
+    res.status(400).json({ message: "Error creating medicine", error: err.message });
   }
 };
 
+//  Lấy danh sách thuốc đang kinh doanh
 const getAllMedicines = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const skip = (page - 1) * limit;
-  const searchTerm = req.query.searchTerm || "";  // Lấy tham số tìm kiếm từ query
+  const searchTerm = req.query.searchTerm || "";
 
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    console.log("token", token);
-
     if (!token) {
-      return res.status(401).json({ message: "fel" });
-    }
-    //co token
-    try {
-      const decode = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("decode", JSON.stringify(decode));
-    } catch (error) {
-      console.log("error", error)
-      return res.status(401).json({ message: "fel1" });
+      return res.status(401).json({ message: "Unauthorized: No token" });
     }
 
-    // Lấy tổng số thuốc để tính số trang, sử dụng searchTerm để lọc
+    jwt.verify(token, process.env.JWT_SECRET);
+
     const totalMedicines = await medicineRepo.countMedicines(searchTerm);
     const totalPages = Math.ceil(totalMedicines / limit);
-
-    // Lấy thuốc với phân trang
     const medicines = await medicineRepo.getMedicinesWithPagination(skip, limit, searchTerm);
 
     res.status(200).json({
@@ -63,44 +47,61 @@ const getAllMedicines = async (req, res) => {
       perPage: limit,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: "Error retrieving medicines", error: err.message });
   }
 };
 
+//  Lấy thuốc theo ID
 const getMedicineById = async (req, res) => {
   try {
     const medicine = await medicineRepo.getMedicineById(req.params.id);
-    if (!medicine) return res.status(404).json({ message: "Not found" });
+    if (!medicine) return res.status(404).json({ message: "Medicine not found" });
+
     res.status(200).json({ message: "OK", medicine });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: "Error retrieving medicine", error: err.message });
   }
 };
 
+//  Cập nhật thông tin thuốc
 const updateMedicine = async (req, res) => {
   try {
     const medicine = await medicineRepo.updateMedicine(req.params.id, req.body);
-    if (!medicine) return res.status(404).json({ message: "Not found" });
-    res.status(200).json({ message: "OK", medicine });
+    if (!medicine) return res.status(404).json({ message: "Medicine not found" });
+
+    res.status(200).json({ message: "Updated", medicine });
   } catch (err) {
-    res.status(400).json({ message: "Error", error: err.message });
+    res.status(400).json({ message: "Error updating medicine", error: err.message });
   }
 };
 
-const deleteMedicine = async (req, res) => {
+//  Ngừng kinh doanh thuốc + lý do
+const disableMedicine = async (req, res) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return res.status(400).json({ message: "Disable reason is required" });
+  }
+
   try {
-    const medicine = await medicineRepo.deleteMedicine(req.params.id);
-    if (!medicine) return res.status(404).json({ message: "Not found" });
-    res.status(200).json({ message: "Deleted", medicine });
+    const medicine = await medicineRepo.updateMedicine(req.params.id, {
+      isActive: false,
+      disableReason: reason,
+    });
+
+    if (!medicine) return res.status(404).json({ message: "Medicine not found" });
+
+    res.status(200).json({ message: "Medicine disabled", medicine });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: "Error disabling medicine", error: err.message });
   }
 };
 
+//  Export các hàm chính
 module.exports = {
   createMedicine,
   getAllMedicines,
   getMedicineById,
   updateMedicine,
-  deleteMedicine,
-}
+  disableMedicine,
+};
