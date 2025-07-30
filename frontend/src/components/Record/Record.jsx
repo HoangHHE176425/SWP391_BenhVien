@@ -77,7 +77,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         };
       case 'pending_re-examination':
         return {
-          isDisabled: false,
+          isDisabled: true,
           showLabTest: true,
           editableFields: ['admissionReason', 'admissionDiagnosis']
         };
@@ -190,7 +190,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
             message.error("Vui lòng đợi kết quả xét nghiệm");
             return;
         }
-        await onUpdateRecord({...values, _id: selectedRecord._id, status: selectedRecord.status === 'pending_re-examination' ? 'done' : selectedRecord.status});
+        await onUpdateRecord({...selectedRecord,...values, _id: selectedRecord._id, status: selectedRecord.status === 'pending_re-examination' ? 'done' : selectedRecord.status});
         if (selectedRecord.status === 'pending_re-examination') {
             handleRestTree();
         }
@@ -445,9 +445,9 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                 </Form.Item>
               </div>
               <div className="form-row">
-                <Form.Item name="docterAct" label="Do bác sĩ thực hiện" className="form-field full-width">
+                <Form.Item name="docterAct" label="Do bác sĩ xét nghiệm" className="form-field full-width">
                   <Select 
-                    placeholder="Do bác sĩ thực hiện" 
+                    placeholder="Do bác sĩ xét nghiệm" 
                     options={docterActs?.map((docterAct) => ({ label: docterAct?.name, value: docterAct._id }))} 
                     disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
                   />
