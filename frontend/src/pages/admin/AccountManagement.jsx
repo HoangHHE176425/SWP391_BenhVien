@@ -275,9 +275,20 @@ useEffect(() => {
 
     {/* Tên */}
     <Form.Item
-      name="name"
-      label="Tên"
-      rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+          name="name"
+          label="Tên"
+          rules={[
+    { required: true, message: "Vui lòng nhập tên" },
+    { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+    {
+      validator: (_, value) => {
+        if (value && value.trim().length === 0) {
+          return Promise.reject("Tên không được toàn khoảng trắng");
+        }
+        return Promise.resolve();
+        },
+      },
+    ]}
     >
       <Input />
     </Form.Item>
@@ -286,13 +297,22 @@ useEffect(() => {
     <Form.Item
       name="email"
       label="Email"
-      rules={[{ required: true, message: "Vui lòng nhập email" }]}
+      rules={[
+        { required: true, message: "Vui lòng nhập email" },
+        { type: "email", message: "Email không hợp lệ" },
+      ]}
     >
       <Input />
     </Form.Item>
 
     {/* Số điện thoại */}
-    <Form.Item name="phone" label="Số điện thoại">
+    <Form.Item name="phone" label="Số điện thoại" rules={[
+        {
+          pattern: /^0\d{9}$/,
+          message: "Số điện thoại phải có 10 chữ số và bắt đầu bằng 0",
+        },
+      ]}
+      >
       <Input />
     </Form.Item>
 
@@ -424,7 +444,11 @@ useEffect(() => {
       {
         title: "Người thực hiện",
         dataIndex: "actionBy",
-        render: (val) => (val?.name || val || "Không rõ"),
+        render: (val) => {
+          const name = val?.name || "Không rõ";
+          const code = val?.employeeCode || val?.user_code || "";
+          return code ? `${name} (${code})` : name;
+        },
       },
       {
         title: "Thời gian",
@@ -442,8 +466,9 @@ useEffect(() => {
             : "-",
       },
     ]}
-/>
+  />
 </Modal>
+
 
     </div>
   );
