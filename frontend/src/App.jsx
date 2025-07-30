@@ -294,6 +294,7 @@ const AppRoutes = () => {
           >
             <Route index element={<Dashboard />} />
             <Route path="accounts" element={<AccountManagement />} />
+            <Route path="departments" element={<DepartmentManagement />} />
             <Route path="employees" element={<EmployeeManagement />} />
             <Route path="attendance" element={<AttendanceManagement />} />
           </Route>
@@ -351,7 +352,7 @@ const AppRoutes = () => {
           <Route
             path="/hrmanager/*"
             element={
-              <PrivateRouteByRole allowedRoles={["hrmanager"]}>
+              <PrivateRouteByRole allowedRoles={["HRManager"]}>
                 <HrmanagerLayout />
               </PrivateRouteByRole>
             }
