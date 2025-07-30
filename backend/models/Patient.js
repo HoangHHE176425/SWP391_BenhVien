@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const patientSchema = new mongoose.Schema({
-  profileId: { type: mongoose.Schema.Types.ObjectId, ref: "Profile", required: true, unique: true }, // 1-1 với Profile
+  profileId: { type: mongoose.Schema.Types.ObjectId, ref: "Profile", required: true}, // 1-1 với Profile
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" } // Bác sĩ/lễ tân tạo
 }, { timestamps: true });
 

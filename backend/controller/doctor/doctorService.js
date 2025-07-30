@@ -2,8 +2,10 @@ const mongoose = require('mongoose'); // Thêm dòng này
 const Employee = require("../../models/Employee");
 const User = require("../../models/User");
 const Profile = require("../../models/Profile");
-// Lấy tất cả bác sĩ
+const Schedule = require("../../models/Schedule");
+const moment = require('moment');
 
+// Lấy tất cả bác sĩ
 const getAllDoctors = async (req, res) => {
     try {
         const doctors = await Employee.find({ role: 'Doctor' })
@@ -265,14 +267,71 @@ module.exports.delEmployees = async (req, res) => {
     }
 };
 
-module.exports.getAllDoctorsForApm = async (req, res) => {
-    try {
-        const doctors = await Employee.find({ role: 'Doctor', status: 'active' })
-            .select('name department expYear avatar degree'); // CHỈ lấy các trường cần thiết
+module.exports.getDoctorsByDepartment = async (req, res) => {
+    const { departmentId } = req.query;
 
-        res.status(200).json(doctors);
-    } catch (err) {
-        console.error("Error fetching doctors:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
+    if (!departmentId) {
+        return res.status(400).json({ error: 'Cần departmentId' });
+    }
+
+    try {
+        const doctors = await Employee.find({ role: 'Doctor', department: departmentId }).select('name _id specialization');
+        res.json({ doctors });
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Lỗi server' });
+    }
+};
+
+module.exports.getAvailableSlotsInWeek = async (req, res) => {
+    const doctorId = req.params.doctorId;
+    const { startDate } = req.query; // Ví dụ: "2025-07-30" (ngày bắt đầu tuần)
+
+    if (!startDate) {
+        return res.status(400).json({ error: 'Cần startDate (YYYY-MM-DD)' });
+    }
+
+    try {
+        // Validate và chuẩn hóa startDate
+        const start = moment(startDate, 'YYYY-MM-DD', true);
+        if (!start.isValid()) {
+            return res.status(400).json({ error: 'startDate không hợp lệ' });
+        }
+
+        // Tính 7 ngày tiếp theo
+        const endDate = moment(start).add(6, 'days').endOf('day');
+        const dates = [];
+        for (let m = moment(start); m.isSameOrBefore(endDate); m.add(1, 'days')) {
+            dates.push(m.toDate());
+        }
+
+        // Query Schedule trong 1 tuần
+        const schedules = await Schedule.find({
+            employeeId: doctorId,
+            date: { $in: dates }
+        });
+
+        // Lọc và sắp xếp slot Available
+        let availableSlots = [];
+        schedules.forEach(schedule => {
+            const slots = schedule.timeSlots.filter(slot => slot.status === 'Available');
+            slots.forEach(slot => {
+                availableSlots.push({
+                    date: schedule.date,
+                    startTime: slot.startTime,
+                    endTime: slot.endTime,
+                    status: slot.status
+                });
+            });
+        });
+
+        // Sắp xếp theo ngày và giờ bắt đầu
+        availableSlots.sort((a, b) => {
+            if (a.date.getTime() !== b.date.getTime()) return a.date.getTime() - b.date.getTime();
+            return a.startTime.getTime() - b.startTime.getTime();
+        });
+
+        res.json({ slots: availableSlots });
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Lỗi server' });
     }
 };

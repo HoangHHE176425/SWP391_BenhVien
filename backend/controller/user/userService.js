@@ -3,11 +3,7 @@ const Question = require("../../models/Question");
 const User = require("../../models/User");
 const Appointment = require("../../models/Appointment");
 const Feedback = require("../../models/Feedback");
-const Schedule = require("../../models/Schedule");
-const { sendAppointmentConfirmation } = require("../../utils/mailService");
-const Employee = require("../../models/Employee");
-const Notification = require("../../models/Notification");
-const mongoose = require('mongoose');
+const Patient = require("../../models/Patient");
 
 const doctorRepo = require("../../repository/employee.repository");
 const serviceRepo = require("../../repository/service.repository");
@@ -121,98 +117,43 @@ const getAllQAUser = async (req, res) => {
 };
 
 const createAppointment = async (req, res) => {
-  const { profileId, doctorId, department, appointmentDate, type, timeSlot } = req.body;
-  const userId = req.user.id;
+  const { profileId, doctorId, department, appointmentDate, timeSlot, symptoms, bhytCode, type, room } = req.body;
+  const createdBy = req.user.id;
+
+  if (!profileId || !doctorId || !department || !appointmentDate || !timeSlot || !symptoms || !type) {
+    return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
+  }
+  if (type !== 'Online' && type !== 'Offline') {
+    return res.status(400).json({ error: 'Type không hợp lệ' });
+  }
+  if (type === 'Offline' && !room) {
+    return res.status(400).json({ error: 'Offline cần room' });
+  }
 
   try {
-    // // ✅ Kiểm tra timeSlot hợp lệ
-    // if (!timeSlot || !timeSlot.startTime || !timeSlot.endTime) {
-    //   return res.status(400).json({ message: "Thiếu thông tin timeSlot hoặc cấu trúc không hợp lệ." });
-    // }
-
-    // // ✅ Kiểm tra doctorId đúng format
-    // if (!mongoose.Types.ObjectId.isValid(doctorId)) {
-    //   return res.status(400).json({ message: "doctorId không hợp lệ." });
-    // }
-
-    // ✅ Chuẩn hóa ngày appointmentDate để tìm lịch
-    const appointmentDateObj = new Date(appointmentDate);
-    if (isNaN(appointmentDateObj.getTime())) {
-      return res.status(400).json({ message: "appointmentDate không hợp lệ." });
+    const profile = await Profile.findById(profileId);
+    if (!profile) {
+      return res.status(400).json({ error: 'Profile không tồn tại' });
     }
 
-    const y = appointmentDateObj.getFullYear();
-    const m = appointmentDateObj.getMonth();
-    const d = appointmentDateObj.getDate();
-
-    const startOfDay = new Date(y, m, d, 0, 0, 0, 0);
-    const endOfDay = new Date(y, m, d, 23, 59, 59, 999);
-
-    // ✅ Tìm lịch bác sĩ theo ngày
-    const doctorSchedule = await Schedule.findOne({
-      employeeId: new mongoose.Types.ObjectId(doctorId),
-      date: { $gte: startOfDay, $lte: endOfDay }
-    });
-
-    if (!doctorSchedule) {
-      return res.status(404).json({ message: "Không tìm thấy lịch làm việc của bác sĩ trong ngày này." });
-    }
-
-    // ✅ Tìm timeSlot khớp
-    const selectedSlot = doctorSchedule.timeSlots.find(slot =>
-      new Date(slot.startTime).getTime() === new Date(timeSlot.startTime).getTime() &&
-      new Date(slot.endTime).getTime() === new Date(timeSlot.endTime).getTime()
-    );
-
-    if (!selectedSlot) {
-      return res.status(400).json({ message: "Không tìm thấy timeSlot phù hợp trong lịch bác sĩ." });
-    }
-
-    if (selectedSlot.status === 'Booked') {
-      return res.status(400).json({ message: "Khung giờ đã được đặt. Vui lòng chọn thời gian khác." });
-    }
-
-    // ✅ Đánh dấu đã đặt và lưu lại lịch
-    selectedSlot.status = 'Booked';
-    await doctorSchedule.save();
-
-    // ✅ Tạo cuộc hẹn 
-    const newAppointment = new Appointment({
-      appointmentDate,
-      department,
-      doctorId,
-      timeSlot: {
-        startTime: timeSlot.startTime,
-        endTime: timeSlot.endTime,
-        status: "Booked",
-      },
-      type: type || "Offline",
-      reminderSent: false,
+    const appointment = new Appointment({
+      userId: type === 'Online' ? req.user._id : null,
       profileId,
-      userId,
+      doctorId,
+      department,
+      appointmentDate,
+      timeSlot,
+      symptoms,
+      bhytCode,
+      type,
+      createdBy,
+      room: type === 'Offline' ? room : null
     });
+    await appointment.save();
 
-    // // ✅ Gửi mail xác nhận
-    // const [user, profile, doctor] = await Promise.all([
-    //   User.findById(userId),
-    //   Profile.findById(profileId),
-    //   Employee.findById(doctorId),
-    // ]);
-
-    // await sendAppointmentConfirmation({
-    //   to: user.email,
-    //   patientName: profile.name,
-    //   doctorName: doctor.name,
-    //   date: new Date(appointmentDate),
-    //   type,
-    // });
-
-    await newAppointment.save();
-    return res.status(201).json(newAppointment);
-
+    res.status(201).json({ message: 'Tạo lịch hẹn thành công', appointment });
   } catch (error) {
-    console.error("Lỗi tạo appointment:", error);
-    return res.status(500).json({ message: "Lỗi server", error: error.message });
+    res.status(500).json({ error: error.message || 'Lỗi server' });
   }
 };
 

@@ -11,7 +11,7 @@ const profileSchema = new mongoose.Schema({
 
   phone: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional, gắn sau
-  patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient", unique: true } // 1-1 với Patient, optional (tạo sau khi khám)
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient"} // 1-1 với Patient, optional (tạo sau khi khám)
 
 }, { timestamps: true });
 
