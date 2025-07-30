@@ -137,15 +137,29 @@ module.exports.delEmployees = async (req, res) => {
 
 module.exports.getAllAppointments = async (req, res) => {
   try {
-    const { doctorId } = req.query;
+    const { doctorId, status, increaseSort } = req.query;
 
     const filter = doctorId ? { doctorId } : {};
+    
+    // Hỗ trợ nhiều giá trị status (có thể là string hoặc array)
+    if (status) {
+      if (Array.isArray(status)) {
+        // Nếu status là array, sử dụng $in operator
+        filter.status = { $in: status };
+      } else if (status.includes(',')) {
+        // Nếu status là string chứa dấu phẩy, split thành array
+        filter.status = { $in: status.split(',').map(s => s.trim()) };
+      } else {
+        // Nếu status là string đơn lẻ
+        filter.status = status;
+      }
+    }
 
     const appointments = await Appointment.find(filter)
         .populate('userId', 'name email')
-        .populate('profileId', 'fullName gender dateOfBirth')
+        .populate('profileId', 'fullName gender dateOfBirth name identityNumber')
         .populate('doctorId', 'name department')
-        .sort({ appointmentDate: -1 });
+        .sort({ appointmentDate: increaseSort ? 1 : -1 });
 
     res.status(200).json(appointments);
   } catch (error) {

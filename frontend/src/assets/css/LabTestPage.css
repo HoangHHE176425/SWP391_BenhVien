@@ -1,0 +1,93 @@
+/* LabTestPage.css */
+.khung-ds-cho {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+.appointment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appointment-list > div {
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.appointment-list > div:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.appointment-list > div.selected {
+  border-color: #1890ff;
+  background-color: #f0f8ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.appointment-time {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.appointment-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.status-pending {
+  background-color: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+.status-booked {
+  background-color: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.appointment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.appointment-info > div {
+  font-size: 13px;
+  color: #333;
+}
+
+.appointment-info span {
+  color: #666;
+  margin-right: 4px;
+}
+
+.appointment-info strong {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+/* Style cho form xét nghiệm */
+.khung-form-xet-nghiem {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fafafa;
+} 
