@@ -9,7 +9,7 @@ const {
   getAllUserEmails,
 } = require("../../controller/staff/notificationService");
 const { getAllQA, replyQA, createCheckup, createSchedule, getSchedules, updateSchedule, deleteSchedule, getFeedbacksForStaff, approveCancellation } = require('../../controller/staff/staffService');
-const { getAllServices, createService, deleteService, getServiceById, updateService } = require('../../controller/staff/servicesControlelr');
+const { getAllServices, createService, deleteService, getServiceById, updateService, toggleServiceStatus, getServiceLogs, } = require('../../controller/staff/servicesControlelr');
 const staffController = require('../../controller/staff/staffService');
 staffRouter.post('/qa/:id/mark-as-faq',staffController.markAsFAQ); // them api moi
 const { createMedicalRecord, allMedicalRecord, editMedicalRecord, createProfile, getAllProfiles } = require('../../controller/staff/medicalRecordController');
@@ -36,6 +36,8 @@ staffRouter.get("/profiles/:userId", invoiceController.getProfilesByUserId)
 staffRouter.get('/doctors', doctorServices.getAllDoctors);
 staffRouter.get('/:userId/profiles', doctorServices.getProfilesByUserId);
 staffRouter.get("/abc/services", invoiceController.getAllServices);
+staffRouter.put('/toggle/services/:id', authStaffMiddleware, toggleServiceStatus);
+staffRouter.get('/logs/services/:id', authStaffMiddleware, getServiceLogs);
 // Checkup
 staffRouter.post('/checkup', createCheckup);
 
@@ -53,7 +55,7 @@ staffRouter.get("/getAllUserEmails", getAllUserEmails);
 // Services routes
 staffRouter.get('/all/services', getAllServices); // GET /api/staff/services - Get all services with pagination, sorting, search
 staffRouter.get('/get/services/:id', getServiceById); // GET /api/staff/services/:id - Get a single service by ID
-staffRouter.post('/create/services', createService); // POST /api/staff/services - Create a new service
+staffRouter.post('/create/services', authStaffMiddleware, createService); // POST /api/staff/services - Create a new service
 staffRouter.put('/update/services/:id', updateService); // PUT /api/staff/services/:id - Update a service
 staffRouter.delete('/delete/services/:id', deleteService); // DELETE /api/staff/services/:id - Delete a service
 // staffRouter.get('/labtestresult/:profileId', LabTestbyProfileId);
@@ -63,5 +65,6 @@ staffRouter.put('/qa/:id',replyQA);
 // Feedback
 staffRouter.get('/feedback', getFeedbacksForStaff);
 staffRouter.post('/:id/approve', authStaffMiddleware, approveCancellation);
+
 
 module.exports = staffRouter;
