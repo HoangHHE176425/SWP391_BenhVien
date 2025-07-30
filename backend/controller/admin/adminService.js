@@ -13,7 +13,6 @@ module.exports.getUserAccs = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 module.exports.editUsers = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
