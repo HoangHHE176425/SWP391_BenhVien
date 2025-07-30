@@ -8,7 +8,8 @@ const {
   getDepartmentById,
   createDepartment,
   updateDepartment,
-  deleteDepartment
+  deleteDepartment,
+  getDepartmentLogs
 } = require("../../controller/staff/departmentManagement");
 
 const { authStaffMiddleware } = require("../../middleware/auth.middleware");
@@ -33,5 +34,6 @@ router.get("/:id", getDepartmentById);
 router.post("/", authStaffMiddleware, uploadMulter.single("image"), createDepartment); 
 router.put("/:id", authStaffMiddleware, uploadMulter.single("image"), updateDepartment); 
 router.delete("/:id", authStaffMiddleware, deleteDepartment);
+router.get("/:id/logs", authStaffMiddleware, getDepartmentLogs);
 
 module.exports = router;
