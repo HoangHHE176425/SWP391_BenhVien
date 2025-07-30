@@ -1,4 +1,5 @@
 const Department = require("../../models/Department");
+const DepartmentLog = require("../../models/DepartmentLog");
 const mongoose = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs").promises;
@@ -24,8 +25,8 @@ const validateDepartment = (data) => {
 
   if (data.description && typeof data.description !== "string") {
     errors.push("Mô tả phải là chuỗi ký tự");
-  } else if (data.description && data.description.length > 500) {
-    errors.push("Mô tả không được vượt quá 500 ký tự");
+  } else if (data.description && data.description.length > 250) {
+    errors.push("Mô tả không được vượt quá 250 ký tự");
   }
 
   if (data.status && !["active", "inactive"].includes(data.status)) {
@@ -71,6 +72,7 @@ exports.getAllDepartments = async (req, res) => {
       $or: [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
+        { departmentCode: { $regex: search, $options: "i" } }, // ✅ thêm dòng này
       ],
     };
 
@@ -147,6 +149,13 @@ exports.createDepartment = async (req, res) => {
     });
 
     await newDepartment.save();
+    // Ghi log
+    await DepartmentLog.create({
+      departmentId: newDepartment._id,
+      action: "create",
+      description: `Tạo mới phòng ban: ${name}`,
+      performedBy: req.user?.userId,
+    });
     res.status(201).json({ message: "Tạo khoa thành công", department: newDepartment });
   } catch (error) {
     console.error("Lỗi tạo khoa:", error);
@@ -156,7 +165,6 @@ exports.createDepartment = async (req, res) => {
 
 
 
-// Cập nhật khoa
 exports.updateDepartment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -170,45 +178,61 @@ exports.updateDepartment = async (req, res) => {
 
     // 2. Kiểm tra trùng tên (nếu có name gửi lên)
     if (name) {
-      const existing = await Department.findOne({
-        name,
-        _id: { $ne: id },
-      });
+      const existing = await Department.findOne({ name, _id: { $ne: id } });
       if (existing) {
         return res.status(400).json({ message: "Tên khoa đã tồn tại" });
       }
     }
 
-    // 3. Chuẩn bị dữ liệu cập nhật
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (description) updateData.description = description;
-
-    // ✅ Xử lý status
-    if (status && ['active', 'inactive'].includes(status)) {
-      updateData.status = status;
+    const oldDepartment = await Department.findById(id);
+    if (!oldDepartment) {
+      return res.status(404).json({ message: "Không tìm thấy khoa để cập nhật" });
     }
 
-    // ✅ Xử lý ảnh nếu có file upload
+    // 3. Chuẩn bị dữ liệu cập nhật
+    const updateData = {};
+    let changes = [];
+
+    if (name && name !== oldDepartment.name) {
+      updateData.name = name;
+      changes.push(`Tên từ "${oldDepartment.name}" → "${name}"`);
+    }
+
+    if (description && description !== oldDepartment.description) {
+      updateData.description = description;
+      changes.push(
+        `Mô tả từ "${oldDepartment.description || "trống"}" → "${description}"`
+      );
+    }
+
+    if (status && ['active', 'inactive'].includes(status) && status !== oldDepartment.status) {
+      updateData.status = status;
+      changes.push(`Trạng thái từ "${oldDepartment.status}" → "${status}"`);
+    }
+
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: "departments",
       });
       updateData.image = result.secure_url;
-
-      // Xoá file tạm
+      changes.push("Cập nhật ảnh đại diện");
       await fs.unlink(req.file.path).catch(() => {});
     }
 
-    // 4. Cập nhật trong DB
-    const updated = await Department.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
+    // 4. Cập nhật DB
+    const updated = await Department.findByIdAndUpdate(id, { $set: updateData }, {
+      new: true,
+      runValidators: true,
+    });
 
-    if (!updated) {
-      return res.status(404).json({ message: "Không tìm thấy khoa để cập nhật" });
+    // 5. Ghi log nếu có thay đổi
+    if (changes.length > 0) {
+      await DepartmentLog.create({
+        departmentId: updated._id,
+        action: "update",
+        description: `Thay đổi: ${changes.join("; ")}`,
+        performedBy: req.user?.userId,
+      });
     }
 
     return res.status(200).json({
@@ -223,6 +247,7 @@ exports.updateDepartment = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -242,5 +267,19 @@ exports.deleteDepartment = async (req, res) => {
     res.status(200).json({ message: "Xóa khoa thành công" });
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+exports.getDepartmentLogs = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const logs = await DepartmentLog.find({ departmentId: id })
+      .populate("performedBy", "name role employeeCode")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ logs });
+  } catch (error) {
+    console.error("Lỗi khi lấy logs:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
