@@ -15,11 +15,6 @@ const AccountantSidebar = () => {
       label: "Xem Hồ Sơ Cá Nhân",
       icon: <UserOutlined />,
     },
-    {
-      to: "/accountant/attendance",
-      label: "Điểm Danh",
-      icon: <CalendarOutlined />,
-    },
   ];
 
   const handleLogout = () => {
