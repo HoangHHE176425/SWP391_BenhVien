@@ -72,29 +72,45 @@ module.exports.editUsers = async (req, res) => {
     const updates = { ...req.body };
     const changes = {};
 
-    // Xử lý mật khẩu mới nếu có
+    // Hash password nếu có
     if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
-      changes["password"] = { from: "****", to: "****" };
+      const hashed = await bcrypt.hash(updates.password, 10);
+      updates.password = hashed;
+      changes["password"] = { from: "••••", to: "••••" };
     }
 
-    // Kiểm tra các trường thay đổi
-    for (const key in updates) {
-      if (key !== "password" && updates[key] !== user[key]) {
-        changes[key] = { from: user[key], to: updates[key] };
-        user[key] = updates[key];
-      } else if (key === "password") {
+    // So sánh từng trường và ghi lại thay đổi
+    const updatableFields = [
+      "name",
+      "email",
+      "phone",
+      "role",
+      "status",
+      "password",
+    ]; // 🔐 lọc những trường cho phép cập nhật và log
+
+    updatableFields.forEach((field) => {
+      if (updates[field] !== undefined && field !== "password") {
+        const current = user[field];
+        const next = updates[field];
+
+        if (String(current) !== String(next)) {
+          changes[field] = { from: current, to: next };
+          user[field] = next;
+        }
+      } else if (field === "password" && updates.password) {
         user.password = updates.password;
       }
-    }
+    });
 
-    user.updatedBy = req.user?.id || null; // ✅ SỬA Ở ĐÂY
+    user.updatedBy = req.user?.id || null;
     const updatedUser = await user.save();
 
+    // ✅ Ghi log nếu có thay đổi
     if (Object.keys(changes).length > 0) {
       await UserLog.create({
         user: user._id,
-        actionBy: req.user?.id || null, // ✅ VÀ Ở ĐÂY
+        actionBy: req.user?.id || null,
         actionType: "update",
         changes,
       });
@@ -102,6 +118,7 @@ module.exports.editUsers = async (req, res) => {
 
     res.json(updatedUser);
   } catch (err) {
+    console.error("❌ Error updating user:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -162,7 +179,7 @@ module.exports.getUserLog = async (req, res) => {
   try {
     const logs = await UserLog.find({ user: req.params.id })
       .sort({ createdAt: -1 })
-      .populate("actionBy", "name"); // Optional
+      .populate("actionBy", "name employeeCode");
     res.json(logs);
   } catch (err) {
     res.status(500).json({ message: "Không thể lấy log", error: err.message });
