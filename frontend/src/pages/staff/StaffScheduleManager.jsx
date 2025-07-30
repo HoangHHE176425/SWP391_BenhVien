@@ -27,39 +27,50 @@ function StaffScheduleManager() {
   const [filterDate, setFilterDate] = useState(null);
   const [autoModalVisible, setAutoModalVisible] = useState(false);
   const [autoForm] = Form.useForm();
-  useEffect(() => {
-    fetchSchedules();
-    fetchDepartments();
-  }, []);
+  const token = localStorage.getItem("token"); 
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [departmentDetailVisible, setDepartmentDetailVisible] = useState(false);
+
+useEffect(() => {
+  fetchSchedules();
+  fetchDepartments();
+}, []);
+
 
   useEffect(() => {
     let result = schedules;
     
     if (searchText) {
-      result = result.filter(schedule => 
-        (typeof schedule.employeeId === 'object' 
-          ? schedule.employeeId.name?.toLowerCase()
-          : schedule.employeeId?.toLowerCase()
-        )?.includes(searchText.toLowerCase())
-      );
+      const lowerText = searchText.toLowerCase();
+      result = result.filter(schedule => {
+        const emp = schedule.employeeId;
+        const name = typeof emp === 'object' ? emp.name?.toLowerCase() : '';
+        const code = typeof emp === 'object' ? emp.employeeCode?.toLowerCase() : '';
+        return name?.includes(lowerText) || code?.includes(lowerText);
+      });
     }
-
     if (filterDepartment) {
-      result = result.filter(schedule => schedule.department === filterDepartment);
+      result = result.filter(schedule => {
+        const depId = typeof schedule.department === 'object' ? schedule.department._id : schedule.department;
+        return depId === filterDepartment;
+      });
     }
-
     if (filterDate) {
       result = result.filter(schedule => 
         dayjs(schedule.date).format('YYYY-MM-DD') === filterDate.format('YYYY-MM-DD')
       );
     }
 
+
     setFilteredSchedules(result);
   }, [schedules, searchText, filterDepartment, filterDate]);
 
   const fetchSchedules = async () => {
     try {
-      const res = await axios.get('/api/staff/schedule');
+      const res = await axios.get('/api/staff/schedule-management/schedule');
       setSchedules(res.data);
     } catch (err) {
       message.error('Không thể lấy lịch');
@@ -86,14 +97,19 @@ function StaffScheduleManager() {
 
   const handleDepartmentChange = (value) => {
     form.setFieldValue('employeeId', undefined);
-    fetchEmployeesByDepartment(value);
+    fetchEmployeesByDepartment(value); // `value` ở đây luôn là _id từ <Select>
   };
-const handleAutoGenerateSchedule = async (values) => {
+  const handleAutoGenerateSchedule = async (values) => {
   const { department, employeeId, workingShifts, dateRange } = values;
   const [startDateRaw, endDateRaw] = dateRange;
 
   if (!startDateRaw || !endDateRaw) {
     message.error('Vui lòng chọn khoảng ngày hợp lệ');
+    return;
+  }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
     return;
   }
 
@@ -137,7 +153,16 @@ const handleAutoGenerateSchedule = async (values) => {
         timeSlots
       };
 
-      await axios.post('/api/staff/schedule', payload);
+      await axios.post(
+        '/api/staff/schedule-management/schedule',
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
       current = current.add(1, 'day');
     }
 
@@ -152,12 +177,9 @@ const handleAutoGenerateSchedule = async (values) => {
   }
 };
 
-
-
-
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/staff/schedule/${id}`);
+      await axios.delete(`/api/staff/schedule-management/schedule/${id}`);
       message.success('Lịch đã xóa');
       fetchSchedules();
     } catch (err) {
@@ -179,10 +201,10 @@ const handleAutoGenerateSchedule = async (values) => {
 
     try {
       if (editingId) {
-        await axios.put(`/api/staff/schedule/${editingId}`, payload);
+        await axios.put(`/api/staff/schedule-management/schedule/${editingId}`, payload);
         message.success('Lịch trình đã cập nhật');
       } else {
-        await axios.post('/api/staff/schedule', payload);
+        await axios.post('/api/staff/schedule-management/schedule', payload);
         message.success('Lịch đã được tạo');
       }
 
@@ -196,17 +218,20 @@ const handleAutoGenerateSchedule = async (values) => {
     }
   };
 
-  const handleEdit = (record) => {
-    fetchEmployeesByDepartment(record.department);
+  const handleEdit = async (record) => {
+    const depId = typeof record.department === 'object' ? record.department._id : record.department;
+    await fetchEmployeesByDepartment(depId);
+
     form.setFieldsValue({
       employeeId: typeof record.employeeId === 'object' ? record.employeeId._id : record.employeeId,
-      department: record.department,
+      department: depId,
       date: dayjs(record.date),
       timeSlots: record.timeSlots.map(slot => ({
         timeRange: [dayjs(slot.startTime), dayjs(slot.endTime)],
         status: slot.status
       }))
     });
+
     setEditingId(record._id);
     setIsModalVisible(true);
   };
@@ -227,14 +252,36 @@ const handleAutoGenerateSchedule = async (values) => {
     {
       title: 'Bác sĩ',
       dataIndex: 'employeeId',
-      render: emp => typeof emp === 'object' ? emp.name || emp._id : emp
+      render: emp => {
+        const employee = typeof emp === 'object' ? emp : employees.find(e => e._id === emp);
+        if (!employee) return 'N/A';
+
+        return (
+          <Button type="link" onClick={() => {
+            setSelectedEmployee(employee);
+            setDetailModalVisible(true);
+          }}>
+            {employee.employeeCode || employee._id}
+          </Button>
+        );
+      }
     },
     {
       title: 'Khoa',
       dataIndex: 'department',
       render: (depId) => {
-        const dep = departments.find(d => d._id === (depId?._id || depId));
-        return dep?.name || 'N/A';
+        const department = departments.find(d => d._id === (depId?._id || depId));
+        if (!department) return <Tag color="red">Đã bị vô hiệu</Tag>;
+        if (!department) return 'N/A';
+
+        return (
+          <Button type="link" onClick={() => {
+            setSelectedDepartment(department);
+            setDepartmentDetailVisible(true);
+          }}>
+            {department.departmentCode || department.name}
+          </Button>
+        );
       }
     },
     {
@@ -302,7 +349,7 @@ const handleAutoGenerateSchedule = async (values) => {
 
       <Space style={{ marginBottom: 16 }}>
         <Search
-          placeholder="Tìm kiếm theo tên bác sĩ"
+          placeholder="Tìm theo tên hoặc mã bác sĩ"
           onSearch={value => setSearchText(value)}
           onChange={e => setSearchText(e.target.value)}
           style={{ width: 200 }}
@@ -315,9 +362,11 @@ const handleAutoGenerateSchedule = async (values) => {
           onChange={value => setFilterDepartment(value)}
           value={filterDepartment}
         >
-          {departments.map(dep => (
+        {departments
+          .filter(dep => dep.status === 'active')
+          .map(dep => (
             <Option key={dep._id} value={dep._id}>{dep.name}</Option>
-          ))}
+        ))}
         </Select>
         <DatePicker
           placeholder="Lọc theo ngày"
@@ -364,12 +413,13 @@ const handleAutoGenerateSchedule = async (values) => {
             rules={[{ required: true, message: 'Vui lòng chọn khoa' }]}
           >
             <Select placeholder="Chọn khoa" onChange={handleDepartmentChange}>
-              {departments.map(dep => (
-                <Option key={dep._id} value={dep._id}>{dep.name}</Option>
-              ))}
+              {departments
+                .filter(dep => dep.status === 'active')
+                .map(dep => (
+                  <Option key={dep._id} value={dep._id}>{dep.name}</Option>
+                ))}
             </Select>
           </Form.Item>
-
           <Form.Item
             label="Bác sĩ"
             name="employeeId"
@@ -469,12 +519,13 @@ const handleAutoGenerateSchedule = async (values) => {
       rules={[{ required: true, message: 'Chọn khoa' }]}
     >
       <Select onChange={fetchEmployeesByDepartment} placeholder="Chọn khoa">
-        {departments.map(dep => (
-          <Option key={dep._id} value={dep._id}>{dep.name}</Option>
-        ))}
+        {departments
+          .filter(dep => dep.status === 'active')
+          .map(dep => (
+            <Option key={dep._id} value={dep._id}>{dep.name}</Option>
+          ))}
       </Select>
     </Form.Item>
-
     <Form.Item
       name="employeeId"
       label="Bác sĩ"
@@ -559,6 +610,50 @@ const handleAutoGenerateSchedule = async (values) => {
     </Form.Item>
 
   </Form>
+</Modal>
+<Modal
+  title="Chi tiết bác sĩ"
+  open={detailModalVisible}
+  onCancel={() => setDetailModalVisible(false)}
+  footer={null}
+>
+  {selectedEmployee ? (
+    <div>
+      <p><strong>Tên:</strong> {selectedEmployee.name}</p>
+      <p><strong>Email:</strong> {selectedEmployee.email}</p>
+      <p><strong>Số điện thoại:</strong> {selectedEmployee.phone}</p>
+      <p><strong>Chuyên môn:</strong> {selectedEmployee.specialization}</p>
+      <p><strong>Bằng cấp:</strong> {selectedEmployee.degree}</p>
+      <p><strong>Năm kinh nghiệm:</strong> {selectedEmployee.expYear}</p>
+      <p><strong>Vai trò:</strong> {selectedEmployee.role}</p>
+      <p><strong>Trạng thái:</strong> {selectedEmployee.status}</p>
+    </div>
+  ) : (
+    <p>Đang tải...</p>
+  )}
+</Modal>
+<Modal
+  title="Chi tiết khoa"
+  open={departmentDetailVisible}
+  onCancel={() => setDepartmentDetailVisible(false)}
+  footer={null}
+>
+  {selectedDepartment ? (
+    <div>
+      <p><strong>Mã khoa:</strong> {selectedDepartment.departmentCode}</p>
+      <p><strong>Tên khoa:</strong> {selectedDepartment.name}</p>
+      <p><strong>Mô tả:</strong> {selectedDepartment.description || 'Không có'}</p>
+      {selectedDepartment.image && (
+        <img
+          src={selectedDepartment.image}
+          alt="Ảnh khoa"
+          style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8 }}
+        />
+      )}
+    </div>
+  ) : (
+    <p>Đang tải...</p>
+  )}
 </Modal>
 
     </div>
