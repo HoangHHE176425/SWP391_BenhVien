@@ -16,6 +16,7 @@ const recordsSchema = new mongoose.Schema({
   dischargeDate: { type: Date }, // Ngày xuất viện
   admissionReason: { type: String },
   admissionDiagnosis: { type: String },
+  admissionLabTest: { type: String },
   dischargeDiagnosis: { type: String },
   treatmentSummary: { type: String },
   ethnicity: { type: String },

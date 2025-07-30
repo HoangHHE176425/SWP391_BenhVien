@@ -1,22 +1,25 @@
 // File: UserMedicalProfileDetail.js
 // --- BẮT ĐẦU CODE ---
 
-import { useState, useEffect } from "react"
 import {
+  Button,
+  Checkbox,
+  DatePicker,
   Form,
   Input,
-  Button,
-  List, // Sử dụng List để hiển thị danh sách gọn gàng hơn
-  Space,
-  Typography,
+  List,
   message,
   Modal,
-  Select,
-  Checkbox,
+  Select, // Sử dụng List để hiển thị danh sách gọn gàng hơn
+  Space,
   Spin,
-  DatePicker,
+  Tag,
+  Typography
 } from "antd"
+import axios from "axios"
 import dayjs from "dayjs"
+import { useEffect, useState } from "react"
+import "../assets/css/LabTestPage.css"
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -46,6 +49,7 @@ const ProfileSelectionList = ({ profiles, onSelect }) => (
 
 const UserMedicalProfileDetail = () => {
   const [modalForm] = Form.useForm()
+  const [labTestForm] = Form.useForm()
 
   // State quản lý UI chính
   const [identityToSearch, setIdentityToSearch] = useState("")
@@ -60,9 +64,13 @@ const UserMedicalProfileDetail = () => {
 
   // State cho dữ liệu phụ (dịch vụ, thuốc)
   const [services, setServices] = useState([])
-  const [medicines, setMedicines] = useState([])
-  const [isMedicineLoading, setIsMedicineLoading] = useState(false)
-  const [appointments, setAppointments] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState(null)
+  const [isSavingLabTest, setIsSavingLabTest] = useState(false)
+  
+  // Lấy thông tin bác sĩ từ localStorage
+  const doctor = JSON.parse(localStorage.getItem("user"));
 
   // --- I. HÀM GỌI API ---
 
@@ -80,6 +88,34 @@ const UserMedicalProfileDetail = () => {
     }
     fetchServices()
   }, [])
+
+  useEffect(() => {
+    fetchRecords();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+
+  const fetchRecords = async () => {
+    if (!doctor || !doctor._id) {
+      console.log("Không tìm thấy thông tin bác sĩ");
+      return;
+    }
+    
+    try {
+      const res = await axios.get(`/api/record`, {
+        params: {
+          status: 'pending_clinical',
+          doctorAct: doctor._id
+        }
+      });
+      console.log(res.data);
+      setRecords(res.data.data || []);
+    } catch ( err) {
+      console.log(err);
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // 2. Tìm kiếm hồ sơ và mở popup lựa chọn
   const handleSearchAndShowSelection = async () => {
@@ -112,32 +148,15 @@ const UserMedicalProfileDetail = () => {
     }
   }
 
-  // 3. Tìm kiếm thuốc
-  const handleMedicineSearch = async (searchText) => {
-    if (searchText && searchText.length > 1) {
-      setIsMedicineLoading(true)
-      try {
-        const response = await fetch(
-          `http://localhost:9999/api/medicines?search=${searchText}`
-        )
-        const data = await response.json()
-        setMedicines(data)
-      } catch (error) {
-        console.log(error)
-        setMedicines([])
-      } finally {
-        setIsMedicineLoading(false)
-      }
-    } else {
-      setMedicines([])
-    }
-  }
-
   // 4. Gửi dữ liệu cập nhật
   const handleUpdateProfile = async (values) => {
+    if (!doctor || !doctor._id) {
+      message.error("Không tìm thấy thông tin bác sĩ");
+      return;
+    }
+    
     setIsUpdating(true)
     try {
-      const doctor = JSON.parse(localStorage.getItem("user"));
       const response = await fetch(
         `http://localhost:9999/api/doctor/${selectedProfile._id}`,
         {
@@ -158,6 +177,40 @@ const UserMedicalProfileDetail = () => {
       setIsUpdating(false)
     }
   }
+
+  // Xử lý chọn record từ danh sách
+  const handleSelectRecord = (record) => {
+    setSelectedRecord(record);
+    labTestForm.setFieldsValue({
+      admissionLabTest: record.admissionLabTest || ""
+    });
+  };
+
+  // Xử lý lưu kết quả xét nghiệm
+  const handleSaveLabTest = async (values) => {
+    if (!selectedRecord) {
+      message.error("Vui lòng chọn một record để cập nhật");
+      return;
+    }
+
+    setIsSavingLabTest(true);
+    try {
+      await axios.put(`/api/record/${selectedRecord._id}`, {
+        ...selectedRecord,
+        admissionLabTest: values.admissionLabTest,
+        status: 'pending_re-examination'
+      });
+      message.success("Kết quả xét nghiệm đã được cập nhật thành công!");
+      await fetchRecords(); // Refresh danh sách
+      setSelectedRecord(null);
+      labTestForm.resetFields();
+    } catch (error) {
+      console.error("Lỗi khi cập nhật kết quả xét nghiệm:", error);
+      message.error("Có lỗi xảy ra khi cập nhật kết quả xét nghiệm!");
+    } finally {
+      setIsSavingLabTest(false);
+    }
+  };
 
   // --- II. HÀM XỬ LÝ GIAO DIỆN ---
 
@@ -198,7 +251,7 @@ const UserMedicalProfileDetail = () => {
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: "auto" }}>
-      <Title level={3}>Tìm hồ sơ y tế</Title>
+      <Title level={3}>Quản lý xét nghiệm</Title>
 
       <Form
         layout="inline"
@@ -320,6 +373,107 @@ const UserMedicalProfileDetail = () => {
           </Form>
         )}
       </Modal>
+
+      {/* Khung danh sách chờ và form xét nghiệm */}
+      <div className="flex gap-10">
+        {/* Danh sách chờ xét nghiệm */}
+        <div className="khung-ds-cho max-h-[500px] overflow-y-auto w-1/3">
+          <Title level={4}>Danh sách chờ xét nghiệm</Title>
+          {loading ? <div className="appointment-list">
+            <Spin />
+          </div> : <div className="appointment-list">
+            {records?.length > 0 ? (
+              records?.map((record) => (
+                <div
+                  key={record?._id}
+                  className={`appointment-item ${selectedRecord?._id === record?._id ? 'selected' : ''}`}
+                  onClick={() => handleSelectRecord(record)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="appointment-header">
+                    <div className="appointment-time">
+                      {dayjs(record?.createdAt).format('DD/MM/YYYY HH:mm')}
+                    </div>
+                    <Tag
+                      className={`appointment-status ${
+                        record?.status === 'pending_clinical' ? 'status-pending' : 'status-booked'
+                      }`}
+                    >
+                      {record?.status === 'pending_clinical' ? 'Chờ xét nghiệm' : ''}
+                    </Tag>
+                  </div>
+                  <div className="appointment-info">
+                    <div>
+                      <span>Bệnh nhân:</span> <strong>{record?.profileId?.name || 'N/A'}</strong>
+                    </div>
+                    <div>
+                      <span>Dịch vụ:</span> <strong>{record?.services?.map((service) => service?.name).join(', ')}</strong>
+                    </div>
+                    <div>
+                      <span>Chẩn đoán:</span> <strong>{record?.admissionDiagnosis || 'Chưa có'}</strong>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                Không có lịch hẹn nào trong danh sách chờ
+              </div>
+            )}
+          </div>}
+        </div>
+
+        {/* Form cập nhật kết quả xét nghiệm */}
+        <div className="khung-form-xet-nghiem w-2/3">
+          <Title level={4}>Cập nhật kết quả xét nghiệm</Title>
+          {selectedRecord ? (
+            <div style={{ padding: '20px', border: '1px solid #d9d9d9', borderRadius: '8px', backgroundColor: '#fafafa' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <Text strong>Bệnh nhân: {selectedRecord.profileId?.name}</Text>
+                <br />
+                <Text type="secondary">Ngày tạo: {dayjs(selectedRecord.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
+              </div>
+              
+              <Form
+                form={labTestForm}
+                layout="vertical"
+                onFinish={handleSaveLabTest}
+              >
+                <Form.Item 
+                  name="admissionLabTest" 
+                  label="Kết quả xét nghiệm"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập chẩn đoán!",
+                    },
+                  ]}
+                >
+                  <Input.TextArea
+                    rows={4}
+                    placeholder="Nhập chẩn đoán"
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={isSavingLabTest}
+                    size="large"
+                  >
+                    Cập nhật kết quả xét nghiệm
+                  </Button>
+                </Form.Item>
+              </Form>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#666', padding: '40px', border: '1px solid #d9d9d9', borderRadius: '8px', backgroundColor: '#fafafa' }}>
+              Vui lòng chọn một bệnh nhân từ danh sách để cập nhật kết quả xét nghiệm
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

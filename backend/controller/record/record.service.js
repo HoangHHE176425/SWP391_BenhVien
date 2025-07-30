@@ -22,12 +22,13 @@ class RecordService {
     }
 
     async getRecords(req, res) {
-        const { status, patientId, appointmentId } = req.query;
+        const { status, patientId, appointmentId, docterAct } = req.query;
         try {
             const records = await Records.find({
                 ...(status && {status}), 
                 ...(patientId && {patientId}), 
-                ...(appointmentId && {appointmentId})
+                ...(appointmentId && {appointmentId}),
+                ...(docterAct && {docterAct: docterAct})
             })
             .populate('services')
             .populate('appointmentId', 'appointmentDate type status reminderSent')
@@ -60,18 +61,32 @@ class RecordService {
 
     async updateRecord(req, res) {
         try {
+            console.log(req.body);
             const updatedRecord = await Records.findByIdAndUpdate(
                 req.params.id,
                 {
                     ...req.body,
                     updatedAt: new Date()
-                },
-                { new: true }
+                }
             ).populate('services')
              .populate('appointmentId')
              .populate('profileId')
              .populate('doctorId')
              .populate('department');
+
+             console.log(req.body.status);
+
+            if (req.body.status === "done") {
+                await Appointment.findByIdAndUpdate(req.body.appointmentId, {
+                    status: "done",
+                    updatedAt: new Date(),
+                });
+            } else if (req.body.status === "pending_re-examination") {
+                await Appointment.findByIdAndUpdate(req.body.appointmentId, {
+                    status: "pending_re-examination",
+                    updatedAt: new Date(),
+                });
+            }
             
             if (!updatedRecord) {
                 return res.status(404).json({ success: false, message: "Record not found" });

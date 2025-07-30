@@ -93,9 +93,17 @@ const UserMedicalProfileDetail = () => {
 
   const fetchAppointments = async (doctorId) => {
     try {
-      const res = await axios.get(`/api/appointments`, {
-        params: { doctorId, status: ['pending_clinical', 'waiting_for_doctor'], increaseSort: 1 },
-      });
+      // Sử dụng URLSearchParams để tạo query string đúng format
+      const params = new URLSearchParams();
+      params.append('doctorId', doctorId);
+      params.append('increaseSort', '1');
+      
+      // Thêm từng status riêng biệt
+      params.append('status', 'pending_clinical');
+      params.append('status', 'waiting_for_doctor');
+      params.append('status', 'pending_re-examination');
+      
+      const res = await axios.get(`/api/appointments?${params.toString()}`);
       setAppointments(res.data);
     } catch (err) {
       console.error(err);
@@ -263,6 +271,11 @@ const UserMedicalProfileDetail = () => {
     }
   };
 
+  const handleRestTree = () => {
+    setSelectedAppointment(null);
+    fetchAppointments(doctor._id);
+  }
+
   // --- III. RENDER COMPONENT ---
 
   return (
@@ -330,7 +343,7 @@ const UserMedicalProfileDetail = () => {
                       appointment.status === 'pending_clinical' ? 'status-pending' : 'status-booked'
                     }`}
                   >
-                    {appointment.status === 'pending_clinical' ? 'Chờ xét nghiệm' : 'Chờ khám'}
+                    {appointment.status === 'pending_clinical' ? 'Chờ xét nghiệm' : appointment.status === 'pending_re-examination' ? 'Chờ tái khám' : 'Chờ khám'}
                   </Tag>
                 </div>
                 <div className="appointment-info">
@@ -362,6 +375,7 @@ const UserMedicalProfileDetail = () => {
         selectedAppointment={selectedAppointment}
         onSaveRecord={handleSaveMedicalRecord}
         onUpdateRecord={handleUpdateRecord}
+        handleRestTree={handleRestTree}
       />
       </div>
 
