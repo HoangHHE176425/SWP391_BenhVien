@@ -39,20 +39,35 @@ const ProfileDoctor = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const res = await fetch("http://localhost:9999/api/admin/getDepart");
-        const data = await res.json();
-        setDepartments(data);
-      } catch (err) {
-        console.error("Failed to fetch departments:", err);
-      }
-    };
+ const fetchDepartments = async () => {
+  try {
+    const res = await fetch("http://localhost:9999/api/departments", {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+    });
+
+    const data = await res.json();
+    console.log("🚀 API Response for departments:", data);
+
+    const deptList = Array.isArray(data?.departments)
+      ? data.departments
+      : Array.isArray(data)
+      ? data
+      : [];
+
+    setDepartments(deptList);
+  } catch (err) {
+    console.error("❌ Failed to fetch departments:", err);
+  }
+};
+
 
     if (user?.role === "Doctor") {
       fetchDepartments();
     }
   }, [user]);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -89,24 +104,32 @@ const ProfileDoctor = () => {
 
         updatedProfilePicture = uploadData.profilePictureUrl;
       }
+      // Chuẩn bị payload sạch sẽ
+      const payload = {
+        email: user.email,
+        name: formData.fullname,
+        phone: formData.phone,
+        status: "active",
+        profilePicture: updatedProfilePicture,
+      };
 
-      const res = await fetch("http://localhost:9999/api/user/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          email: user.email,
-          name: formData.fullname,
-          phone: formData.phone,
-          status: "active",
-          profilePicture: updatedProfilePicture,
-          department: user.role === "Doctor" ? formData.department : undefined,
-          specialization:
-            user.role === "Doctor" ? formData.specialization : undefined,
-        }),
-      });
+      // Chỉ thêm nếu có giá trị thực sự
+      if (user.role === "Doctor") {
+        if (formData.department && formData.department.trim() !== "") {
+          payload.department = formData.department;
+        }
+        if (formData.specialization && formData.specialization.trim() !== "") {
+          payload.specialization = formData.specialization;
+        }
+      }
+    const res = await fetch("http://localhost:9999/api/user/update", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user.token}`,
+      },
+      body: JSON.stringify(payload),
+    });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Cập nhật thất bại");
@@ -203,7 +226,7 @@ const ProfileDoctor = () => {
                   value={formData.fullname}
                   onChange={handleInputChange}
                   className="form-control"
-                  required
+                  disabled
                 />
               </div>
 
@@ -218,6 +241,7 @@ const ProfileDoctor = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   className="form-control"
+                  disabled
                 />
               </div>
 
@@ -228,21 +252,18 @@ const ProfileDoctor = () => {
                     <label htmlFor="department" className="form-label">
                       Khoa
                     </label>
-                    <select
+                    <input
+                      type="text"
                       id="department"
                       name="department"
-                      value={formData.department}
-                      onChange={handleInputChange}
+                      value={
+                        departments.find((dept) => dept._id === formData.department)?.name || ""
+                      }
                       className="form-control"
-                    >
-                      <option value="">-- Chọn Khoa --</option>
-                      {departments.map((dept) => (
-                        <option key={dept._id} value={dept._id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
+                      disabled
+                    />
                   </div>
+
 
                   <div className="col-md-6 mb-3">
                     <label htmlFor="specialization" className="form-label">
@@ -255,27 +276,12 @@ const ProfileDoctor = () => {
                       value={formData.specialization}
                       onChange={handleInputChange}
                       className="form-control"
+                      disabled 
                     />
                   </div>
                 </>
               )}
             </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary mt-3"
-              disabled={loading}
-            >
-              {loading ? "Đang Lưu..." : "Lưu Thay Đổi"}
-            </button>
-            <br></br>
-            <button
-              type="button"
-              onClick={() => navigate("/changepass")}
-              className="btn btn-primary mt-3"
-            >
-              Change password
-            </button>
           </form>
         </div>
       </div>
