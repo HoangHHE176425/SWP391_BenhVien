@@ -23,9 +23,9 @@ const BlogListPage = () => {
 
         const [blogsResponse, categoriesResponse, topViewedResponse] =
           await Promise.all([
-            axios.get("http://localhost:9999/api/staff/blogs", { headers }),
-            axios.get("http://localhost:9999/api/staff/categories", { headers }),
-            axios.get("http://localhost:9999/api/staff/blogs/top-viewed", {
+            axios.get("http://localhost:9999/api/receptionist/blogs", { headers }),
+            axios.get("http://localhost:9999/api/receptionist/categories", { headers }),
+            axios.get("http://localhost:9999/api/receptionist/blogs/top-viewed", {
               headers,
             }),
           ]);

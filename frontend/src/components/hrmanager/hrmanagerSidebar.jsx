@@ -16,11 +16,6 @@ const HrManagerSidebar = () => {
       label: "Hồ Sơ Quản Lý",
       icon: <UserOutlined />,
     },
-    {
-      to: "/hrmanager/attendance",
-      label: "Chấm Công",
-      icon: <CalendarOutlined />,
-    },
   ];
 
   const handleLogout = () => {

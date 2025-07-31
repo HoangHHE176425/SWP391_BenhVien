@@ -137,17 +137,17 @@ const authUserMiddleware = (req, res, next) => {
   });
 };
 
-const authStaffMiddleware = async (req, res, next) => {
+const authReceptionistMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
   if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const staff = await Employee.findById(decoded.id);
-    if (!staff) return res.status(404).json({ message: "Staff not found" });
+    const receptionist = await Employee.findById(decoded.id);
+    if (!receptionist) return res.status(404).json({ message: "Receptionist not found" });
 
-    req.user = { userId: staff._id }; // 👈 Quan trọng để thống nhất sử dụng req.user.userId
+    req.user = { userId: receptionist._id }; // 👈 Quan trọng để thống nhất sử dụng req.user.userId
     next();
   } catch (err) {
     res.status(401).json({ message: "Invalid token" });
@@ -161,4 +161,4 @@ const ismeomeo = (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, authAdminMiddleware, authDoctorMiddleware, authUserMiddleware, authStaffMiddleware, tokenBlacklist, isTokenBlacklisted };
+module.exports = { authMiddleware, authAdminMiddleware, authDoctorMiddleware, authUserMiddleware, authReceptionistMiddleware, tokenBlacklist, isTokenBlacklisted };

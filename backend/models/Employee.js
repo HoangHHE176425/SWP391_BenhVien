@@ -1,13 +1,18 @@
 const mongoose = require('mongoose');
 
 const employeeSchema = new mongoose.Schema({
+  employeeCode: {
+    type: String,
+    unique: true,
+    index: true,
+  },
   email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
   avatar: { type: String },
   role: {
     type: String,
-    enum: ['Pharmacist', 'Doctor', 'Nurse', 'Accountant', 'Admin'],
+    enum: ['Pharmacist', 'Doctor', 'Accountant', 'Admin', 'Receptionist', 'HRManager'],
     required: true,
   },
   degree: { type: String },
@@ -25,5 +30,16 @@ const employeeSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 employeeSchema.index({ role: 1, status: 1 });
+
+// ✅ Tự động sinh mã nhân viên dạng EMP001, EMP002...
+employeeSchema.pre('save', async function (next) {
+  if (this.isNew && !this.employeeCode) {
+    const Employee = mongoose.model('Employee', employeeSchema);
+    const count = await Employee.countDocuments({});
+    const nextCode = 'EMP' + String(count + 1).padStart(3, '0');
+    this.employeeCode = nextCode;
+  }
+  next();
+});
 
 module.exports = mongoose.model('Employee', employeeSchema);

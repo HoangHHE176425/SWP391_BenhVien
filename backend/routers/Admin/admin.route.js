@@ -5,13 +5,16 @@ const {
   getUserAccs,
   editUsers,
   delUsers,
+  createUser,
   getEmployees,
   editEmployees,
   delEmployees,
   createEmployees,
   changeStatus,
   getAllDepartments,
+  getUserLog,
 } = require("../../controller/admin/adminService");
+
 const {
   getAppointmentTypeStats,
   getRevenueByMethod,
@@ -22,41 +25,53 @@ const {
   getUserGrowthStats,
   getEmployeeStats,
 } = require("../../controller/admin/statisService");
-const { getAllAttendance, updateNote, createAttendance, getAttendConfig, updateAttendConfig } = require("../../controller/admin/attendanceService");
-const { get } = require("mongoose");
 
-// Admin - user manage
-adminRouter.get("/users", getUserAccs);
-adminRouter.put("/updUser/:id", editUsers);
-adminRouter.put("/changeStatus/:id", changeStatus);
-adminRouter.delete("/delUser/:id", delUsers);
+const {
+  getAllAttendance,
+  updateNote,
+  createAttendance,
+  getAttendConfig,
+  updateAttendConfig,
+} = require("../../controller/admin/attendanceService");
 
-// Admin - employee manage
-adminRouter.get("/employees", getEmployees);
-adminRouter.put("/updEmp/:id", editEmployees);
-adminRouter.delete("/delEmp/:id", delEmployees);
-adminRouter.post("/createEmp", createEmployees);
-adminRouter.get("/getDepart", getAllDepartments); 
-
-// Admin - statistics
-adminRouter.get("/user-registrations", getUserRegistrationTrend);
-adminRouter.get("/appointments", getAppointmentTrend);
-adminRouter.get("/revenue", getRevenueTrend);
-adminRouter.get("/appointment-types", getAppointmentTypeStats);
-adminRouter.get("/revenue-methods", getRevenueByMethod);
-adminRouter.get("/summaries", getDashboardSummaries);
-adminRouter.get("/user-growth-stats", getUserGrowthStats);
-adminRouter.get("/employee-stats", getEmployeeStats);
-
-// Admin - attendance management
-
-adminRouter.get('/attend', getAllAttendance);
-adminRouter.put('/attend/note/:id', updateNote);
-adminRouter.post('/createAttend', createAttendance);
+const { authAdminMiddleware } = require("../../middleware/auth.middleware");
 
 
-adminRouter.get('/attend-config', getAttendConfig);
-adminRouter.put('/upd-config', updateAttendConfig)
+// ---------------------- USER MANAGEMENT ----------------------
 
+// 🔐 Gắn middleware để req.user._id tồn tại trong controller (ghi log được)
+adminRouter.get("/users", authAdminMiddleware, getUserAccs);
+adminRouter.post("/createUser", authAdminMiddleware, createUser);
+adminRouter.put("/updateUser/:id", authAdminMiddleware, editUsers);
+adminRouter.put("/changeStatus/:id", authAdminMiddleware, changeStatus);
+adminRouter.delete("/delUser/:id", authAdminMiddleware, delUsers);
+adminRouter.get("/user-log/:id", authAdminMiddleware, getUserLog);
+
+// ---------------------- EMPLOYEE MANAGEMENT ----------------------
+
+adminRouter.get("/employees", authAdminMiddleware, getEmployees);
+adminRouter.post("/createEmp", authAdminMiddleware, createEmployees);
+adminRouter.put("/updEmp/:id", authAdminMiddleware, editEmployees);
+adminRouter.delete("/delEmp/:id", authAdminMiddleware, delEmployees);
+adminRouter.get("/getDepart", authAdminMiddleware, getAllDepartments);
+
+// ---------------------- STATISTICS ----------------------
+
+adminRouter.get("/user-registrations", authAdminMiddleware, getUserRegistrationTrend);
+adminRouter.get("/appointments", authAdminMiddleware, getAppointmentTrend);
+adminRouter.get("/revenue", authAdminMiddleware, getRevenueTrend);
+adminRouter.get("/appointment-types", authAdminMiddleware, getAppointmentTypeStats);
+adminRouter.get("/revenue-methods", authAdminMiddleware, getRevenueByMethod);
+adminRouter.get("/summaries", authAdminMiddleware, getDashboardSummaries);
+adminRouter.get("/user-growth-stats", authAdminMiddleware, getUserGrowthStats);
+adminRouter.get("/employee-stats", authAdminMiddleware, getEmployeeStats);
+
+// ---------------------- ATTENDANCE ----------------------
+
+adminRouter.get("/attend", authAdminMiddleware, getAllAttendance);
+adminRouter.put("/attend/note/:id", authAdminMiddleware, updateNote);
+adminRouter.post("/createAttend", authAdminMiddleware, createAttendance);
+adminRouter.get("/attend-config", authAdminMiddleware, getAttendConfig);
+adminRouter.put("/upd-config", authAdminMiddleware, updateAttendConfig);
 
 module.exports = adminRouter;

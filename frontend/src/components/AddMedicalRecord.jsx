@@ -18,7 +18,7 @@ const CreateProfile = () => {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const response = await axios.get('http://localhost:9999/api/staff/doctors');
+                const response = await axios.get('http://localhost:9999/api/receptionist/doctors');
                 if (response.data.success) {
                     setDoctors(response.data.data);
                 } else {
@@ -37,7 +37,7 @@ const CreateProfile = () => {
         setSuccess('');
 
         try {
-            const response = await axios.post('http://localhost:9999/api/staff/medical-record', {
+            const response = await axios.post('http://localhost:9999/api/receptionist/medical-record', {
                 userId: userId.trim() || null, // nếu không có userId sẽ là null
                 name,
                 dob,

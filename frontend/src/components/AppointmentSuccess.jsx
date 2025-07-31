@@ -20,7 +20,7 @@ const AppointmentSuccess = () => {
 
         if (orderCode && serviceId && amount && userId && profileId) {
             // 1. Gửi tạo hóa đơn
-            fetch("http://localhost:9999/api/staff/appointmentinvoices", {
+            fetch("http://localhost:9999/api/receptionist/appointmentinvoices", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderCode, serviceId, amount, userId, profileId }),

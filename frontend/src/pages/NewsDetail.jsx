@@ -41,9 +41,9 @@ const NewsDetail = () => {
 
         // Fetch news detail, increment views, and fetch prioritized news
         const [newsResponse, viewsResponse, prioritizedNewsResponse] = await Promise.all([
-          axios.get(`http://localhost:9999/api/staff/news/slug/${slug}`, { headers }),
-          axios.post(`http://localhost:9999/api/staff/news/slug/${slug}/views`, {}, { headers }), // Increment views
-          axios.get(`http://localhost:9999/api/staff/news/priority`, { headers }), // Fetch prioritized news
+          axios.get(`http://localhost:9999/api/receptionist/news/slug/${slug}`, { headers }),
+          axios.post(`http://localhost:9999/api/receptionist/news/slug/${slug}/views`, {}, { headers }), // Increment views
+          axios.get(`http://localhost:9999/api/receptionist/news/priority`, { headers }), // Fetch prioritized news
         ]);
 
         // Process news detail

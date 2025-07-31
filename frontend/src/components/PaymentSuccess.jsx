@@ -10,7 +10,7 @@ const PaymentSuccess = () => {
     useEffect(() => {
         const fetchPayment = async () => {
             try {
-                const res = await fetch(`http://localhost:9999/api/staff/success/${paymentId}`);
+                const res = await fetch(`http://localhost:9999/api/receptionist/success/${paymentId}`);
                 const data = await res.json();
                 if (data.success) {
                     setPayment(data.data);

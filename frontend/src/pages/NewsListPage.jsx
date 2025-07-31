@@ -24,7 +24,7 @@ const NEWS_CATEGORIES = [
   "Cập Nhật Dịch Vụ",
   "Khác",
 ];
-const API_BASE_URL = "http://localhost:9999/api/staff";
+const API_BASE_URL = "http://localhost:9999/api/receptionist";
 
 const NewsListPage = () => {
   const [newsItems, setNewsItems] = useState([]);
