@@ -46,8 +46,8 @@ const HomePage = () => {
         const [serviceResponse, departmentResponse, blogResponse, newsResponse] = await Promise.all([
           axios.get(`http://localhost:9999/api/user/service?t=${Date.now()}`, { headers }),
           axios.get(`http://localhost:9999/api/user/department?t=${Date.now()}`, { headers }),
-          axios.get(`http://localhost:9999/api/staff/blogs/top-viewed?t=${Date.now()}`, { headers }),
-          axios.get(`http://localhost:9999/api/staff/news/priority?t=${Date.now()}`, { headers }),
+          axios.get(`http://localhost:9999/api/receptionist/blogs/top-viewed?t=${Date.now()}`, { headers }),
+          axios.get(`http://localhost:9999/api/receptionist/news/priority?t=${Date.now()}`, { headers }),
         ]);
 
         // Log raw responses for debugging

@@ -3,7 +3,6 @@ const Department = require("../../models/Department");
 
 const getByDoctor = async (req, res) => {
   const doctorId = req.params.id;
-
   try {
     const schedules = await Schedule.find({ employeeId: doctorId });
 

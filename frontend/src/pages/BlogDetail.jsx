@@ -33,7 +33,7 @@ const BlogDetail = () => {
 
         // Fetch blog detail
         const blogResponse = await axios.get(
-          `http://localhost:9999/api/staff/blogs/slug/${slug}`,
+          `http://localhost:9999/api/receptionist/blogs/slug/${slug}`,
           { headers }
         );
         const transformedBlog = {
@@ -62,14 +62,14 @@ const BlogDetail = () => {
 
         // Increment blog views
         await axios.post(
-          `http://localhost:9999/api/staff/blogs/slug/${slug}/views`,
+          `http://localhost:9999/api/receptionist/blogs/slug/${slug}/views`,
           {},
           { headers }
         );
 
         // Fetch top viewed blogs
         const topViewedResponse = await axios.get(
-          "http://localhost:9999/api/staff/blogs/top-viewed",
+          "http://localhost:9999/api/receptionist/blogs/top-viewed",
           { headers }
         );
         setTopViewedBlogs(topViewedResponse.data);

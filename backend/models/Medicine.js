@@ -16,7 +16,7 @@ const medicineSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, min: 0 },
   unitPrice: { type: Number, required: true, min: 0 },
   expirationDate: { type: Date, required: true, index: true },
-  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }, // Staff
+  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }, // receptionist
   lastUpdated: { type: Date, default: Date.now }
 }, { timestamps: true });
 

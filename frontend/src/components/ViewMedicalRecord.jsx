@@ -22,7 +22,7 @@ const ViewMedicalRecords = () => {
     const fetchProfiles = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('http://localhost:9999/api/staff/medical-records', {
+            const res = await axios.get('http://localhost:9999/api/receptionist/medical-records', {
                 params: { page, limit, search, sortBy, order },
             });
             if (res.data.success) {
@@ -66,7 +66,7 @@ const ViewMedicalRecords = () => {
                         <h3 className="card-title text-primary">Danh Sách Hồ Sơ Y Tế</h3>
                         <Button
                             variant="primary"
-                            onClick={() => navigate('/staff/add/medicalrecords')}
+                            onClick={() => navigate('/receptionist/add/medicalrecords')}
                             aria-label="Xem hồ sơ y tế"
                         >
                             Tạo Hồ Sơ

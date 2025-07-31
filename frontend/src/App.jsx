@@ -7,7 +7,16 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import DoctorLayout from "./layouts/DoctorLayout";
+// Layouts
+import AccountantLayout from "./layouts/AccountantLayout";
+import PharmacistLayout from "./layouts/PharmacistLayout";
+import HrmanagerLayout from "./layouts/HrmanagerLayout";
+import DoctorLayout from "./components/doctor/DoctorLayout";
+import ReceptionistLayout from "./components/receptionist/ReceptionistLayout";
+import AdminLayout from "./components/admin/AdminLayout";
+// import receptionistLayout from "./components/receptionist/receptionistLayout";
+
+// Pages
 import UserMedicalProfile from "./pages/UserMedicalProfile";
 import ServicePage from "./pages/ServicePage";
 import DoctorPage from "./pages/DoctorPage";
@@ -24,7 +33,7 @@ import AppointmentManagePage from "./pages/AppointmentManagePage";
 import MedicalLabPage from "./pages/BlogTestPage.jsx";
 import TestPageDetails from "./pages/TestPageDetails.jsx";
 import WorkSchedulePage from "./pages/WorkSchedulePage";
-import StaffScheduleManager from "./pages/staff/StaffScheduleManager";
+import ReceptionistScheduleManager from "./pages/receptionist/ReceptionistScheduleManager";
 import Changepass from "./pages/ChangePassword";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -35,28 +44,21 @@ import AccountManagement from "./pages/admin/AccountManagement";
 import EmployeeManagement from "./pages/admin/EmployessManagement";
 import StaffLayout from "./components/staff/StaffLayout";
 import InvoiceUser from "./pages/InvoiceManagement";
-import BlogManagement from "./pages/staff/BlogManagement";
-import CategoryManagement from "./pages/staff/CategoryBlogManagement";
-import ServiceManagement from "./pages/staff/ServiceManagement";
-import DepartmentManagement from "./pages/staff/DepartmentManagement";
-import SpecialtyManagement from "./pages/staff/SpecialtyManagement";
-import InvoiceManagement from "./pages/staff/InvoiceManagement";
-import PaymentView from "./pages/staff/PaymentView";
-import NewsManagement from "./pages/staff/NewsManagement";
-import FeedbackManagement from "./pages/staff/FeedbackManagement";
-import QnAView from "./pages/staff/QnAView";
-import AppointmentScheduleManagement from "./pages/staff/AppointmentScheduleManagement";
-import NotificationManagement from "./pages/staff/NotificationManagement";
-import UserManagement from "./pages/staff/UserManagement";
-import MedicalRecord from "./pages/staff/MedicalRecord";
-import MedicineManagement from "./pages/staff/MedicineManagement";
-import Header from "./components/HeaderComponent";
-import MenuComponent from "./components/MenuComponent";
-import FooterComponent from "./components/FooterComponent";
-import InvoiceList from "./components/InvoiceList";
-import PaymentSuccess from "./components/PaymentSuccess";
-import PaymentFail from "./components/PaymentFail";
-import CreateInvoice from "./components/staff/CreateInvoice";
+import BlogManagement from "./pages/receptionist/BlogManagement";
+import CategoryManagement from "./pages/receptionist/CategoryBlogManagement";
+import ServiceManagement from "./pages/receptionist/ServiceManagement";
+import DepartmentManagement from "./pages/receptionist/DepartmentManagement";
+import SpecialtyManagement from "./pages/receptionist/SpecialtyManagement";
+import InvoiceManagement from "./pages/receptionist/InvoiceManagement";
+import PaymentView from "./pages/receptionist/PaymentView";
+import NewsManagement from "./pages/receptionist/NewsManagement";
+import FeedbackManagement from "./pages/receptionist/FeedbackManagement";
+import QnAView from "./pages/receptionist/QnAView";
+import AppointmentScheduleManagement from "./pages/receptionist/AppointmentScheduleManagement";
+import NotificationManagement from "./pages/receptionist/NotificationManagement";
+import UserManagement from "./pages/receptionist/UserManagement";
+import MedicalRecord from "./pages/receptionist/MedicalRecord";
+import MedicineManagement from "./pages/receptionist/MedicineManagement";
 import NotificationCenter from "./pages/NotificationCenter";
 import NotificationDetail from "./pages/NotificationDetail";
 import {
@@ -76,15 +78,15 @@ import NewsDetail from "./pages/NewsDetail";
 import BlogDetail from "./pages/BlogDetail";
 import ViewMedicalRecord from "./pages/ViewMedicalRecord";
 import NotFoundPage from "./pages/NotFoundPage";
-import DoctorAttendance from './components/staff/DoctorAttendance';
-import StaffAttendance from './pages/staff/attendanceStaff.jsx';
+import DoctorAttendance from "./components/receptionist/DoctorAttendance";
+import ReceptionistAttendance from "./pages/receptionist/attendanceReceptionist.jsx";
 import MedicineListPage from "./pages/MedicineListPage.jsx";
 import MedicineDetail from "./pages/MedicineDetail";
 import ServiceDetail from "./pages/ServiceDetail.jsx";
 import DepartmentPage from "./pages/DepartmentListPage.jsx";
 import DepartmentDetail from "./pages/DepartmentDetail.jsx";
 import QAHistories from "./pages/QAHistories";
-import ProfileStaff from "./pages/staff/ProfileStaff";
+import ProfileReceptionist from "./pages/receptionist/Profilereceptionist";
 import ProfileDoctor from "./pages/ProfileDoctor";
 // them FAQ
 import FAQList from "./pages/FAQ.jsx";
@@ -93,9 +95,35 @@ import AppointmentSuccess from "./components/AppointmentSuccess.jsx";
 import MedicinePage from "./pages/MedicinePage.jsx";
 import LabTestPage from "./pages/LabTestPage.jsx";
 import DoctorAppointments from "./pages/DoctorAppointment.jsx";
-import CreateInvoice2 from "./components/staff/CreateInvoiceTest.jsx";
+import CreateInvoice2 from "./components/receptionist/CreateInvoiceTest.jsx";
 import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
 import FeedbackList from "./pages/ListFeedback.jsx";
+import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
+import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
+import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
+
+// Components
+import Header from "./components/HeaderComponent";
+import MenuComponent from "./components/MenuComponent";
+import FooterComponent from "./components/FooterComponent";
+import InvoiceList from "./components/InvoiceList";
+import PaymentSuccess from "./components/PaymentSuccess";
+import PaymentFail from "./components/PaymentFail";
+import CreateInvoice from "./components/receptionist/CreateInvoice";
+import AddMedicalRecord from "./components/AddMedicalRecord";
+import ViewMedicalRecords from "./components/ViewMedicalRecord";
+import CreateServicePage from "./components/receptionist/CreateServicePage";
+import EditServicePage from "./components/receptionist/EditService";
+
+// Private Route Components
+import {
+  PrivateRoute,
+  PrivateRouteNotAllowUser,
+  PrivateRouteByRole,
+} from "./components/PrivateRoute";
+
+// CSS
+import "antd/dist/reset.css";
 
 const DRAWER_WIDTH = 240;
 
@@ -111,6 +139,19 @@ const RoleRedirect = () => {
 
     if (!user) return;
 
+    // Role-to-path mapping for redirection
+    const roleToPath = {
+      admin: "/admin",
+      receptionist: "/receptionist",
+      doctor: "/doctor",
+      pharmacist: "/pharmacist",
+      hrmanager: "/hrmanager",
+      accountant: "/accountant",
+      patient: "/home",
+      // receptionist: "/receptionist",
+    };
+
+    // Redirect from root path "/"
     if (path === "/") {
       if (role === "Admin") navigate("/admin", { replace: true });
       else if (role === "Staff") navigate("/staff", { replace: true });
@@ -119,17 +160,72 @@ const RoleRedirect = () => {
       return;
     }
 
-    if (role === "Admin" && !path.startsWith("/admin")) {
-      navigate("/admin", { replace: true });
+    // Role-to-path prefix mapping for access control
+    const rolePathPrefix = {
+      admin: "/admin",
+      receptionist: "/receptionist",
+      doctor: "/doctor",
+      pharmacist: "/pharmacist",
+      hrmanager: "/hrmanager",
+      accountant: "/accountant",
+      // receptionist: "/receptionist",
+    };
+
+
+    const expectedPrefix = rolePathPrefix[role];
+
+    // Redirect if current path doesn't match the role's prefix
+    if (
+      expectedPrefix &&
+      !path.startsWith(expectedPrefix) &&
+      ![
+        "/home",
+        "/service-home",
+        "/doctor-home",
+        "/blogs",
+        "/news",
+        "/blog/",
+        "/news/",
+        "/login",
+        "/register",
+        "/about",
+        "/medicines-home",
+        "/department-home",
+        "/myprofile",
+        "/invoice",
+        "/profilemanage",
+        "/appointment",
+        "/appointmentmanage",
+        "/not-found",
+        "/doctor/",
+        "/medicines/",
+        "/service/",
+        "/department/",
+        "/myappointments",
+        "/payment",
+        "/payment/success",
+        "/payment/fail",
+        "/health/calculator",
+        "/forgot-password",
+        "/reset-password",
+        "/notifications",
+        "/notifications/",
+        "/health/food",
+        "/qahistory",
+        "/qa",
+        "/faq",
+      ].some((allowedPath) => path === allowedPath || path.startsWith(allowedPath))
+    ) {
+      navigate(expectedPrefix, { replace: true });
+      return;
     }
-    // else if (role === "Staff" && !path.startsWith("/staff")) {
-    //   navigate("/staff", { replace: true });
-    // } else if (role === "Doctor" && !path.startsWith("/doctor")) {
-    //   navigate("/doctor", { replace: true });
-    // }
-    else if (
-      role === "patient" &&
-      (path.startsWith("/admin") || path.startsWith("/staff"))
+
+    // Prevent patients from accessing protected role-based paths
+    if (
+      role === "Patient" &&
+      ["/admin", "/receptionist", "/doctor", "/pharmacist", "/hrmanager", "/accountant"].some((prefix) =>
+        path.startsWith(prefix)
+      )
     ) {
       navigate("/home", { replace: true });
     }
@@ -206,16 +302,17 @@ const AppRoutes = () => {
           >
             <Route index element={<Dashboard />} />
             <Route path="accounts" element={<AccountManagement />} />
+            <Route path="departments" element={<DepartmentManagement />} />
             <Route path="employees" element={<EmployeeManagement />} />
             <Route path="attendance" element={<AttendanceManagement />} />
           </Route>
 
-          {/* Staff */}
+          {/* Receptionist Routes */}
           <Route
-            path="/staff/*"
+            path="/receptionist/*"
             element={
-              <PrivateRouteByRole allowedRoles={["Staff"]}>
-                <StaffLayout />
+              <PrivateRouteByRole allowedRoles={["Receptionist"]}>
+                <ReceptionistLayout />
               </PrivateRouteByRole>
             }
           >
@@ -247,28 +344,69 @@ const AppRoutes = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="medicalrecord" element={<MedicalRecord />} />
             <Route path="medicines" element={<MedicineManagement />} />
-            <Route path="schedule" element={<StaffScheduleManager />} />
-            <Route path="profile" element={<ProfileStaff />} />
-            <Route path="attendance" element={<StaffAttendance />} /> {/* Add Staff Attendance route */}
+            <Route path="schedule" element={<ReceptionistScheduleManager />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
+            <Route path="attendance" element={<ReceptionistAttendance />} />
           </Route>
 
-
-          <Route path="/doctor" element={<PrivateRouteByRole allowedRoles={["Doctor"]}><DoctorLayout /></PrivateRouteByRole>}>
-            <Route path="medical-profile" element={<UserMedicalProfile />} />
-            <Route path="medicine" element={<div>View Medicine Page</div>} />
-            <Route
-              path="appointments"
-              element={<div>Appointment List Page</div>}
-            />
-            <Route
-              path="notifications"
-              element={<div>Notifications Page</div>}
-            />
-            <Route path="work-schedule" element={<WorkSchedulePage />} />
-
-            <Route path="profile" element={<ProfileDoctor />} />
+          {/* Pharmacist Routes */}
+          <Route
+            path="/pharmacist/*"
+            element={
+              <PrivateRouteByRole allowedRoles={["Pharmacist"]}>
+                <PharmacistLayout />
+              </PrivateRouteByRole>
+            }
+          >
+            <Route index element={<InvoiceManagement />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
+            <Route path="attendance" element={<PharmacistAttendance />} />
           </Route>
-          {/* Public routes */}
+
+          {/* HR Manager Routes */}
+          <Route
+            path="/hrmanager/*"
+            element={
+              <PrivateRouteByRole allowedRoles={["HRManager"]}>
+                <HrmanagerLayout />
+              </PrivateRouteByRole>
+            }
+          >
+            <Route index element={<InvoiceManagement />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
+            <Route path="attendance" element={<HrmanagerAttendance />} />
+          </Route>
+
+          {/* Accountant Routes */}
+          <Route
+            path="/accountant/*"
+            element={
+              <PrivateRouteByRole allowedRoles={["Accountant"]}>
+                <AccountantLayout  />
+              </PrivateRouteByRole>
+            }
+          >
+            <Route index element={<InvoiceManagement />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
+            <Route path="attendance" element={<AccountantAttendance />} />
+          </Route>
+
+          {/* Receptionist Routes (Added for completeness) */}
+          <Route
+            path="/receptionist/*"
+            element={
+              <PrivateRouteByRole allowedRoles={["Receptionist"]}>
+                <ReceptionistLayout />
+              </PrivateRouteByRole>
+            }
+          >
+            <Route index element={<AppointmentScheduleManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
+          </Route>
+
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/service-home" element={<ServicePage />} />
           <Route path="/doctor-home" element={<DoctorPage />} />
