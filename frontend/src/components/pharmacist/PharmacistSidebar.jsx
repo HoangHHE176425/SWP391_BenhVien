@@ -15,13 +15,7 @@ const PharmacistSidebar = () => {
       label: "Xem Hồ Sơ Cá Nhân",
       icon: <UserOutlined />,
     },
-    {
-      to: "/pharmacist/attendance",
-      label: "Điểm Danh",
-      icon: <CalendarOutlined />,
-    },
   ];
-
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
