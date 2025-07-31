@@ -10,7 +10,7 @@ const recordsSchema = new mongoose.Schema({
   gender: { type: String },
   dateOfBirth: { type: Date },
   address: { type: String },
-  bhytCode: { type: String },
+  bhytCode: { type: Boolean },
   identityNumber: { type: String },
   admissionDate: { type: Date }, // Ngày nhập viện
   dischargeDate: { type: Date }, // Ngày xuất viện

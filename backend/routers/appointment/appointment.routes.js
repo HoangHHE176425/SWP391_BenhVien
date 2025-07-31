@@ -3,6 +3,7 @@ const appointmentRouter = express.Router();
 const apmServices = require('../../controller/appointment/apmServices');
 
 appointmentRouter.get('/appointments', apmServices.getAllAppointments);
+appointmentRouter.get('/appointments/aggregate', apmServices.getAllAppointmentsAggregate);
 
 // Lấy tất cả bác sĩ
 appointmentRouter.get('/doctors', apmServices.getAllDoctors);

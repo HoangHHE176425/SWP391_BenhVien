@@ -266,7 +266,9 @@ module.exports.delEmployees = async (req, res) => {
 
 module.exports.getAllDoctorsForApm = async (req, res) => {
     try {
-        const doctors = await Employee.find({ role: 'Doctor', status: 'active' })
+        const {services} = req.query;
+        console.log("🚀 ~ services:", services)
+        const doctors = await Employee.find({ role: 'Doctor', status: 'active', ...(services ? { services: { $all: Array.isArray(services) ? services.map(id => new mongoose.Types.ObjectId(id.trim())) : [new mongoose.Types.ObjectId(services.trim())] } } : {}) })
             .select('name department expYear avatar degree'); // CHỈ lấy các trường cần thiết
 
         res.status(200).json(doctors);

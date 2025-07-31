@@ -3,6 +3,7 @@ const User = require("../../models/User");
 const Employee = require("../../models/Employee");
 const Appointment = require("../../models/Appointment");
 const bcrypt = require("bcrypt");
+const { default: mongoose } = require("mongoose");
 
 // Admin - user manage
 module.exports.getUserAccs = async (req, res) => {
@@ -136,22 +137,24 @@ module.exports.delEmployees = async (req, res) => {
 
 module.exports.getAllAppointments = async (req, res) => {
   try {
-    const { doctorId, status, increaseSort } = req.query;
+    console.log(req.query);
+    const { doctorId, status, increaseSort, dateFrom, 
+      dateTo, identityNumber, page = 1, limit = 10 } = req.query;
 
     const filter = doctorId ? { doctorId } : {};
     
-    // Hỗ trợ nhiều giá trị status (có thể là string hoặc array)
     if (status) {
       if (Array.isArray(status)) {
-        // Nếu status là array, sử dụng $in operator
         filter.status = { $in: status };
       } else if (status.includes(',')) {
-        // Nếu status là string chứa dấu phẩy, split thành array
         filter.status = { $in: status.split(',').map(s => s.trim()) };
       } else {
-        // Nếu status là string đơn lẻ
         filter.status = status;
       }
+    }
+
+    if (dateFrom && dateTo) {
+      filter.appointmentDate = { $gte: new Date(dateFrom), $lte: new Date(dateTo) };
     }
 
     const appointments = await Appointment.find(filter)
@@ -161,6 +164,120 @@ module.exports.getAllAppointments = async (req, res) => {
         .sort({ appointmentDate: increaseSort ? 1 : -1 });
 
     res.status(200).json(appointments);
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports.getAllAppointmentsAggregate = async (req, res) => {
+  try {
+    const {
+      doctorId,
+      status,
+      increaseSort,
+      dateFrom,
+      dateTo,
+      identityNumber,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    // Khởi tạo điều kiện lọc
+    const matchStage = {};
+
+    if (doctorId) {
+      matchStage.doctorId = new mongoose.Types.ObjectId(doctorId);
+    }
+
+    if (status) {
+      matchStage.status = Array.isArray(status)
+        ? { $in: status }
+        : status.includes(',')
+        ? { $in: status.split(',').map(s => s.trim()) }
+        : status;
+    }
+
+    if (dateFrom && dateTo) {
+      matchStage.appointmentDate = {
+        $gte: new Date(dateFrom),
+        $lte: new Date(dateTo),
+      };
+    }
+
+    // Pipeline chính
+    const pipeline = [
+      { $match: matchStage },
+
+      // Join với profile
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'profileId',
+          foreignField: '_id',
+          as: 'profileId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profileId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Lọc theo số CCCD nếu có
+      ...(identityNumber
+        ? [{ $match: { 'profileId.identityNumber': identityNumber } }]
+        : []),
+
+      // Join với doctor
+      {
+        $lookup: {
+          from: 'doctors',
+          localField: 'doctorId',
+          foreignField: '_id',
+          as: 'doctorId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$doctorId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Tách nhánh: một nhánh để phân trang, một nhánh để đếm tổng
+      {
+        $facet: {
+          data: [
+            { $sort: { appointmentDate: increaseSort === 'true' ? 1 : -1 } },
+            { $skip: (parseInt(page) - 1) * parseInt(limit) },
+            { $limit: parseInt(limit) },
+          ],
+          totalCount: [{ $count: 'count' }]
+        }
+      },
+
+      // Chuyển totalCount về dạng số đơn giản
+      {
+        $addFields: {
+          total: { $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0] }
+        }
+      }
+    ];
+
+    // Thực thi pipeline
+    const result = await Appointment.aggregate(pipeline);
+    const { data = [], total = 0 } = result[0] || {};
+
+    // Trả kết quả
+    res.status(200).json({
+      data,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
   } catch (error) {
     console.error('Error fetching appointments:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
