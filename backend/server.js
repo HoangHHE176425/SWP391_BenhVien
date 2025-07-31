@@ -33,7 +33,7 @@ app.use("/api/doctor", require("./routers/Doctor/doctor.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/blog.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/news.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/medicalrecord.route"));
-app.use("/api/receptionist", require("./routers/Receptionist/medicine.route"));
+app.use("/api/pharmacist", require("./routers/pharmacist/medicine.route"));
 app.use("/api/work-schedule", require("./routers/Doctor/workschedule.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/receptionist.route"));
 app.use("/api/receptionist/blog", require("./routers/Receptionist/blog.route"));

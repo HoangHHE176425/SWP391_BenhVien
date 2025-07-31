@@ -8,24 +8,63 @@ async function getAllMedicines() {
     return await Medicine.find().populate('supplier');
 }
 
-const countMedicines = async (searchTerm) => {
-    const query = searchTerm ? { name: { $regex: searchTerm, $options: 'i' } } : {}; // Tìm kiếm theo tên thuốc
+const countMedicines = async (searchTerm = '', filterMode = 'all') => {
+    let query = {};
+    if (searchTerm) {
+        query.name = { $regex: searchTerm, $options: 'i' };
+    }
+    query.isActive = true;
+
+    if (filterMode === 'low-stock') {
+        query.quantity = { $lt: 10 };
+    } else if (filterMode === 'expiring') {
+        const now = new Date();
+        const in30Days = new Date(now);
+        in30Days.setDate(now.getDate() + 30);
+        query.expirationDate = { $lte: in30Days };
+    }
+
+    console.log("Count Query:", JSON.stringify(query));
     const result = await Medicine.countDocuments(query);
+    console.log("Total medicines counted:", result);
     return result;
 };
 
-const getMedicinesWithPagination = async (skip, limit, searchTerm) => {
-    const query = searchTerm ? { name: { $regex: searchTerm, $options: 'i' } } : {}; // Tìm kiếm theo tên thuốc
+const getMedicinesWithPagination = async (skip, limit, searchTerm = '', filterMode = 'all') => {
+    try {
+        let query = {};
+        if (searchTerm) {
+            query.name = { $regex: searchTerm, $options: 'i' };
+        }
+        query.isActive = true;
 
-    query['isActive'] = true;
-    const medicines = await Medicine.find(query)
-        .populate('supplier')
-        .skip(skip) // Bỏ qua các bản ghi trước đó
-        .limit(limit) // Giới hạn số bản ghi trả về
-        .exec();
-    return medicines;
+        if (filterMode === 'low-stock') {
+            query.quantity = { $lt: 10 };
+        } else if (filterMode === 'expiring') {
+            const now = new Date();
+            const in30Days = new Date(now);
+            in30Days.setDate(now.getDate() + 30);
+            query.expirationDate = { $lte: in30Days };
+        }
+
+        // Log the query for debugging
+        console.log("Query:", JSON.stringify(query));
+        console.log("Skip:", skip, "Limit:", limit);
+
+        const medicines = await Medicine.find(query)
+            .populate('supplier')
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        console.log("Medicines found:", medicines.length);
+
+        return medicines || [];
+    } catch (error) {
+        console.error("Error in getMedicinesWithPagination:", error);
+        throw new Error(`Failed to fetch medicines: ${error.message}`);
+    }
 };
-
 
 async function getMedicineById(id) {
     return await Medicine.findById(id);
