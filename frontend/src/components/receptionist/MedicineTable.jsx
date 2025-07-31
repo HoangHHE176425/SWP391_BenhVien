@@ -2,7 +2,7 @@ import React from "react";
 import { FaPen, FaTrashAlt } from "react-icons/fa";
 
 
-const MedicineTable = ({ medicines, onEdit, onDelete }) => (
+const MedicineTable = ({ medicines, onEdit, onDisable }) => (
   <table className="medicine-table">
     <thead>
       <tr>
@@ -19,7 +19,7 @@ const MedicineTable = ({ medicines, onEdit, onDelete }) => (
     </thead>
     <tbody>
       {medicines.map((med) => (
-        <tr key={med._id}>
+        <tr key={med._id} className={med.isActive ? "" : "table-secondary"}>
           <td>{med.name}</td>
           <td>{med.type}</td>
           <td>{med.ingredient}</td>
@@ -27,16 +27,19 @@ const MedicineTable = ({ medicines, onEdit, onDelete }) => (
           <td>{med.unitPrice?.toLocaleString()}</td>
           <td>{med.quantity}</td>
           <td>
-            {med.expirationDate
-              ? new Date(med.expirationDate).toLocaleDateString("vi-VN")
-              : ""}
+            {med.expirationDate ? new Date(med.expirationDate).toLocaleDateString("vi-VN") : ""}
           </td>
           <td>{med.supplier?.email}</td>
           <td className="medicine-actions">
             <FaPen className="btn-edit" onClick={() => onEdit(med)} />
-            <FaTrashAlt className="btn-delete" onClick={() => onDelete(med._id)} />
+            <button
+              className="btn btn-warning"
+              onClick={() => onDisable(med)}
+              disabled={!med.isActive}
+            >
+              Disable
+            </button>
           </td>
-
         </tr>
       ))}
       {!medicines.length && (

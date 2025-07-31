@@ -354,6 +354,7 @@ const AppRoutes = () => {
             <Route index element={<InvoiceManagement />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<PharmacistAttendance />} />
+            <Route path="medicines" element={<MedicineManagement />} />
           </Route>
 
           {/* HR Manager Routes */}
