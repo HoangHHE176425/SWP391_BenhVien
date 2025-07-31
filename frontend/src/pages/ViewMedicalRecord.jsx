@@ -30,7 +30,7 @@ const ViewMedicalRecord = () => {
 
         const headers = { Authorization: `Bearer ${token}` };
         const res = await axios.get(
-          `http://localhost:9999/api/staff/medicalrecord/${user._id}`,
+          `http://localhost:9999/api/receptionist/medicalrecord/${user._id}`,
           { headers }
         );
 

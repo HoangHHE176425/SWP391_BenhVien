@@ -12,9 +12,9 @@ import AccountantLayout from "./layouts/AccountantLayout";
 import PharmacistLayout from "./layouts/PharmacistLayout";
 import HrmanagerLayout from "./layouts/HrmanagerLayout";
 import DoctorLayout from "./components/doctor/DoctorLayout";
-import ReceptionistLayout from "./components/receptionist/receptionistLayout";
+import ReceptionistLayout from "./components/receptionist/ReceptionistLayout";
 import AdminLayout from "./components/admin/AdminLayout";
-import StaffLayout from "./components/staff/StaffLayout";
+// import receptionistLayout from "./components/receptionist/receptionistLayout";
 
 // Pages
 import UserMedicalProfile from "./pages/UserMedicalProfile";
@@ -33,7 +33,7 @@ import AppointmentManagePage from "./pages/AppointmentManagePage";
 import MedicalLabPage from "./pages/BlogTestPage.jsx";
 import TestPageDetails from "./pages/TestPageDetails.jsx";
 import WorkSchedulePage from "./pages/WorkSchedulePage";
-import StaffScheduleManager from "./pages/staff/StaffScheduleManager";
+import ReceptionistScheduleManager from "./pages/receptionist/ReceptionistScheduleManager";
 import Changepass from "./pages/ChangePassword";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -42,21 +42,21 @@ import Dashboard from "./pages/admin/Dashboard";
 import AccountManagement from "./pages/admin/AccountManagement";
 import EmployeeManagement from "./pages/admin/EmployessManagement";
 import InvoiceUser from "./pages/InvoiceManagement";
-import BlogManagement from "./pages/staff/BlogManagement";
-import CategoryManagement from "./pages/staff/CategoryBlogManagement";
-import ServiceManagement from "./pages/staff/ServiceManagement";
-import DepartmentManagement from "./pages/staff/DepartmentManagement";
-import SpecialtyManagement from "./pages/staff/SpecialtyManagement";
-import InvoiceManagement from "./pages/staff/InvoiceManagement";
-import PaymentView from "./pages/staff/PaymentView";
-import NewsManagement from "./pages/staff/NewsManagement";
-import FeedbackManagement from "./pages/staff/FeedbackManagement";
-import QnAView from "./pages/staff/QnAView";
-import AppointmentScheduleManagement from "./pages/staff/AppointmentScheduleManagement";
-import NotificationManagement from "./pages/staff/NotificationManagement";
-import UserManagement from "./pages/staff/UserManagement";
-import MedicalRecord from "./pages/staff/MedicalRecord";
-import MedicineManagement from "./pages/staff/MedicineManagement";
+import BlogManagement from "./pages/receptionist/BlogManagement";
+import CategoryManagement from "./pages/receptionist/CategoryBlogManagement";
+import ServiceManagement from "./pages/receptionist/ServiceManagement";
+import DepartmentManagement from "./pages/receptionist/DepartmentManagement";
+import SpecialtyManagement from "./pages/receptionist/SpecialtyManagement";
+import InvoiceManagement from "./pages/receptionist/InvoiceManagement";
+import PaymentView from "./pages/receptionist/PaymentView";
+import NewsManagement from "./pages/receptionist/NewsManagement";
+import FeedbackManagement from "./pages/receptionist/FeedbackManagement";
+import QnAView from "./pages/receptionist/QnAView";
+import AppointmentScheduleManagement from "./pages/receptionist/AppointmentScheduleManagement";
+import NotificationManagement from "./pages/receptionist/NotificationManagement";
+import UserManagement from "./pages/receptionist/UserManagement";
+import MedicalRecord from "./pages/receptionist/MedicalRecord";
+import MedicineManagement from "./pages/receptionist/MedicineManagement";
 import NotificationCenter from "./pages/NotificationCenter";
 import NotificationDetail from "./pages/NotificationDetail";
 import HealthCalculatorPage from "./pages/HealthCalculatorPage";
@@ -66,15 +66,15 @@ import NewsDetail from "./pages/NewsDetail";
 import BlogDetail from "./pages/BlogDetail";
 import ViewMedicalRecord from "./pages/ViewMedicalRecord";
 import NotFoundPage from "./pages/NotFoundPage";
-import DoctorAttendance from "./components/staff/DoctorAttendance";
-import StaffAttendance from "./pages/staff/attendanceStaff.jsx";
+import DoctorAttendance from "./components/receptionist/DoctorAttendance";
+import ReceptionistAttendance from "./pages/receptionist/attendanceReceptionist.jsx";
 import MedicineListPage from "./pages/MedicineListPage.jsx";
 import MedicineDetail from "./pages/MedicineDetail";
 import ServiceDetail from "./pages/ServiceDetail.jsx";
 import DepartmentPage from "./pages/DepartmentListPage.jsx";
 import DepartmentDetail from "./pages/DepartmentDetail.jsx";
 import QAHistories from "./pages/QAHistories";
-import ProfileStaff from "./pages/staff/ProfileStaff";
+import ProfileReceptionist from "./pages/receptionist/Profilereceptionist";
 import ProfileDoctor from "./pages/ProfileDoctor";
 import FAQList from "./pages/FAQ.jsx";
 import NutritionAdvice from "./pages/NutritionAdvice.jsx";
@@ -82,7 +82,7 @@ import AppointmentSuccess from "./components/AppointmentSuccess.jsx";
 import MedicinePage from "./pages/MedicinePage.jsx";
 import LabTestPage from "./pages/LabTestPage.jsx";
 import DoctorAppointments from "./pages/DoctorAppointment.jsx";
-import CreateInvoice2 from "./components/staff/CreateInvoiceTest.jsx";
+import CreateInvoice2 from "./components/receptionist/CreateInvoiceTest.jsx";
 import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
 import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
 import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
@@ -95,11 +95,11 @@ import FooterComponent from "./components/FooterComponent";
 import InvoiceList from "./components/InvoiceList";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentFail from "./components/PaymentFail";
-import CreateInvoice from "./components/staff/CreateInvoice";
+import CreateInvoice from "./components/receptionist/CreateInvoice";
 import AddMedicalRecord from "./components/AddMedicalRecord";
 import ViewMedicalRecords from "./components/ViewMedicalRecord";
-import CreateServicePage from "./components/staff/CreateServicePage";
-import EditServicePage from "./components/staff/EditService";
+import CreateServicePage from "./components/receptionist/CreateServicePage";
+import EditServicePage from "./components/receptionist/EditService";
 
 // Private Route Components
 import {
@@ -134,15 +134,14 @@ const RoleRedirect = () => {
     // Role-to-path mapping for redirection
     const roleToPath = {
       admin: "/admin",
-      staff: "/staff",
+      receptionist: "/receptionist",
       doctor: "/doctor",
       pharmacist: "/pharmacist",
       hrmanager: "/hrmanager",
       accountant: "/accountant",
       patient: "/home",
-      receptionist: "/receptionist",
+      // receptionist: "/receptionist",
     };
-
 
     // Redirect from root path "/"
     if (path === "/") {
@@ -153,12 +152,12 @@ const RoleRedirect = () => {
     // Role-to-path prefix mapping for access control
     const rolePathPrefix = {
       admin: "/admin",
-      staff: "/staff",
+      receptionist: "/receptionist",
       doctor: "/doctor",
       pharmacist: "/pharmacist",
       hrmanager: "/hrmanager",
       accountant: "/accountant",
-      receptionist: "/receptionist",
+      // receptionist: "/receptionist",
     };
 
 
@@ -213,7 +212,7 @@ const RoleRedirect = () => {
     // Prevent patients from accessing protected role-based paths
     if (
       role === "Patient" &&
-      ["/admin", "/staff", "/doctor", "/pharmacist", "/hrmanager", "/accountant"].some((prefix) =>
+      ["/admin", "/receptionist", "/doctor", "/pharmacist", "/hrmanager", "/accountant"].some((prefix) =>
         path.startsWith(prefix)
       )
     ) {
@@ -299,12 +298,12 @@ const AppRoutes = () => {
             <Route path="attendance" element={<AttendanceManagement />} />
           </Route>
 
-          {/* Staff Routes */}
+          {/* Receptionist Routes */}
           <Route
-            path="/staff/*"
+            path="/receptionist/*"
             element={
-              <PrivateRouteByRole allowedRoles={["Staff"]}>
-                <StaffLayout />
+              <PrivateRouteByRole allowedRoles={["Receptionist"]}>
+                <ReceptionistLayout />
               </PrivateRouteByRole>
             }
           >
@@ -329,9 +328,9 @@ const AppRoutes = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="medicalrecord" element={<MedicalRecord />} />
             <Route path="medicines" element={<MedicineManagement />} />
-            <Route path="schedule" element={<StaffScheduleManager />} />
-            <Route path="profile" element={<ProfileStaff />} />
-            <Route path="attendance" element={<StaffAttendance />} />
+            <Route path="schedule" element={<ReceptionistScheduleManager />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
+            <Route path="attendance" element={<ReceptionistAttendance />} />
           </Route>
 
           {/* Pharmacist Routes */}
@@ -344,7 +343,7 @@ const AppRoutes = () => {
             }
           >
             <Route index element={<InvoiceManagement />} />
-            <Route path="profile" element={<ProfileStaff />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<PharmacistAttendance />} />
           </Route>
 
@@ -358,7 +357,7 @@ const AppRoutes = () => {
             }
           >
             <Route index element={<InvoiceManagement />} />
-            <Route path="profile" element={<ProfileStaff />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<HrmanagerAttendance />} />
           </Route>
 
@@ -372,7 +371,7 @@ const AppRoutes = () => {
             }
           >
             <Route index element={<InvoiceManagement />} />
-            <Route path="profile" element={<ProfileStaff />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<AccountantAttendance />} />
           </Route>
 
@@ -387,7 +386,7 @@ const AppRoutes = () => {
           >
             <Route index element={<AppointmentScheduleManagement />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="profile" element={<ProfileStaff />} />
+            <Route path="profile" element={<ProfileReceptionist />} />
           </Route>
 
           {/* Public Routes */}

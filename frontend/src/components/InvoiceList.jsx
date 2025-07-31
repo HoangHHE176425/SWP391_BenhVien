@@ -57,7 +57,7 @@ const InvoiceList = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:9999/api/staff/invoices', {
+            const response = await axios.get('http://localhost:9999/api/receptionist/invoices', {
                 headers: { Authorization: `Bearer ${token}` },
                 params: {
                     page: currentPage,
@@ -89,7 +89,7 @@ const InvoiceList = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.put(
-                `http://localhost:9999/api/staff/services/paid/${invoiceId}`,
+                `http://localhost:9999/api/receptionist/services/paid/${invoiceId}`,
                 { method: 'Cash' },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -115,7 +115,7 @@ const InvoiceList = () => {
         setDeleteLoading(invoiceId);
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:9999/api/staff/services/delete/${invoiceId}`, {
+            await axios.delete(`http://localhost:9999/api/receptionist/services/delete/${invoiceId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -145,7 +145,7 @@ const InvoiceList = () => {
         try {
             setLoadingInvoiceId(invoiceId);
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:9999/api/staff/services/${invoiceId}`, {
+            const response = await axios.get(`http://localhost:9999/api/receptionist/services/${invoiceId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -167,7 +167,7 @@ const InvoiceList = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                'http://localhost:9999/api/staff/create-payment-link',
+                'http://localhost:9999/api/receptionist/create-payment-link',
                 { invoiceId, method: 'Credit Card' },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -256,7 +256,7 @@ const InvoiceList = () => {
                         </div>
                         <h1 className="text-3xl font-bold text-slate-800">Danh sách hóa đơn</h1>
                         <div
-                            onClick={() => { navigate("/staff/invoices/create"); }}
+                            onClick={() => { navigate("/receptionist/invoices/create"); }}
                             className="bg-green-200 cursor-pointer rounded-xl rounded-3xl p-6 text-green-600 shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
                         >
                             + Tạo hóa đơn

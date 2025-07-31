@@ -159,7 +159,7 @@ exports.getMySchedule = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-// controller/staff/attendanceController.js
+// controller/receptionist/attendanceController.js
 exports.getTodaySchedule = async (req, res) => {
   const { employeeId } = req.params;
   const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"

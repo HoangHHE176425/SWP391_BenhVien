@@ -131,7 +131,7 @@ function EmployeeManagement() {
           style={{ width: 150 }}
         >
           <Option value="Admin">Quản trị viên</Option>
-          <Option value="Staff">Nhân viên</Option>
+          <Option value="Receptionist">Lễ tân</Option>
           <Option value="Doctor">Bác sĩ</Option>
         </Select>
 
@@ -278,7 +278,7 @@ function EmployeeManagement() {
           <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
             <Select>
               <Option value="Admin">Quản trị viên</Option>
-              <Option value="Staff">Nhân viên</Option>
+              <Option value="Receptionist">Lễ tân</Option>
               <Option value="Doctor">Bác sĩ</Option>
             </Select>
           </Form.Item>
@@ -344,7 +344,7 @@ function EmployeeManagement() {
           <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
             <Select>
               <Option value="Admin">Quản trị viên</Option>
-              <Option value="Staff">Nhân viên</Option>
+              <Option value="Receptionist">Lễ tân</Option>
               <Option value="Doctor">Bác sĩ</Option>
             </Select>
           </Form.Item>

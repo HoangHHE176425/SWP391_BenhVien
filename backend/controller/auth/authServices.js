@@ -56,7 +56,7 @@ const Login = async (req, res) => {
           "phone",
         ];
         missingFields = requiredFields.filter((field) => !employee[field]);
-      } else if (employee.role === "Staff") {
+      } else if (employee.role === "Receptionist") {
         const requiredFields = ["avatar", "phone"];
         missingFields = requiredFields.filter((field) => !employee[field]);
       }

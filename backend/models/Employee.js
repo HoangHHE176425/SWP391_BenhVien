@@ -29,7 +29,6 @@ const employeeSchema = new mongoose.Schema({
   verificationExpires: { type: Date },
 }, { timestamps: true });
 
-// Tạo index phụ
 employeeSchema.index({ role: 1, status: 1 });
 
 // ✅ Tự động sinh mã nhân viên dạng EMP001, EMP002...

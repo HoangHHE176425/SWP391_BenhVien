@@ -71,28 +71,28 @@ userRouter.put("/update", async (req, res) => {
 });
 const {
   createPaymentLinkEmbedded, createPaymentLinkEmbeddedForBookAppointment
-} = require("../../controller/staff/PaymentController");
+} = require("../../controller/receptionist/PaymentController");
 const {
   getAllInvoices4User,
   CompletedInvoices,
-} = require("../../controller/staff/InvoiceController");
+} = require("../../controller/receptionist/InvoiceController");
 const {
   createAppointment,
   getAppointmentsByUser,
   cancelAppointment,
   createFeedback,
 } = require("../../controller/user/userService");
-const { getAllFAQ, markAsFAQ } = require("../../controller/staff/staffService");
+const { getAllFAQ, markAsFAQ } = require("../../controller/receptionist/receptionistService");
 
 userRouter.get(
   "/getNoti",
   authMiddleware,
-  require("../../controller/staff/notificationService").getUserNotifications
+  require("../../controller/receptionist/notificationService").getUserNotifications
 );
 userRouter.put(
   "/markRead/:id",
   authMiddleware,
-  require("../../controller/staff/notificationService").markAsRead
+  require("../../controller/receptionist/notificationService").markAsRead
 );
 
 userRouter.get("/invoices", verifyToken1, getAllInvoices4User);
