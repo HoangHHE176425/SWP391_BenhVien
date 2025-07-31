@@ -7,7 +7,7 @@ profileRouter.get('/', (req, res) => {
     res.send("Profile route is working!");
 });
 
-profileRouter.post('/create', authMiddleware, CreateProfile);
+profileRouter.post('/create', CreateProfile);
 profileRouter.get('/cccd', getByCccd);
 profileRouter.put('/update/:id', authMiddleware, updateProfile);
 profileRouter.delete('/delete/:id', authMiddleware, deleteProfile);

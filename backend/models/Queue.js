@@ -22,5 +22,6 @@ const queueSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 queueSchema.index({ department: 1, date: 1, type: 1 });
+queueSchema.index({ 'queueEntries.room': 1 });
 
 module.exports = mongoose.model('Queue', queueSchema);

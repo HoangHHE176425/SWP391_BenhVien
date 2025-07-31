@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Modal, Button, Table } from "react-bootstrap";
-import Flatpickr from "react-flatpickr";
-import "flatpickr/dist/themes/material_green.css";
-import "../assets/css/AppointmentPage.css";
 import axios from "axios";
-import { useAuth } from "../context/authContext";
-import moment from 'moment'; // Để xử lý ngày tuần
+import moment from 'moment';
+import "flatpickr/dist/themes/material_green.css";
+import "../../assets/css/AppointmentPage.css";
 
-const AppointmentPage = () => {
-  const { token } = useAuth();
+const OfflineAppointmentPage = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState("profile");
   const [identityNumber, setIdentityNumber] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -27,48 +25,92 @@ const AppointmentPage = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [symptoms, setSymptoms] = useState("");
   const [bhytCode, setBhytCode] = useState("");
+  const [appointmentType, setAppointmentType] = useState("Offline");
+  const [doctorRoomMapping, setDoctorRoomMapping] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
+
   const steps = [
     { id: "profile", title: "Hồ sơ", desc: "" },
     { id: "department", title: "Chọn khoa", desc: "" },
     { id: "doctor", title: "Chọn bác sĩ", desc: "" },
-    { id: "datetime", title: "Chọn ngày giờ", desc: "" },
     { id: "details", title: "Thông tin bổ sung", desc: "" },
     { id: "confirm", title: "Xác nhận", desc: "" },
   ];
 
+  // Lấy danh sách khoa
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
         const res = await axios.get("http://localhost:9999/api/departments", {
-          params: {
-            page: 1,
-            limit: 50,
-            search: "",
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          params: { page: 1, limit: 50, search: "" },
         });
-
         const departments = res.data.departments.map((dep) => ({
           id: dep._id,
           name: dep.name,
           description: dep.description,
         }));
-
         setDepartmentData(departments);
       } catch (err) {
-        console.error("[ERROR] Fetch departments:", err); // Log lỗi tải departments
+        console.error("[ERROR] Fetch departments:", err);
+        setError("Không tải được danh sách khoa.");
       }
     };
-
     fetchDepartments();
-  }, [token]);
+  }, []);
 
+  // Lấy danh sách bác sĩ
+  useEffect(() => {
+    if (selectedDepartment) {
+      const fetchDoctors = async () => {
+        try {
+          const res = await axios.get(`http://localhost:9999/api/doctor/doctor?departmentId=${selectedDepartment}`);
+          setDoctors(res.data.doctors || []);
+        } catch (err) {
+          console.error("[ERROR] Fetch doctors:", err);
+          setDoctors([]);
+          setError("Không tải được danh sách bác sĩ.");
+        }
+      };
+      fetchDoctors();
+    } else {
+      setDoctors([]);
+    }
+  }, [selectedDepartment]);
+
+  // // Lấy lịch bác sĩ
+  // useEffect(() => {
+  //   if (selectedDoctor && startWeekDate) {
+  //     const fetchWeekSlots = async () => {
+  //       try {
+  //         const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`);
+  //         setWeekSlots(res.data.slots || []);
+  //       } catch (err) {
+  //         console.error("[ERROR] Fetch week slots:", err);
+  //         setWeekSlots([]);
+  //         setError("Không tải được lịch bác sĩ.");
+  //       }
+  //     };
+  //     fetchWeekSlots();
+  //   }
+  // }, [selectedDoctor, startWeekDate]);
+
+  // // Lấy mapping phòng - bác sĩ
+  // useEffect(() => {
+  //   const fetchDoctorRoomMapping = async () => {
+  //     try {
+  //       const res = await axios.get("http://localhost:9999/api/apm/doctor-room-mapping");
+  //       setDoctorRoomMapping(res.data.mapping || {});
+  //     } catch (err) {
+  //       console.error("[ERROR] Fetch doctor-room mapping:", err);
+  //       setError("Không tải được mapping phòng - bác sĩ.");
+  //     }
+  //   };
+  //   fetchDoctorRoomMapping();
+  // }, []);
+
+  // Kiểm tra CCCD
   const handleCheckCccd = async () => {
     setLoading(true);
     setError(null);
@@ -80,38 +122,29 @@ const AppointmentPage = () => {
     }
 
     try {
-      const res = await axios.get(
-        "http://localhost:9999/api/profile/cccd",
-        {
-          params: {
-            identityNumber
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.get("http://localhost:9999/api/profile/cccd", {
+        params: { identityNumber },
+      });
 
       if (res.data.profile) {
         setProfileId(res.data.profile._id);
         setStep("department");
       } else {
-        // Nếu chưa tồn tại, hiện modal tạo mới
         setShowCreateModal(true);
       }
     } catch (err) {
-      console.error("[ERROR] Check CCCD:", err); // Log lỗi kiểm tra CCCD
+      console.error("[ERROR] Check CCCD:", err);
       setError("Kiểm tra CCCD thất bại.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Tạo hồ sơ mới
   const handleCreateProfile = async () => {
     setLoading(true);
     setError(null);
 
-    // Validate name (không chứa số)
     const regexName = /^[a-zA-Z\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ\s]+$/;
     if (!regexName.test(profileName)) {
       setError("Tên không được chứa số, chỉ chấp nhận chữ cái và khoảng trắng.");
@@ -119,15 +152,14 @@ const AppointmentPage = () => {
       return;
     }
 
-    // Validate identityNumber (12 ký tự số)
     const regexId = /^\d{12}$/;
     if (!regexId.test(identityNumber)) {
-      setError("CMND/CCCD phải là 12 ký tự số, không khoảng trắng, chữ hoặc ký tự đặc biệt.");
+      setError("CMND/CCCD phải là 12 ký tự số.");
       setLoading(false);
       return;
     }
 
-    const regexPhone = /^(0[1-9][0-9]{8,9})$/; // Số điện thoại Việt Nam: 10-11 số, bắt đầu 0
+    const regexPhone = /^(0[1-9][0-9]{8,9})$/;
     if (!regexPhone.test(profilePhoneNumber)) {
       setError("Số điện thoại không hợp lệ (phải là 10-11 số, bắt đầu 0).");
       setLoading(false);
@@ -143,11 +175,6 @@ const AppointmentPage = () => {
           dateOfBirth: profileDateOfBirth,
           gender: profileGender,
           phone: profilePhoneNumber,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
@@ -156,141 +183,58 @@ const AppointmentPage = () => {
       setSuccess(true);
       setStep("department");
     } catch (err) {
-      console.error("[ERROR] Create profile:", err); // Log lỗi tạo profile
+      console.error("[ERROR] Create profile:", err);
       setError("Tạo hồ sơ thất bại.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (selectedDepartment) {
-      const fetchDoctors = async () => {
-        try {
-          console.log("[LOG] Fetching doctors for department:", selectedDepartment); // Debug
-          const res = await axios.get(`http://localhost:9999/api/doctor/doctor?departmentId=${selectedDepartment}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          });
-          console.log("[LOG] Doctors response:", res.data); // Debug response
-          setDoctors(res.data.doctors || []); // Đặt trực tiếp doctors từ response
-        } catch (err) {
-          console.error("[ERROR] Fetch doctors:", err); // Log lỗi tải doctors
-          setDoctors([]); // Reset nếu lỗi
-        }
-      };
-      fetchDoctors();
-    } else {
-      setDoctors([]); // Reset khi không có department
-    }
-  }, [selectedDepartment, token]);
-
-  useEffect(() => {
-    if (selectedDoctor && startWeekDate) {
-      const fetchWeekSlots = async () => {
-        try {
-          console.log("[LOG] Fetching week slots for doctor:", selectedDoctor, "startDate:", startWeekDate); // Debug gọi API
-          const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          console.log("[LOG] Week slots response:", res.data); // Log response data
-          setWeekSlots(res.data.slots);
-        } catch (err) {
-          console.error("[ERROR] Fetch week slots:", err); // Log lỗi tải slots
-        }
-      };
-      fetchWeekSlots();
-    }
-  }, [selectedDoctor, startWeekDate, token]);
-
-  useEffect(() => {
-    if (selectedDoctor && startWeekDate) {
-      const mockSlots = [];
-
-      for (let i = 0; i < 7; i++) {
-        const date = moment(startWeekDate).add(i, 'days').startOf('day').toDate();
-        mockSlots.push(
-          {
-            date: date,
-            startTime: moment(date).set({ hour: 8, minute: 0 }).toISOString(),
-            endTime: moment(date).set({ hour: 8, minute: 30 }).toISOString(),
-            status: "Available"
-          },
-          {
-            date: date,
-            startTime: moment(date).set({ hour: 9, minute: 0 }).toISOString(),
-            endTime: moment(date).set({ hour: 9, minute: 30 }).toISOString(),
-            status: "Available"
-          }
-        );
-      }
-
-      setWeekSlots(mockSlots);
-    }
-  }, [selectedDoctor, startWeekDate]);
-
+  // Tạo lịch hẹn offline
   const handleCreateAppointment = async () => {
     setLoading(true);
     setError(null);
 
-    if (!profileId || !selectedDoctor || !selectedDepartment || !selectedSlot || !symptoms) {
+    if (!profileId || !selectedDoctor || !selectedDepartment || !selectedSlot) {
       setError("Vui lòng chọn đầy đủ thông tin.");
       setLoading(false);
       return;
     }
 
-    const standardizedStart = moment.utc(selectedSlot.startTime).toISOString(); // UTC chuẩn
-    const standardizedEnd = moment.utc(selectedSlot.endTime).toISOString();
+    const room = doctorRoomMapping[selectedDoctor];
+    if (!room) {
+      setError("Không tìm thấy phòng ứng với bác sĩ này.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      console.log("[LOG] Creating appointment with payload:", {
+      const now = moment();
+      const startTime = now.startOf('minute').toISOString();
+      const endTime = now.add(30, 'minutes').toISOString();
+
+      // Nếu dùng trực tiếp:
+      await axios.post("http://localhost:9999/api/user/create-offline", {
         profileId,
-        doctorId: selectedDoctor,
+        doctorId,
         department: selectedDepartment,
-        appointmentDate: selectedSlot.startTime,
+        appointmentDate: now.toISOString(),
         timeSlot: {
-          startTime: standardizedStart,
-          endTime: standardizedEnd,
-          status: 'Booked'
+          startTime,
+          endTime,
+          status: "Booked"
         },
-        symptoms,
-        bhytCode,
-        type: "Online",
-        status: "pending_confirmation",
-        room: ""
-      }); // Log payload trước khi gửi
+        symptoms: symptoms || "Không có triệu chứng",
+        bhytCode: bhytCode || "",
+        type: appointmentType,
+        status: "confirmed",
+        room
+      });
 
-      const res = await axios.post(
-        "http://localhost:9999/api/user/create",
-        {
-          profileId,
-          doctorId: selectedDoctor,
-          department: selectedDepartment,
-          appointmentDate: selectedSlot.startTime, // Sử dụng startTime để có thời gian đầy đủ
-          timeSlot: {
-            startTime: selectedSlot.startTime,
-            endTime: selectedSlot.endTime,
-            status: 'Booked' // Thêm status cho timeSlot
-          },
-          symptoms,
-          bhytCode,
-          type: "Online",
-          status: "pending_confirmation", // Đặt status mặc định là pending_confirmation cho lịch online
-          room: "" // Không cần cho online
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("[LOG] Create appointment success:", res.data); // Log response thành công
       setSuccess(true);
       setStep("confirm");
     } catch (err) {
-      console.error("[ERROR] Create appointment:", err.response?.data || err); // Log chi tiết lỗi API
+      console.error("[ERROR] Create appointment:", err.response?.data || err);
       setError("Đặt lịch thất bại.");
     } finally {
       setLoading(false);
@@ -304,7 +248,6 @@ const AppointmentPage = () => {
           <div className="p-4 bg-white rounded shadow-sm">
             <h3 className="display-6 fw-bold text-primary mb-4">Hồ Sơ</h3>
             {error && <div className="alert alert-danger">{error}</div>}
-
             <div className="mb-3">
               <label className="form-label">Nhập CCCD</label>
               <input
@@ -316,7 +259,6 @@ const AppointmentPage = () => {
                 placeholder="Nhập số CCCD"
               />
             </div>
-
             <div className="text-end mt-4">
               <button
                 className="btn btn-primary"
@@ -326,8 +268,6 @@ const AppointmentPage = () => {
                 {loading ? "Đang kiểm tra..." : "Kiểm tra CCCD"}
               </button>
             </div>
-
-            {/* Modal tạo Profile mới */}
             <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
               <Modal.Header closeButton>
                 <Modal.Title>Tạo Hồ Sơ Mới</Modal.Title>
@@ -362,8 +302,8 @@ const AppointmentPage = () => {
                     className="form-control"
                     value={profileDateOfBirth}
                     onChange={(e) => setProfileDateOfBirth(e.target.value)}
-                    max={moment().format('YYYY-MM-DD')} // Giới hạn tối đa là hôm nay
-                    min={moment().subtract(120, 'years').format('YYYY-MM-DD')} // Giới hạn tối thiểu 120 năm trước
+                    max={moment().format('YYYY-MM-DD')}
+                    min={moment().subtract(120, 'years').format('YYYY-MM-DD')}
                     required
                   />
                 </div>
@@ -426,9 +366,7 @@ const AppointmentPage = () => {
             <h3 className="text-primary fw-bold mb-4">Chọn Bác Sĩ</h3>
             <Row>
               {doctors.length === 0 ? (
-                <Col className="text-center">
-                  Không có bác sĩ trong chuyên khoa này
-                </Col>
+                <Col className="text-center">Không có bác sĩ trong chuyên khoa này</Col>
               ) : (
                 doctors.map((doctor) => (
                   <Col key={doctor._id} xs={12} sm={6} md={4} lg={4} className="mb-4">
@@ -447,7 +385,7 @@ const AppointmentPage = () => {
                         )}
                       </div>
                       <h5 className="doctor-name">{doctor.name}</h5>
-                      <p className="doctor-degree">{doctor.specialization || "Chưa có chuyên môn"}</p> {/* Sử dụng specialization */}
+                      <p className="doctor-degree">{doctor.specialization || "Chưa có chuyên môn"}</p>
                       <p className="doctor-experience">{doctor.expYear || "Chưa cập nhật"} năm kinh nghiệm</p>
                     </label>
                   </Col>
@@ -458,152 +396,168 @@ const AppointmentPage = () => {
               <button className="btn btn-outline-secondary" onClick={() => setStep("department")}>
                 Quay Lại
               </button>
-              <button className="btn btn-primary" onClick={() => setStep("datetime")} disabled={!selectedDoctor}>
+              <button className="btn btn-primary" onClick={() => setStep("details")} disabled={!selectedDoctor}>
                 Tiếp Theo
               </button>
             </div>
           </div>
         );
 
-      case "datetime":
-        const now = moment();
-        const defaultStartDate = startWeekDate || moment().isoWeekday(1).format('YYYY-MM-DD');
-        const twoHoursLater = moment().add(2, 'hours');
+      // case "datetime":
+      //   const defaultStartDate = startWeekDate || moment().isoWeekday(1).format('YYYY-MM-DD');
 
-        return (
-          <div className="p-4 bg-white rounded shadow-sm">
-            <h3 className="text-primary fw-bold mb-4">Chọn Ngày và Giờ</h3>
-            <div className="mb-3">
-              <label className="form-label">Chọn ngày bắt đầu (từ thứ 2)</label>
-              <input
-                type="date"
-                className="form-control"
-                value={defaultStartDate}
-                onChange={(e) => {
-                  const selectedDate = moment(e.target.value);
-                  if (selectedDate.isoWeekday() !== 1) {
-                    setError("Vui lòng chọn ngày thứ 2 để hiển thị tuần.");
-                  } else {
-                    setError(null); // Xóa lỗi khi chọn đúng thứ 2
-                    setStartWeekDate(selectedDate.format('YYYY-MM-DD'));
-                    fetchWeekSlots(); // Reload slot khi thay đổi ngày hợp lệ
-                  }
-                }}
-                min={moment().isoWeekday(1).format('YYYY-MM-DD')}
-              />
-            </div>
-            {weekSlots.length === 0 ? (
-              <p className="text-muted">Không có slot available cho ngày đã chọn.</p>
-            ) : (
-              <Table striped bordered hover className="custom-slot-table">
-                <thead>
-                  <tr>
-                    {Array.from({ length: 7 }).map((_, dayIdx) => {
-                      const dayDate = moment(defaultStartDate).add(dayIdx, 'days');
-                      const dayFormatted = dayDate.isoWeekday() >= 1 && dayDate.isoWeekday() <= 7
-                        ? dayDate.format('dddd (DD/MM/YYYY)')
-                        : null;
-                      return (
-                        <th key={dayIdx} className="text-center bg-primary text-white">
-                          {dayFormatted || "Không hiển thị"}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {Array.from({ length: 7 }).map((_, dayIdx) => {
-                      const dayDate = moment(defaultStartDate).add(dayIdx, 'days').format('YYYY-MM-DD');
-                      const daySlots = weekSlots
-                        .filter(slot => moment(slot.date).format('YYYY-MM-DD') === dayDate)
-                        .filter(slot => slot.status === "Available") // Chỉ hiển thị slot Available
-                        .filter(slot => moment(slot.date).isSameOrAfter(now, 'day'))
-                        .filter(slot => moment(slot.startTime).isAfter(twoHoursLater));
-                      return (
-                        <td key={dayIdx} className="align-middle">
-                          {daySlots.length === 0 ? (
-                            <p className="text-muted text-center">Không có slot khả dụng</p>
-                          ) : (
-                            daySlots.map((slot, slotIdx) => (
-                              <div key={slotIdx} className="form-check mb-2">
-                                <input
-                                  type="radio"
-                                  className="form-check-input"
-                                  checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
-                                  onChange={() => setSelectedSlot(slot)}
-                                  disabled={moment(slot.date).isBefore(now, 'day') || slot.status !== "Available"}
-                                />
-                                <label className="form-check-label">
-                                  {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
-                                </label>
-                              </div>
-                            ))
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </Table>
-            )}
-            {error && <div className="alert alert-danger mt-3">{error}</div>}
-            <div className="d-flex justify-content-between mt-4">
-              <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
-                Quay Lại
-              </button>
-              <button className="btn btn-primary" onClick={() => setStep("details")} disabled={!selectedSlot}>
-                Tiếp Theo
-              </button>
-            </div>
-          </div>
-        );
+      //   return (
+      //     <div className="p-4 bg-white rounded shadow-sm">
+      //       <h3 className="text-primary fw-bold mb-4">Chọn Ngày và Giờ</h3>
+      //       <div className="mb-3">
+      //         <label className="form-label">Chọn ngày bắt đầu (từ thứ 2)</label>
+      //         <input
+      //           type="date"
+      //           className="form-control"
+      //           value={defaultStartDate}
+      //           onChange={(e) => {
+      //             const selectedDate = moment(e.target.value);
+      //             if (selectedDate.isoWeekday() !== 1) {
+      //               setError("Vui lòng chọn ngày thứ 2 để hiển thị tuần.");
+      //             } else {
+      //               setError(null);
+      //               setStartWeekDate(selectedDate.format('YYYY-MM-DD'));
+      //             }
+      //           }}
+      //           min={moment().isoWeekday(1).format('YYYY-MM-DD')}
+      //         />
+      //       </div>
+      //       {weekSlots.length === 0 ? (
+      //         <p className="text-muted">Không có slot khả dụng cho ngày đã chọn.</p>
+      //       ) : (
+      //         <Table striped bordered hover className="custom-slot-table">
+      //           <thead>
+      //             <tr>
+      //               {Array.from({ length: 7 }).map((_, dayIdx) => {
+      //                 const dayDate = moment(defaultStartDate).add(dayIdx, 'days');
+      //                 const dayFormatted = dayDate.isoWeekday() >= 1 && dayDate.isoWeekday() <= 7
+      //                   ? dayDate.format('dddd (DD/MM/YYYY)')
+      //                   : null;
+      //                 return (
+      //                   <th key={dayIdx} className="text-center bg-primary text-white">
+      //                     {dayFormatted || "Không hiển thị"}
+      //                   </th>
+      //                 );
+      //               })}
+      //             </tr>
+      //           </thead>
+      //           <tbody>
+      //             <tr>
+      //               {Array.from({ length: 7 }).map((_, dayIdx) => {
+      //                 const dayDate = moment(defaultStartDate).add(dayIdx, 'days').format('YYYY-MM-DD');
+      //                 const daySlots = weekSlots
+      //                   .filter(slot => moment(slot.date).format('YYYY-MM-DD') === dayDate)
+      //                   .filter(slot => slot.status === "Available");
+      //                 return (
+      //                   <td key={dayIdx} className="align-middle">
+      //                     {daySlots.length === 0 ? (
+      //                       <p className="text-muted text-center">Không có slot khả dụng</p>
+      //                     ) : (
+      //                       daySlots.map((slot, slotIdx) => (
+      //                         <div key={slotIdx} className="form-check mb-2">
+      //                           <input
+      //                             type="radio"
+      //                             className="form-check-input"
+      //                             checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
+      //                             onChange={() => setSelectedSlot(slot)}
+      //                             disabled={slot.status !== "Available"}
+      //                           />
+      //                           <label className="form-check-label">
+      //                             {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
+      //                           </label>
+      //                         </div>
+      //                       ))
+      //                     )}
+      //                   </td>
+      //                 );
+      //               })}
+      //             </tr>
+      //           </tbody>
+      //         </Table>
+      //       )}
+      //       {error && <div className="alert alert-danger mt-3">{error}</div>}
+      //       <div className="d-flex justify-content-between mt-4">
+      //         <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
+      //           Quay Lại
+      //         </button>
+      //         <button className="btn btn-primary" onClick={() => setStep("details")} disabled={!selectedSlot}>
+      //           Tiếp Theo
+      //         </button>
+      //       </div>
+      //     </div>
+      //   );
+
       case "details":
         return (
           <div className="p-4 bg-white rounded shadow-sm">
             <h3 className="text-primary fw-bold mb-4">Thông Tin Bổ Sung</h3>
             <div className="mb-3">
-              <label className="form-label">Triệu chứng</label>
+              <label className="form-label">Loại lịch hẹn</label>
+              <select
+                className="form-select"
+                value={appointmentType}
+                onChange={(e) => setAppointmentType(e.target.value)}
+              >
+                <option value="Offline">Trực tiếp</option>
+                <option value="Online">Trực tuyến</option>
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Triệu chứng (không bắt buộc)</label>
               <textarea
                 className="form-control"
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="Mô tả triệu chứng"
-                required
+                placeholder="Mô tả triệu chứng (nếu có)"
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Mã BHYT (optional)</label>
+              <label className="form-label">Mã BHYT (không bắt buộc)</label>
               <input
                 type="text"
                 className="form-control"
                 value={bhytCode}
                 onChange={(e) => setBhytCode(e.target.value)}
-                placeholder="Nhập mã BHYT"
+                placeholder="Nhập mã BHYT (nếu có)"
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Phòng khám</label>
+              <input
+                type="text"
+                className="form-control"
+                value={doctorRoomMapping[selectedDoctor] || "Chưa gán phòng"}
+                disabled
               />
             </div>
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             <div className="d-flex justify-content-between mt-4">
-              <button className="btn btn-outline-secondary" onClick={() => setStep("datetime")}>
+              <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
                 Quay Lại
               </button>
-              <button className="btn btn-primary" onClick={handleCreateAppointment} disabled={loading || !symptoms}>
+              <button className="btn btn-primary" onClick={handleCreateAppointment} disabled={loading}>
                 {loading ? "Đang đặt lịch..." : "Xác Nhận Đặt Lịch"}
               </button>
             </div>
           </div>
         );
+
       case "confirm":
         return (
           <div className="p-4 bg-white rounded shadow-sm text-center">
             <h3 className="text-primary fw-bold mb-3">Đặt Lịch Thành Công</h3>
             {error && <div className="alert alert-danger">{error}</div>}
-            <p>Lịch hẹn của bạn đã được tạo và đang chờ xác nhận từ lễ tân. Vui lòng kiểm tra email hoặc thông báo để cập nhật tình trạng.</p>
+            <p>Lịch hẹn của bạn đã được tạo và xác nhận. Vui lòng kiểm tra danh sách lịch hẹn để quản lý.</p>
             <div className="mt-4 d-flex justify-content-center gap-3">
               <button className="btn btn-primary" onClick={() => setStep("profile")}>
                 Đặt Thêm Lịch
               </button>
-              <button className="btn btn-outline-secondary" onClick={() => navigate("/myappointments")}>
+              <button className="btn btn-outline-secondary" onClick={() => navigate("/appointment-schedule-management")}>
                 Quản lý Lịch
               </button>
             </div>
@@ -617,69 +571,6 @@ const AppointmentPage = () => {
 
   return (
     <>
-      <div className="bg-light py-3 px-5 d-none d-lg-block border-bottom shadow-sm">
-        <Row className="align-items-center justify-content-between">
-          <Col md={6} className="text-start">
-            <small className="text-muted">
-              <i className="far fa-clock text-primary me-2"></i>
-              Giờ Mở Cửa: Thứ 2 - Thứ 7: 7:00 Sáng - 8:00 Tối, Chủ Nhật: 9:00
-              Sáng - 5:00 Chiều
-            </small>
-          </Col>
-          <Col md={6} className="text-end">
-            <small className="text-muted me-4">
-              <i className="fa fa-envelope-open text-primary me-2"></i>
-              contact@kiwicare.com
-            </small>
-            <small className="text-muted">
-              <i className="fa fa-phone-alt text-primary me-2"></i>
-              +987 654 3210
-            </small>
-          </Col>
-        </Row>
-      </div>
-
-      <div
-        id="heroCarousel"
-        className="carousel slide carousel-fade"
-        data-bs-ride="carousel"
-        data-bs-interval="4000"
-      >
-        <div className="carousel-inner">
-          <div className="carousel-item active">
-            <img
-              src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d"
-              className="d-block w-100"
-              alt="KiwiCare Banner"
-              style={{
-                objectFit: "cover",
-                height: "80vh",
-                borderRadius: "8px",
-              }}
-            />
-            <div
-              className="carousel-caption d-flex flex-column justify-content-center align-items-center"
-              style={{
-                backgroundColor: "rgba(0, 0, 0, 0.6)",
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                position: "absolute",
-                borderRadius: "8px",
-              }}
-            >
-              <h1 className="display-3 fw-bold text-white mb-3">
-                Đặt Lịch Hẹn Tại KiwiCare
-              </h1>
-              <p className="text-white fs-5">
-                Dễ dàng đặt lịch với các bác sĩ chuyên khoa hàng đầu
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="container py-5">
         <section className="mb-5">
           <Row className="align-items-start">
@@ -724,4 +615,4 @@ const AppointmentPage = () => {
   );
 };
 
-export default AppointmentPage;
+export default OfflineAppointmentPage;

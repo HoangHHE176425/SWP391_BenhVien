@@ -38,11 +38,11 @@ import Changepass from "./pages/ChangePassword";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import SendQAForm from "./pages/sendQA";
-import AdminLayout from "./components/admin/AdminLayout";
+// import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import AccountManagement from "./pages/admin/AccountManagement";
 import EmployeeManagement from "./pages/admin/EmployessManagement";
-import StaffLayout from "./components/staff/StaffLayout";
+// import StaffLayout from "./components/staff/StaffLayout";
 import InvoiceUser from "./pages/InvoiceManagement";
 import BlogManagement from "./pages/receptionist/BlogManagement";
 import CategoryManagement from "./pages/receptionist/CategoryBlogManagement";
@@ -61,16 +61,18 @@ import MedicalRecord from "./pages/receptionist/MedicalRecord";
 import MedicineManagement from "./pages/receptionist/MedicineManagement";
 import NotificationCenter from "./pages/NotificationCenter";
 import NotificationDetail from "./pages/NotificationDetail";
-import {
-  PrivateRoute,
-  PrivateRouteNotAllowUser,
-  PrivateRouteByRole,
-} from "./components/PrivateRoute";
+import OfflineAppointmentPage from "./pages/receptionist/OfflineAppointmentPage";
+import QueueManagementPage from "./pages/receptionist/QueueManagement.jsx";
+// import {
+//   PrivateRoute,
+//   PrivateRouteNotAllowUser,
+//   PrivateRouteByRole,
+// } from "./components/PrivateRoute";
 import "antd/dist/reset.css";
-import AddMedicalRecord from "./components/AddMedicalRecord";
-import ViewMedicalRecords from "./components/ViewMedicalRecord";
-import CreateServicePage from "./components/staff/CreateServicePage";
-import EditServicePage from "./components/staff/EditService";
+// import AddMedicalRecord from "./components/AddMedicalRecord";
+// import ViewMedicalRecords from "./components/ViewMedicalRecord";
+// import CreateServicePage from "./components/staff/CreateServicePage";
+// import EditServicePage from "./components/staff/EditService";
 import HealthCalculatorPage from "./pages/HealthCalculatorPage";
 import BlogListPage from "./pages/BlogListPage";
 import NewsListPage from "./pages/NewsListPage";
@@ -347,6 +349,8 @@ const AppRoutes = () => {
             <Route path="schedule" element={<ReceptionistScheduleManager />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<ReceptionistAttendance />} />
+            <Route path="offline-appointment" element={<OfflineAppointmentPage />} />
+            <Route path="queue" element={<QueueManagementPage/>} />
           </Route>
 
           {/* Pharmacist Routes */}

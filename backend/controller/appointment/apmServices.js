@@ -184,7 +184,7 @@ module.exports.getProfilesByUserId = async (req, res) => {
   res.status(200).json({ message: 'getProfilesByUserId not implemented' });
 };
 
-//Thay đổi trạng thái lịch hẹn
+// SỬA: Thay đổi trạng thái lịch hẹn 
 module.exports.updateStatus = async (req, res) => {
   const { status } = req.body;
   const appointmentId = req.params.id;
@@ -199,10 +199,93 @@ module.exports.updateStatus = async (req, res) => {
       return res.status(404).json({ error: 'Lịch hẹn không tồn tại' });
     }
 
+    if (appointment.status !== 'pending_confirmation') {
+      return res.status(400).json({ error: 'Chỉ có thể update từ trạng thái pending_confirmation' });
+    }
+
     appointment.status = status;
     await appointment.save();
-
     res.json({ message: 'Cập nhật status thành công', appointment });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Lỗi server' });
+  }
+};
+
+// SỬA: Đẩy lịch vào hàng đợi, gán phòng từ payload, tính số thứ tự tự động
+module.exports.pushToQueue = async (req, res) => {
+  const appointmentId = req.params.appointmentId;
+  const { room } = req.body;
+
+  try {
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment || appointment.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Lịch hẹn không hợp lệ hoặc chưa confirmed' });
+    }
+
+    appointment.room = room; // SỬA: Cập nhật phòng vào appointment
+    appointment.status = 'queued';
+    await appointment.save();
+
+    let queue = await Queue.findOne({ department: appointment.department, date: appointment.appointmentDate, type: appointment.type });
+    if (!queue) {
+      queue = new Queue({
+        department: appointment.department,
+        date: appointment.appointmentDate,
+        type: appointment.type,
+        queueEntries: []
+      });
+    }
+
+    const position = queue.queueEntries.length + 1; // SỬA: Tính số thứ tự tự động
+
+    queue.queueEntries.push({
+      appointmentId: appointment._id,
+      profileId: appointment.profileId,
+      doctorId: appointment.doctorId,
+      room: room,
+      status: 'queued',
+      position: position // SỬA: Thêm số thứ tự
+    });
+    await queue.save();
+
+    res.json({ message: 'Đẩy vào hàng đợi thành công', queueEntry: queue.queueEntries[queue.queueEntries.length - 1] });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Lỗi server' });
+  }
+};
+
+// SỬA: Lấy danh sách lịch hẹn, populate thêm room, symptoms, lọc mặc định cho online và pending/confirmed
+module.exports.getAppointments = async (req, res) => {
+  const { profileId, status, startDate, endDate, createdBy, page = 1, limit = 10 } = req.query;
+
+  try {
+    const query = { type: 'Online' }; // SỬA: Lọc mặc định cho online
+    if (profileId) query.profileId = profileId;
+    if (status) query.status = status;
+    if (createdBy) query.createdBy = createdBy;
+    if (startDate || endDate) {
+      query.appointmentDate = {};
+      if (startDate) query.appointmentDate.$gte = new Date(startDate);
+      if (endDate) query.appointmentDate.$lte = new Date(endDate);
+    }
+
+    const appointments = await Appointment.find(query)
+      .populate('profileId', 'name gender dateOfBirth identityNumber phone')
+      .populate('doctorId', 'name department room') // SỬA: Populate thêm room từ doctor
+      .populate('department', 'name')
+      .populate('userId', 'name')
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .sort({ appointmentDate: -1, createdAt: -1 });
+
+    const total = await Appointment.countDocuments(query);
+
+    res.json({
+      appointments,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Lỗi server' });
   }
@@ -226,102 +309,61 @@ module.exports.getPendingAppointments = async (req, res) => {
   }
 };
 
-//Đẩy lịch vào hàng đợi
-module.exports.pushToQueue = async (req, res) => {
-  const appointmentId = req.params.appointmentId;
+
+// module.exports.getDoctorRoomMapping = async (req, res) => {
+//   try {
+//     const doctors = await Employee.find({ role: 'Doctor', status: 'active' }, '_id room');
+//     const mapping = {};
+//     doctors.forEach(doc => {
+//       mapping[doc._id.toString()] = doc.room || 'Phòng mặc định'; // SỬA: Gán mặc định nếu thiếu
+//     });
+//     res.json({ mapping });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message || 'Lỗi fetch mapping' });
+//   }
+// };
+
+module.exports.getAllQueues = async (req, res) => {
+  const { room, page = 1, limit = 10 } = req.query;
 
   try {
-    const appointment = await Appointment.findById(appointmentId);
-    if (!appointment || appointment.status !== 'confirmed') {
-      return res.status(400).json({ error: 'Lịch hẹn không hợp lệ hoặc chưa confirmed' });
+    const filter = {};
+    if (room) {
+      filter['queueEntries.room'] = room; // Filter theo room trong queueEntries
     }
 
-    let queue = await Queue.findOne({ department: appointment.department, date: appointment.appointmentDate, type: appointment.type });
-    if (!queue) {
-      queue = new Queue({
-        department: appointment.department,
-        date: appointment.appointmentDate,
-        type: appointment.type,
-        queueEntries: []
-      });
-    }
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    queue.queueEntries.push({
-      appointmentId: appointment._id,
-      profileId: appointment.profileId,
-      doctorId: appointment.doctorId,
-      room: appointment.room,
-      status: 'queued'
-    });
-    await queue.save();
+    // Lấy tổng số Queue để pagination
+    const total = await Queue.countDocuments(filter);
 
-    appointment.status = 'queued';
-    await appointment.save();
-
-    res.json({ message: 'Đẩy vào hàng đợi thành công', queueEntry: queue.queueEntries[queue.queueEntries.length - 1] });
-  } catch (error) {
-    res.status(500).json({ error: error.message || 'Lỗi server' });
-  }
-};
-
-module.exports.updateStatus = async (req, res) => {
-  const { status } = req.body;
-  const appointmentId = req.params.id;
-
-  if (!status || !Appointment.schema.path('status').enumValues.includes(status)) {
-    return res.status(400).json({ error: 'Status không hợp lệ' });
-  }
-
-  try {
-    const appointment = await Appointment.findById(appointmentId);
-    if (!appointment) {
-      return res.status(404).json({ error: 'Lịch hẹn không tồn tại' });
-    }
-
-    // Kiểm tra nếu status phù hợp (ví dụ: chỉ update từ pending_confirmation)
-    if (appointment.status !== 'pending_confirmation') {
-      return res.status(400).json({ error: 'Chỉ có thể update từ trạng thái pending_confirmation' });
-    }
-
-    appointment.status = status;
-    await appointment.save();
-
-    // Có thể gửi email/sms notification cho bệnh nhân ở đây (tích hợp sau)
-    res.json({ message: 'Cập nhật status thành công', appointment });
-  } catch (error) {
-    res.status(500).json({ error: error.message || 'Lỗi server' });
-  }
-};
-
-module.exports.getAppointments = async (req, res) => {
-  const { profileId, status, startDate, endDate, createdBy, page = 1, limit = 10 } = req.query;
-
-  try {
-    const query = {};
-    if (profileId) query.profileId = profileId;
-    if (status) query.status = status;
-    if (createdBy) query.createdBy = createdBy; // Thêm lọc theo createdBy
-    if (startDate || endDate) {
-      query.appointmentDate = {};
-      if (startDate) query.appointmentDate.$gte = new Date(startDate);
-      if (endDate) query.appointmentDate.$lte = new Date(endDate);
-    }
-
-    const appointments = await Appointment.find(query)
-      .populate('profileId doctorId department')
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .sort({ appointmentDate: -1, createdAt: -1 });
-
-    const total = await Appointment.countDocuments(query);
+    // Lấy danh sách Queue, populate queueEntries
+    const queues = await Queue.find(filter)
+      .populate({
+        path: 'queueEntries.appointmentId',
+        select: 'appointmentDate symptoms type status' // Populate thông tin lịch hẹn
+      })
+      .populate({
+        path: 'queueEntries.profileId',
+        select: 'name phone' // Populate tên và SĐT bệnh nhân
+      })
+      .populate({
+        path: 'queueEntries.doctorId',
+        select: 'name' // Populate tên bác sĩ
+      })
+      .populate('department', 'name') // Populate tên khoa
+      .sort({ date: -1 }) // Sort theo ngày mới nhất
+      .skip(skip)
+      .limit(parseInt(limit));
 
     res.json({
-      appointments,
+      queues,
       total,
       page: parseInt(page),
-      limit: parseInt(limit)
+      totalPages: Math.ceil(total / limit)
     });
   } catch (error) {
+    console.error("[ERROR] getAllQueues:", error);
     res.status(500).json({ error: error.message || 'Lỗi server' });
   }
 };

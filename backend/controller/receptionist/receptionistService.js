@@ -251,11 +251,7 @@ const deleteSchedule = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD:backend/controller/staff/staffService.js
-const getFeedbacks = async (req, res) => {
-=======
 const getFeedbacksForReceptionist = async (req, res) => {
->>>>>>> origin/test:backend/controller/receptionist/receptionistService.js
   try {
     const feedbacks = await Feedback.find()
       .populate('userId', 'name') 
@@ -321,11 +317,7 @@ module.exports = {
   getSchedules,
   updateSchedule,
   deleteSchedule,
-<<<<<<< HEAD:backend/controller/staff/staffService.js
-  getFeedbacks,
-=======
   getFeedbacksForReceptionist,
->>>>>>> origin/test:backend/controller/receptionist/receptionistService.js
   getAllFAQ,
   markAsFAQ,
   approveCancellation,

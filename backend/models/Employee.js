@@ -27,9 +27,11 @@ const employeeSchema = new mongoose.Schema({
   services: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Services' }],
   emailVerificationCode: { type: String },
   verificationExpires: { type: Date },
+  room: { type: String, required: false }, // SỬA: Thêm trường phòng mặc định cho bác sĩ (mapping phòng-bác sĩ)
 }, { timestamps: true });
 
 employeeSchema.index({ role: 1, status: 1 });
+employeeSchema.index({ department: 1, room: 1 }); // SỬA: Thêm index để tối ưu query mapping phòng-bác sĩ
 
 // ✅ Tự động sinh mã nhân viên dạng EMP001, EMP002...
 employeeSchema.pre('save', async function (next) {
