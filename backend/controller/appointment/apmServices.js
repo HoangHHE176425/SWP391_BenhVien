@@ -128,7 +128,7 @@ module.exports.delEmployees = async (req, res) => {
     if (!employee)
       return res.status(404).json({ message: "Employee not found" });
 
-    
+
     res.json({ message: "Employee deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -140,7 +140,7 @@ module.exports.getAllAppointments = async (req, res) => {
     const { doctorId, status, increaseSort } = req.query;
 
     const filter = doctorId ? { doctorId } : {};
-    
+
     // Hỗ trợ nhiều giá trị status (có thể là string hoặc array)
     if (status) {
       if (Array.isArray(status)) {
@@ -156,10 +156,10 @@ module.exports.getAllAppointments = async (req, res) => {
     }
 
     const appointments = await Appointment.find(filter)
-        .populate('userId', 'name email')
-        .populate('profileId', 'fullName gender dateOfBirth name identityNumber')
-        .populate('doctorId', 'name department')
-        .sort({ appointmentDate: increaseSort ? 1 : -1 });
+      .populate('userId', 'name email')
+      .populate('profileId', 'fullName gender dateOfBirth name identityNumber')
+      .populate('doctorId', 'name department')
+      .sort({ appointmentDate: increaseSort ? 1 : -1 });
 
     res.status(200).json(appointments);
   } catch (error) {
@@ -216,8 +216,11 @@ module.exports.getPendingAppointments = async (req, res) => {
     const filter = { status: 'pending_confirmation' };
     if (type) filter.type = type;
 
-    const appointments = await Appointment.find(filter).populate('profileId doctorId department');
-    res.json({ appointments });
+    const appointments = await Appointment.find(filter)
+      .populate('profileId', 'fullName gender dateOfBirth phone') // Thêm phone để lễ tân gọi điện
+      .populate('doctorId', 'name department')
+      .populate('department', 'name')
+      .sort({ appointmentDate: 1 }); // Sắp xếp theo ngày gần nhất    res.json({ appointments });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Lỗi server' });
   }
@@ -261,33 +264,30 @@ module.exports.pushToQueue = async (req, res) => {
   }
 };
 
-//đổi trạng thái hàng chờ
-module.exports.updateEntryStatus = async (req, res) => {
+module.exports.updateStatus = async (req, res) => {
   const { status } = req.body;
-  const queueId = req.params.queueId;
-  const entryId = req.params.entryId;
+  const appointmentId = req.params.id;
 
-  // Validate param (đã có middleware, nhưng double-check thủ công nếu cần)
-  if (!queueId || !entryId) {
-    return res.status(400).json({ error: 'Thiếu queueId hoặc entryId' });
+  if (!status || !Appointment.schema.path('status').enumValues.includes(status)) {
+    return res.status(400).json({ error: 'Status không hợp lệ' });
   }
 
   try {
-    // Tìm Queue và update status của entry cụ thể
-    const queue = await Queue.findOneAndUpdate(
-      { _id: queueId, 'queueEntries._id': entryId }, // Tìm Queue có entryId trong array
-      { $set: { 'queueEntries.$.status': status } }, // Update status của entry khớp (.$ là positional operator)
-      { new: true } // Trả document mới sau update
-    );
-
-    if (!queue) {
-      return res.status(404).json({ error: 'Queue hoặc entry không tồn tại' });
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Lịch hẹn không tồn tại' });
     }
 
-    // Tìm entry đã update để trả về
-    const updatedEntry = queue.queueEntries.find(entry => entry._id.toString() === entryId);
+    // Kiểm tra nếu status phù hợp (ví dụ: chỉ update từ pending_confirmation)
+    if (appointment.status !== 'pending_confirmation') {
+      return res.status(400).json({ error: 'Chỉ có thể update từ trạng thái pending_confirmation' });
+    }
 
-    res.json({ message: 'Đổi trạng thái entry thành công', updatedEntry });
+    appointment.status = status;
+    await appointment.save();
+
+    // Có thể gửi email/sms notification cho bệnh nhân ở đây (tích hợp sau)
+    res.json({ message: 'Cập nhật status thành công', appointment });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Lỗi server' });
   }

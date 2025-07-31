@@ -284,33 +284,33 @@ module.exports.getDoctorsByDepartment = async (req, res) => {
 
 module.exports.getAvailableSlotsInWeek = async (req, res) => {
     const doctorId = req.params.doctorId;
-    const { startDate } = req.query; // Ví dụ: "2025-07-30" (ngày bắt đầu tuần)
+    const { startDate } = req.query;
 
     if (!startDate) {
         return res.status(400).json({ error: 'Cần startDate (YYYY-MM-DD)' });
     }
 
     try {
-        // Validate và chuẩn hóa startDate
-        const start = moment(startDate, 'YYYY-MM-DD', true);
+        // Normalize startDate thành UTC và startOf('day')
+        const start = moment.utc(startDate, 'YYYY-MM-DD').startOf('day');
         if (!start.isValid()) {
             return res.status(400).json({ error: 'startDate không hợp lệ' });
         }
 
-        // Tính 7 ngày tiếp theo
-        const endDate = moment(start).add(6, 'days').endOf('day');
-        const dates = [];
-        for (let m = moment(start); m.isSameOrBefore(endDate); m.add(1, 'days')) {
-            dates.push(m.toDate());
-        }
+        const end = moment.utc(start).add(6, 'days').endOf('day');
 
-        // Query Schedule trong 1 tuần
+        // Log để debug
+        console.log('Query range:', start.toISOString(), 'to', end.toISOString());
+
+        // Query Schedule trong khoảng thời gian
         const schedules = await Schedule.find({
             employeeId: doctorId,
-            date: { $in: dates }
+            date: { $gte: start.toDate(), $lte: end.toDate() }
         });
 
-        // Lọc và sắp xếp slot Available
+        // Log schedules tìm thấy
+        console.log('Found schedules:', schedules.length);
+
         let availableSlots = [];
         schedules.forEach(schedule => {
             const slots = schedule.timeSlots.filter(slot => slot.status === 'Available');
@@ -324,7 +324,7 @@ module.exports.getAvailableSlotsInWeek = async (req, res) => {
             });
         });
 
-        // Sắp xếp theo ngày và giờ bắt đầu
+        // Sắp xếp theo ngày và giờ
         availableSlots.sort((a, b) => {
             if (a.date.getTime() !== b.date.getTime()) return a.date.getTime() - b.date.getTime();
             return a.startTime.getTime() - b.startTime.getTime();
@@ -332,6 +332,7 @@ module.exports.getAvailableSlotsInWeek = async (req, res) => {
 
         res.json({ slots: availableSlots });
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message || 'Lỗi server' });
     }
 };

@@ -62,7 +62,7 @@ const AppointmentPage = () => {
 
         setDepartmentData(departments);
       } catch (err) {
-        console.error("Error fetching departments:", err);
+        console.error("[ERROR] Fetch departments:", err); // Log lỗi tải departments
       }
     };
 
@@ -100,7 +100,7 @@ const AppointmentPage = () => {
         setShowCreateModal(true);
       }
     } catch (err) {
-      console.error("Error checking CCCD:", err);
+      console.error("[ERROR] Check CCCD:", err); // Log lỗi kiểm tra CCCD
       setError("Kiểm tra CCCD thất bại.");
     } finally {
       setLoading(false);
@@ -156,7 +156,7 @@ const AppointmentPage = () => {
       setSuccess(true);
       setStep("department");
     } catch (err) {
-      console.error("Error creating profile:", err);
+      console.error("[ERROR] Create profile:", err); // Log lỗi tạo profile
       setError("Tạo hồ sơ thất bại.");
     } finally {
       setLoading(false);
@@ -167,14 +167,14 @@ const AppointmentPage = () => {
     if (selectedDepartment) {
       const fetchDoctors = async () => {
         try {
-          console.log("Fetching doctors for department:", selectedDepartment); // Debug
+          console.log("[LOG] Fetching doctors for department:", selectedDepartment); // Debug
           const res = await axios.get(`http://localhost:9999/api/doctor/doctor?departmentId=${selectedDepartment}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
-          console.log("Doctors response:", res.data); // Debug response
+          console.log("[LOG] Doctors response:", res.data); // Debug response
           setDoctors(res.data.doctors || []); // Đặt trực tiếp doctors từ response
         } catch (err) {
-          console.error("Error fetching doctors:", err);
+          console.error("[ERROR] Fetch doctors:", err); // Log lỗi tải doctors
           setDoctors([]); // Reset nếu lỗi
         }
       };
@@ -184,23 +184,25 @@ const AppointmentPage = () => {
     }
   }, [selectedDepartment, token]);
 
-  // useEffect(() => {
-  //   if (selectedDoctor && startWeekDate) {
-  //     const fetchWeekSlots = async () => {
-  //       try {
-  //         const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`, {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         });
-  //         setWeekSlots(res.data.slots);
-  //       } catch (err) {
-  //         console.error("Error fetching week slots:", err);
-  //       }
-  //     };
-  //     fetchWeekSlots();
-  //   }
-  // }, [selectedDoctor, startWeekDate, token]);
+  useEffect(() => {
+    if (selectedDoctor && startWeekDate) {
+      const fetchWeekSlots = async () => {
+        try {
+          console.log("[LOG] Fetching week slots for doctor:", selectedDoctor, "startDate:", startWeekDate); // Debug gọi API
+          const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log("[LOG] Week slots response:", res.data); // Log response data
+          setWeekSlots(res.data.slots);
+        } catch (err) {
+          console.error("[ERROR] Fetch week slots:", err); // Log lỗi tải slots
+        }
+      };
+      fetchWeekSlots();
+    }
+  }, [selectedDoctor, startWeekDate, token]);
 
   useEffect(() => {
     if (selectedDoctor && startWeekDate) {
@@ -228,7 +230,6 @@ const AppointmentPage = () => {
     }
   }, [selectedDoctor, startWeekDate]);
 
-
   const handleCreateAppointment = async () => {
     setLoading(true);
     setError(null);
@@ -240,20 +241,39 @@ const AppointmentPage = () => {
     }
 
     try {
+      console.log("[LOG] Creating appointment with payload:", {
+        profileId,
+        doctorId: selectedDoctor,
+        department: selectedDepartment,
+        appointmentDate: selectedSlot.startTime,
+        timeSlot: {
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime,
+          status: 'Booked'
+        },
+        symptoms,
+        bhytCode,
+        type: "Online",
+        status: "pending_confirmation",
+        room: ""
+      }); // Log payload trước khi gửi
+
       const res = await axios.post(
         "http://localhost:9999/api/user/create",
         {
           profileId,
           doctorId: selectedDoctor,
           department: selectedDepartment,
-          appointmentDate: selectedSlot.date, // Từ slot chọn
+          appointmentDate: selectedSlot.startTime, // Sử dụng startTime để có thời gian đầy đủ
           timeSlot: {
             startTime: selectedSlot.startTime,
-            endTime: selectedSlot.endTime
+            endTime: selectedSlot.endTime,
+            status: 'Booked' // Thêm status cho timeSlot
           },
           symptoms,
           bhytCode,
           type: "Online",
+          status: "pending_confirmation", // Đặt status mặc định là pending_confirmation cho lịch online
           room: "" // Không cần cho online
         },
         {
@@ -263,10 +283,11 @@ const AppointmentPage = () => {
         }
       );
 
+      console.log("[LOG] Create appointment success:", res.data); // Log response thành công
       setSuccess(true);
       setStep("confirm");
     } catch (err) {
-      console.error("Error creating appointment:", err);
+      console.error("[ERROR] Create appointment:", err.response?.data || err); // Log chi tiết lỗi API
       setError("Đặt lịch thất bại.");
     } finally {
       setLoading(false);
@@ -485,7 +506,8 @@ const AppointmentPage = () => {
                       const daySlots = weekSlots
                         .filter(slot => moment(slot.date).format('YYYY-MM-DD') === dayDate)
                         .filter(slot => moment(slot.date).isSameOrAfter(now, 'day')) // Loại ngày trước
-                        .filter(slot => moment(slot.startTime).isAfter(twoHoursLater)); // Loại slot trong 2 tiếng
+                        .filter(slot => moment(slot.startTime).isAfter(twoHoursLater)) // Loại slot trong 2 tiếng
+                        .filter(slot => slot.status === "Available");
                       return (
                         <td key={dayIdx} className="align-middle">
                           {daySlots.length === 0 ? (
@@ -496,9 +518,9 @@ const AppointmentPage = () => {
                                 <input
                                   type="radio"
                                   className="form-check-input"
-                                  checked={selectedSlot && selectedSlot.startTime === slot.startTime}
+                                  checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
                                   onChange={() => setSelectedSlot(slot)}
-                                  disabled={moment(slot.date).isBefore(now, 'day')} // Vô hiệu hóa ngày trước
+                                  disabled={moment(slot.date).isBefore(now, 'day') || slot.status !== "Available"}  // Thêm kiểm tra status
                                 />
                                 <label className="form-check-label">
                                   {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
@@ -564,7 +586,7 @@ const AppointmentPage = () => {
           <div className="p-4 bg-white rounded shadow-sm text-center">
             <h3 className="text-primary fw-bold mb-3">Đặt Lịch Thành Công</h3>
             {error && <div className="alert alert-danger">{error}</div>}
-            <p>Lịch hẹn của bạn đã được tạo. Vui lòng kiểm tra email hoặc thông báo để xác nhận.</p>
+            <p>Lịch hẹn của bạn đã được tạo và đang chờ xác nhận từ lễ tân. Vui lòng kiểm tra email hoặc thông báo để cập nhật tình trạng.</p>
             <div className="mt-4 d-flex justify-content-center gap-3">
               <button className="btn btn-primary" onClick={() => setStep("profile")}>
                 Đặt Thêm Lịch
@@ -658,13 +680,12 @@ const AppointmentPage = () => {
                   {steps.map((s, index) => (
                     <li
                       key={s.id}
-                      className={`d-flex align-items-center mb-3 ${step === s.id ? "fw-bold" : ""
-                        }`}
+                      className={`d-flex align-items-center mb-3 ${step === s.id ? "fw-bold" : ""}`}
                     >
                       <span
                         className={`d-inline-block rounded-circle text-center me-2 ${steps.findIndex((st) => st.id === step) >= index
-                          ? "bg-white text-primary"
-                          : "bg-light text-white"
+                            ? "bg-white text-primary"
+                            : "bg-light text-white"
                           }`}
                         style={{
                           width: "24px",
@@ -672,9 +693,7 @@ const AppointmentPage = () => {
                           lineHeight: "24px",
                         }}
                       >
-                        {steps.findIndex((st) => st.id === step) >= index
-                          ? "✓"
-                          : "•"}
+                        {steps.findIndex((st) => st.id === step) >= index ? "✓" : "•"}
                       </span>
                       <div>
                         <div className="small fw-semibold">{s.title}</div>
@@ -691,7 +710,6 @@ const AppointmentPage = () => {
       </div>
     </>
   );
-
 };
 
 export default AppointmentPage;

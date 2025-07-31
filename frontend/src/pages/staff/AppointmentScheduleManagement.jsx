@@ -14,7 +14,7 @@ import {
   Card,
   Badge,
 } from "react-bootstrap";
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaTimes } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaTimes, FaPhone } from "react-icons/fa";
 import axios from "axios";
 import "../../assets/css/AppointmentScheduleManagement.css";
 import { message } from 'antd';
@@ -38,7 +38,7 @@ const AppointmentScheduleManagement = () => {
   const [endDate, setEndDate] = useState("");
   const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -47,99 +47,90 @@ const AppointmentScheduleManagement = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [openProfileDialog, setOpenProfileDialog] = useState(false);
 
-
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
-  appointmentDate: "",
-  department: "",
-  doctorId: "",
-  timeSlot: "",
-  type: "Offline",
-  status: "Booked",
-  reminderSent: false,
-  identityNumber: "",
-});
+    appointmentDate: "",
+    department: "",
+    doctorId: "",
+    timeSlot: "",
+    type: "Offline",
+    status: "Booked",
+    reminderSent: false,
+    identityNumber: "",
+  });
 
   const [currentAppointment, setCurrentAppointment] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteAppointmentId, setDeleteAppointmentId] = useState(null);
 
-const handleViewProfile = async (profileId) => {
-  try {
-    const token = localStorage.getItem("token");
-    const id = typeof profileId === "object" ? profileId._id : profileId;
-    
-    const response = await axios.get(`http://localhost:9999/api/appointmentScheduleManagement/profile/detail/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  const handleViewProfile = async (profileId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const id = typeof profileId === "object" ? profileId._id : profileId;
 
-    setSelectedProfile(response.data.data);
-    setOpenProfileDialog(true);
-  } catch (error) {
-    console.error("Lỗi khi tìm kiếm thông tin chi tiết hồ sơ:", error);
-  }
-};
+      const response = await axios.get(`http://localhost:9999/api/appointmentScheduleManagement/profile/detail/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-
-
-useEffect(() => {
-  fetchAppointments();
-  fetchDepartments();
-  fetchUsers();
-}, [
-  currentPage,
-  statusFilter,
-  departmentFilter,
-  searchTerm,
-  startDate,
-  endDate,
-  form.identityNumber,
-]);
-
-
+      setSelectedProfile(response.data.data);
+      setOpenProfileDialog(true);
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm thông tin chi tiết hồ sơ:", error.response?.data || error.message);
+    }
+  };
 
   useEffect(() => {
-  if (form.appointmentDate && form.department) {
-    fetchAvailableDoctors(form.appointmentDate, form.department);
-    
-    // ❗ Reset doctor + timeSlot mỗi khi ngày hoặc department thay đổi
-    setForm((prev) => ({
-      ...prev,
-      doctorId: "",
-      timeSlot: "",
-    }));
-    setSchedules([]);
-  } else {
-    setAvailableDoctors([]);
-    setForm((prev) => ({
-      ...prev,
-      doctorId: "",
-      timeSlot: "",
-    }));
-    setSchedules([]);
-  }
-}, [form.appointmentDate, form.department]);
-
-
-useEffect(() => {
-  if (form.doctorId) {
-    fetchSchedules(form.doctorId, form.appointmentDate);
-    
-    // ✅ reset timeSlot vì lịch đã đổi
-    setForm((prev) => ({ ...prev, timeSlot: "" }));
-  }
-}, [form.doctorId]);
+    fetchAppointments();
+    fetchDepartments();
+    fetchUsers();
+  }, [
+    currentPage,
+    statusFilter,
+    departmentFilter,
+    searchTerm,
+    startDate,
+    endDate,
+    form.identityNumber,
+  ]);
 
   useEffect(() => {
-  if (form.doctorId && form.appointmentDate) {
-    fetchSchedules(form.doctorId, form.appointmentDate);
-    setForm((prev) => ({
-      ...prev,
-      timeSlot: "", // ✅ reset lại slot mỗi lần chọn bác sĩ
-    }));
-  }
-}, [form.doctorId, form.appointmentDate]);
+    if (form.appointmentDate && form.department) {
+      fetchAvailableDoctors(form.appointmentDate, form.department);
 
+      setForm((prev) => ({
+        ...prev,
+        doctorId: "",
+        timeSlot: "",
+      }));
+      setSchedules([]);
+    } else {
+      setAvailableDoctors([]);
+      setForm((prev) => ({
+        ...prev,
+        doctorId: "",
+        timeSlot: "",
+      }));
+      setSchedules([]);
+    }
+  }, [form.appointmentDate, form.department]);
+
+  useEffect(() => {
+    if (form.doctorId) {
+      fetchSchedules(form.doctorId, form.appointmentDate);
+
+      setForm((prev) => ({ ...prev, timeSlot: "" }));
+    }
+  }, [form.doctorId]);
+
+  useEffect(() => {
+    if (form.doctorId && form.appointmentDate) {
+      fetchSchedules(form.doctorId, form.appointmentDate);
+      setForm((prev) => ({
+        ...prev,
+        timeSlot: "",
+      }));
+    }
+  }, [form.doctorId, form.appointmentDate]);
 
   const [resolvedProfile, setResolvedProfile] = useState(null);
 
@@ -154,89 +145,83 @@ useEffect(() => {
     }
   }, [form.identityNumber, form.appointmentDate, form.department, form.doctorId]);
 
+  const [resolvedProfiles, setResolvedProfiles] = useState([]);
+  const [selectedProfileId, setSelectedProfileId] = useState("");
 
-const [resolvedProfiles, setResolvedProfiles] = useState([]);
-const [selectedProfileId, setSelectedProfileId] = useState("");
+  const fetchProfilesByIdentity = async (identityNumber) => {
+    if (!identityNumber || identityNumber.trim() === "") return;
 
-const fetchProfilesByIdentity = async (identityNumber) => {
-  if (!identityNumber || identityNumber.trim() === "") return;
+    try {
+      const res = await axios.get(`http://localhost:9999/api/appointmentScheduleManagement/profileByIdentity`, {
+        params: { identityNumber }
+      });
 
-  try {
-    const res = await axios.get(`http://localhost:9999/api/appointmentScheduleManagement/profileByIdentity`, {
-      params: { identityNumber }
-    });
-
-    if (Array.isArray(res.data)) {
-      if (res.data.length === 0) {
-        // Chỉ hiển thị thông báo khi tìm xong mà không có profile
-        message.error("No profiles found with this identity number.");
-        setResolvedProfiles([]);
-        setSelectedProfileId("");
+      if (Array.isArray(res.data)) {
+        if (res.data.length === 0) {
+          message.error("No profiles found with this identity number.");
+          setResolvedProfiles([]);
+          setSelectedProfileId("");
+        } else {
+          setResolvedProfiles(res.data);
+          setSelectedProfileId(res.data[0]._id);
+        }
       } else {
-        setResolvedProfiles(res.data);
-        setSelectedProfileId(res.data[0]._id); // hoặc để người dùng chọn nếu có nhiều
+        console.error("Định dạng phản hồi không mong đợi:", res.data);
+        message.error("Phản hồi không mong muốn từ máy chủ.");
       }
-    } else {
-      console.error("Định dạng phản hồi không mong đợi:", res.data);
-      message.error("Phản hồi không mong muốn từ máy chủ.");
+    } catch (err) {
+      console.error("Lỗi khi tìm kiếm hồ sơ theo danh tính:", err.response?.data || err.message);
+      setResolvedProfiles([]);
+      setSelectedProfileId("");
     }
-  } catch (err) {
-    console.error("Lỗi khi tìm kiếm hồ sơ theo danh tính:", err);
-    setResolvedProfiles([]);
-    setSelectedProfileId("");
-  }
-};
+  };
 
-
-
-useEffect(() => {
-  if (selectedProfileId) {
-    setForm((prev) => ({ ...prev, profileId: selectedProfileId }));
-  }
-}, [selectedProfileId]);
+  useEffect(() => {
+    if (selectedProfileId) {
+      setForm((prev) => ({ ...prev, profileId: selectedProfileId }));
+    }
+  }, [selectedProfileId]);
 
   const fetchAppointments = async () => {
-  try {
-    setLoading(true);
-    const params = {
-      page: currentPage,
-      limit: itemsPerPage,
-      search: searchTerm,
-    };
-    if (statusFilter !== "all") params.status = statusFilter;
-    if (departmentFilter !== "all") params.department = departmentFilter;
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
-    if (form.identityNumber) params.identityNumber = form.identityNumber; // ✅ THÊM DÒNG NÀY
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+      };
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (departmentFilter !== "all") params.department = departmentFilter;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      if (form.identityNumber) params.identityNumber = form.identityNumber;
 
-    const res = await axios.get(
-      "http://localhost:9999/api/appointmentScheduleManagement",
-      { params }
-    );
-    const { appointments, pagination } = res.data;
-    setAppointments(appointments || []);
-    setFilteredAppointments(appointments || []);
-    setTotalPages(pagination.totalPages || 1);
-    setTotalItems(pagination.total || 0);
-    setLoading(false);
-  } catch (err) {
-    console.error(err);
-    setError("Không tải được lịch hẹn. Vui lòng thử lại.");
-    setLoading(false);
-  }
-};
+      const res = await axios.get(
+        "http://localhost:9999/api/appointmentScheduleManagement",
+        { params }
+      );
+      const { appointments, pagination } = res.data;
+      setAppointments(appointments || []);
+      setFilteredAppointments(appointments || []);
+      setTotalPages(pagination.totalPages || 1);
+      setTotalItems(pagination.total || 0);
+      setLoading(false);
+    } catch (err) {
+      console.error("Lỗi tải danh sách lịch hẹn:", err.response?.data || err.message);
+      setError("Không tải được lịch hẹn. Vui lòng thử lại.");
+      setLoading(false);
+    }
+  };
 
-
-const fetchDepartments = async () => {
-  try {
-    const res = await axios.get("http://localhost:9999/api/appointmentScheduleManagement/departments");
-    setDepartments(Array.isArray(res.data) ? res.data : []);
-  } catch (error) {
-    console.error("Không thể tìm được các phòng ban: ", error);
-    setError("Không tải được phòng ban.");
-  }
-};
-
+  const fetchDepartments = async () => {
+    try {
+      const res = await axios.get("http://localhost:9999/api/appointmentScheduleManagement/departments");
+      setDepartments(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Lỗi tải danh sách phòng ban:", error.response?.data || error.message);
+      setError("Không tải được phòng ban.");
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -245,12 +230,12 @@ const fetchDepartments = async () => {
       );
       setUsers(res.data);
     } catch (err) {
-      console.error("Không thể tìm nạp người dùng:", err);
+      console.error("Lỗi tải danh sách người dùng:", err.response?.data || err.message);
       setError("Không tải được người dùng.");
     }
   };
 
-    const fetchAvailableDoctors = async (date, departmentId) => {
+  const fetchAvailableDoctors = async (date, departmentId) => {
     try {
       setIsFormLoading(true);
 
@@ -265,7 +250,7 @@ const fetchDepartments = async () => {
 
       setAvailableDoctors(res.data || []);
     } catch (error) {
-      console.error("Không thể tìm được bác sĩ:", error);
+      console.error("Lỗi tải danh sách bác sĩ:", error.response?.data || error.message);
       setAvailableDoctors([]);
       setError("Không tìm được bác sĩ phù hợp.");
     } finally {
@@ -273,42 +258,32 @@ const fetchDepartments = async () => {
     }
   };
 
-
   const fetchSchedules = async (doctorId, date) => {
-  try {
-    const res = await axios.get(
-      `http://localhost:9999/api/appointmentScheduleManagement/schedules/${doctorId}`,
-      {
-        params: { date: new Date(date).toISOString().split("T")[0] }, // ⚠️ dùng yyyy-mm-dd
+    try {
+      const res = await axios.get(
+        `http://localhost:9999/api/appointmentScheduleManagement/schedules/${doctorId}`,
+        {
+          params: { date: new Date(date).toISOString().split("T")[0] },
+        }
+      );
+
+      const matchingSchedule = res.data.find(
+        (s) =>
+          new Date(s.date).toISOString().slice(0, 10) ===
+          new Date(date).toISOString().slice(0, 10)
+      );
+
+      if (matchingSchedule) {
+        setSchedules(matchingSchedule.timeSlots || []);
+      } else {
+        console.warn("Không tìm thấy lịch trình phù hợp cho ngày đã chọn:", date);
+        setSchedules([]);
       }
-    );
-
-    //console.log("📥 Raw fetched schedules:", res.data);
-
-const matchingSchedule = res.data.find(
-  (s) =>
-    new Date(s.date).toISOString().slice(0, 10) ===
-    new Date(date).toISOString().slice(0, 10)
-);
-
-if (matchingSchedule) {
-  //console.log("✅ Found matching schedule:", matchingSchedule);
-  //console.log("⏱ Extracted timeSlots:", matchingSchedule.timeSlots);
-  setSchedules(matchingSchedule.timeSlots || []);
-} else {
-  console.warn("⚠️ Không tìm thấy lịch trình phù hợp cho ngày đã chọn:", date);
-  setSchedules([]);
-}
-
-  } catch (error) {
-    console.error("❌ Không thể lấy lịch trình:", error);
-    setSchedules([]);
-  }
-};
-
-
-
-
+    } catch (error) {
+      console.error("Lỗi tải lịch trình:", error.response?.data || error.message);
+      setSchedules([]);
+    }
+  };
 
   const fetchProfilesByUser = async (userId) => {
     try {
@@ -321,7 +296,7 @@ if (matchingSchedule) {
       );
       setProfiles(res.data);
     } catch (err) {
-      console.error("Không thể tải hồ sơ:", err);
+      console.error("Lỗi tải hồ sơ:", err.response?.data || err.message);
       setProfiles([]);
     }
   };
@@ -337,72 +312,68 @@ if (matchingSchedule) {
       minute: "2-digit",
     });
   };
-const formatYYYYMMDD = (dateStr) => {
-  const d = new Date(dateStr);
-  const offset = d.getTimezoneOffset();
-  const localDate = new Date(d.getTime() - offset * 60000);
-  return localDate.toISOString().slice(0, 10); // yyyy-MM-dd
-};
+  const formatYYYYMMDD = (dateStr) => {
+    const d = new Date(dateStr);
+    const offset = d.getTimezoneOffset();
+    const localDate = new Date(d.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 10); // yyyy-MM-dd
+  };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!form.appointmentDate)
+      errors.appointmentDate = "Vui lòng chọn ngày hẹn.";
+    if (!form.department) errors.department = "Vui lòng chọn một khoa.";
+    if (availableDoctors.length > 0 && !form.doctorId)
+      errors.doctorId = "Vui lòng chọn bác sĩ.";
+    if (form.doctorId && schedules.length > 0 && !form.timeSlot)
+      errors.timeSlot = "Vui lòng chọn khung thời gian.";
+    if (!form.identityNumber)
+      errors.identityNumber = "Vui lòng nhập số nhận dạng.";
 
-const validateForm = () => {
-  const errors = {};
-  if (!form.appointmentDate)
-    errors.appointmentDate = "Vui lòng chọn ngày hẹn.";
-  if (!form.department) errors.department = "Vui lòng chọn một khoa.";
-  if (availableDoctors.length > 0 && !form.doctorId)
-    errors.doctorId = "Vui lòng chọn bác sĩ.";
-  if (form.doctorId && schedules.length > 0 && !form.timeSlot)
-    errors.timeSlot = "Vui lòng chọn khung thời gian.";
-  if (!form.identityNumber)
-    errors.identityNumber = "Vui lòng nhập số nhận dạng.";
-  
-  setFormErrors(errors);
-  return Object.keys(errors).length === 0;
-};
-
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   function handleAddNew() {
-  setCurrentAppointment(null);
-  setForm({
-    appointmentDate: "",
-    department: "",
-    doctorId: "",
-    timeSlot: "",
-    type: "Offline",
-    status: "Booked",
-    reminderSent: false,
-    identityNumber: "",
-  });
-  setAvailableDoctors([]);
-  setSchedules([]);
-  setFormErrors({});
-  setDoctorSearchTerm("");
-  setUserSearchTerm("");
-  setShowModal(true);
-}
+    setCurrentAppointment(null);
+    setForm({
+      appointmentDate: "",
+      department: "",
+      doctorId: "",
+      timeSlot: "",
+      type: "Offline",
+      status: "Booked",
+      reminderSent: false,
+      identityNumber: "",
+    });
+    setAvailableDoctors([]);
+    setSchedules([]);
+    setFormErrors({});
+    setDoctorSearchTerm("");
+    setUserSearchTerm("");
+    setShowModal(true);
+  }
 
-
-function handleEdit(appointment) {
-  setCurrentAppointment(appointment);
-  setForm({
-    appointmentDate: appointment.appointmentDate
-      ? appointment.appointmentDate.slice(0, 10)
-      : "",
-    department: appointment.department || "",
-    doctorId: appointment.doctorId || "",
-    timeSlot: appointment.appointmentDate || "",
-    type: appointment.type || "Offline",
-    status: appointment.status || "Booked",
-    reminderSent: appointment.reminderSent || false,
-    identityNumber: "",
-  });
-  setFormErrors({});
-  setDoctorSearchTerm("");
-  setUserSearchTerm("");
-  setShowModal(true);
-}
-
+  function handleEdit(appointment) {
+    setCurrentAppointment(appointment);
+    setForm({
+      appointmentDate: appointment.appointmentDate
+        ? appointment.appointmentDate.slice(0, 10)
+        : "",
+      department: appointment.department || "",
+      doctorId: appointment.doctorId || "",
+      timeSlot: appointment.appointmentDate || "",
+      type: appointment.type || "Offline",
+      status: appointment.status || "Booked",
+      reminderSent: appointment.reminderSent || false,
+      identityNumber: "",
+    });
+    setFormErrors({});
+    setDoctorSearchTerm("");
+    setUserSearchTerm("");
+    setShowModal(true);
+  }
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -413,24 +384,23 @@ function handleEdit(appointment) {
     setFormErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
-function handleResetForm() {
-  setForm({
-    appointmentDate: "",
-    department: "",
-    doctorId: "",
-    timeSlot: "",
-    type: "Offline",
-    status: "Booked",
-    reminderSent: false,
-    identityNumber: "",
-  });
-  setAvailableDoctors([]);
-  setSchedules([]);
-  setFormErrors({});
-  setDoctorSearchTerm("");
-  setUserSearchTerm("");
-}
-
+  function handleResetForm() {
+    setForm({
+      appointmentDate: "",
+      department: "",
+      doctorId: "",
+      timeSlot: "",
+      type: "Offline",
+      status: "Booked",
+      reminderSent: false,
+      identityNumber: "",
+    });
+    setAvailableDoctors([]);
+    setSchedules([]);
+    setFormErrors({});
+    setDoctorSearchTerm("");
+    setUserSearchTerm("");
+  }
 
   function handleClearFilters() {
     setSearchTerm("");
@@ -442,111 +412,79 @@ function handleResetForm() {
     setForm((prev) => ({ ...prev, identityNumber: "" }));
   }
 
-async function handleSubmit() {
-  if (!validateForm()) return;
+  async function handleSubmit() {
+    if (!validateForm()) return;
 
-  // console.log("📋 === BẮT ĐẦU GỬI LỊCH HẸN ===");
-  // console.log("🆔 identityNumber:", form.identityNumber);
-  // console.log("📅 form.appointmentDate:", form.appointmentDate);
-  // console.log("🏥 form.department:", form.department);
-  // console.log("👨‍⚕️ form.doctorId:", form.doctorId);
-  // console.log("⏰ form.timeSlot:", form.timeSlot);
-  // console.log("🧾 selectedProfileId:", selectedProfileId);
-  // console.log("📂 resolvedProfiles:", resolvedProfiles);
-
-  const selectedProfile = resolvedProfiles.find((p) => p._id === selectedProfileId);
-  if (!selectedProfile) {
-    console.warn("⚠️ Không tìm thấy hồ sơ tương ứng.");
-    message.error("Hồ sơ chưa được giải quyết. Vui lòng kiểm tra số nhận dạng.");
-    return;
-  }
-
-  try {
-    setIsFormLoading(true);
-
-    if (!form.timeSlot) {
-      console.warn("⚠️ Thiếu timeSlot.");
-      message.error("Thiếu khoảng thời gian.");
+    const selectedProfile = resolvedProfiles.find((p) => p._id === selectedProfileId);
+    if (!selectedProfile) {
+      message.error("Hồ sơ chưa được giải quyết. Vui lòng kiểm tra số nhận dạng.");
       return;
     }
 
-    const selectedSlot = schedules.find(slot => slot.startTime === form.timeSlot);
-    if (!selectedSlot) {
-      console.warn("⚠️ Không tìm thấy slot trong lịch trình:", form.timeSlot);
-      message.error("Không tìm thấy khoảng thời gian đã chọn trong lịch trình hiện tại.");
-      return;
+    try {
+      setIsFormLoading(true);
+
+      if (!form.timeSlot) {
+        message.error("Thiếu khoảng thời gian.");
+        return;
+      }
+
+      const selectedSlot = schedules.find(slot => slot.startTime === form.timeSlot);
+      if (!selectedSlot) {
+        message.error("Không tìm thấy khoảng thời gian đã chọn trong lịch trình hiện tại.");
+        return;
+      }
+
+      const appointmentDate = new Date(form.appointmentDate);
+      const slotTime = new Date(selectedSlot.startTime);
+
+      const combinedDate = new Date(appointmentDate);
+      combinedDate.setHours(slotTime.getHours());
+      combinedDate.setMinutes(slotTime.getMinutes());
+      combinedDate.setSeconds(0);
+      combinedDate.setMilliseconds(0);
+
+      const finalDate = combinedDate.toISOString();
+
+      const payload = {
+        appointmentDate: finalDate,
+        department: form.department,
+        doctorId: form.doctorId,
+        type: form.type,
+        status: form.status,
+        reminderSent: form.reminderSent,
+        profileId: selectedProfile._id,
+        userId: selectedProfile.userId,
+        timeSlot: {
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime,
+          status: selectedSlot.status,
+        },
+      };
+
+      if (currentAppointment) {
+        await axios.put(
+          `http://localhost:9999/api/appointmentScheduleManagement/${currentAppointment._id}`,
+          payload
+        );
+        message.success("Đã cập nhật cuộc hẹn thành công!");
+      } else {
+        await axios.post(
+          "http://localhost:9999/api/appointmentScheduleManagement",
+          payload
+        );
+        message.success("Đã tạo cuộc hẹn thành công!");
+      }
+
+      setShowModal(false);
+      fetchAppointments();
+    } catch (error) {
+      console.error("Lỗi submit appointment:", error.response?.data || error.message);
+      message.error("Error: " + (error.response?.data?.message || error.message));
+    } finally {
+      setIsFormLoading(false);
     }
-
-    // ✅ Ghép ngày hẹn với giờ từ timeSlot
-    const appointmentDate = new Date(form.appointmentDate);
-    const slotTime = new Date(selectedSlot.startTime);
-
-    const combinedDate = new Date(appointmentDate);
-    combinedDate.setHours(slotTime.getHours());
-    combinedDate.setMinutes(slotTime.getMinutes());
-    combinedDate.setSeconds(0);
-    combinedDate.setMilliseconds(0);
-
-    const finalDate = combinedDate.toISOString();
-
-    console.log("📆 Final combined appointmentDate:", finalDate);
-    console.log("⏱ Slot được chọn:", {
-      startTime: selectedSlot.startTime,
-      endTime: selectedSlot.endTime,
-      status: selectedSlot.status
-    });
-
-    const payload = {
-      appointmentDate: finalDate,
-      department: form.department,
-      doctorId: form.doctorId,
-      type: form.type,
-      status: form.status,
-      reminderSent: form.reminderSent,
-      profileId: selectedProfile._id,
-      userId: selectedProfile.userId,
-      timeSlot: {
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-        status: selectedSlot.status, 
-      },
-    };
-
-    console.log("📦 Payload sẽ gửi:", payload);
-
-    if (currentAppointment) {
-      console.log("✏️ Đang cập nhật lịch hẹn ID:", currentAppointment._id);
-      await axios.put(
-        `http://localhost:9999/api/appointmentScheduleManagement/${currentAppointment._id}`,
-        payload
-      );
-      message.success("Đã cập nhật cuộc hẹn thành công!");
-    } else {
-      console.log("🆕 Đang tạo lịch hẹn mới...");
-      await axios.post(
-        "http://localhost:9999/api/appointmentScheduleManagement",
-        payload
-      );
-      message.success("Đã tạo cuộc hẹn thành công!");
-    }
-
-    setShowModal(false);
-    fetchAppointments();
-  } catch (error) {
-    console.error("❌ Lỗi khi gửi cuộc hẹn:", error);
-    console.log("💥 Chi tiết phản hồi lỗi:", error.response?.data || error);
-    message.error("Error: " + (error.response?.data?.message || error.message));
-  } finally {
-    setIsFormLoading(false);
-    console.log("📋 === KẾT THÚC GỬI LỊCH HẸN ===");
   }
-}
-
-
-
-
-
-
 
   function handleDeleteClick(appointmentId) {
     setDeleteAppointmentId(appointmentId);
@@ -554,51 +492,43 @@ async function handleSubmit() {
   }
 
   async function confirmDelete() {
-  try {
-    const appointmentToDelete = appointments.find((a) => a._id === deleteAppointmentId);
-    if (!appointmentToDelete) {
-      message.error("Không tìm thấy thông tin cuộc hẹn.");
-      return;
-    }
-
-    // ✅ Kiểm tra slot có tồn tại không
-    if (!appointmentToDelete.timeSlot || !appointmentToDelete.timeSlot.startTime || !appointmentToDelete.timeSlot.endTime) {
-      message.error("Không có thông tin khung giờ để xóa.");
-      return;
-    }
-
-    const payload = {
-      doctorId: appointmentToDelete.doctorId,
-      appointmentDate: appointmentToDelete.appointmentDate,
-      timeSlot: appointmentToDelete.timeSlot, // ✅ CẦN PHẢI GỬI CẢ SLOT
-    };
-
-    console.log("📦 Payload gửi khi DELETE:", payload);
-
-    await axios.delete(
-      `http://localhost:9999/api/appointmentScheduleManagement/${deleteAppointmentId}`,
-      {
-        data: payload,
-        headers: {
-          "Content-Type": "application/json",
-        },
+    try {
+      const appointmentToDelete = appointments.find((a) => a._id === deleteAppointmentId);
+      if (!appointmentToDelete) {
+        message.error("Không tìm thấy thông tin cuộc hẹn.");
+        return;
       }
-    );
 
-    setShowDeleteModal(false);
-    setDeleteAppointmentId(null);
-    fetchAppointments();
-    message.success("Đã xóa cuộc hẹn thành công!");
-  } catch (error) {
-    console.error("❌ Lỗi khi xoá:", error);
-    message.error(
-      "Xóa không thành công: " + (error.response?.data?.message || error.message)
-    );
+      if (!appointmentToDelete.timeSlot || !appointmentToDelete.timeSlot.startTime || !appointmentToDelete.timeSlot.endTime) {
+        message.error("Không có thông tin khung giờ để xóa.");
+        return;
+      }
+
+      const payload = {
+        doctorId: appointmentToDelete.doctorId,
+        appointmentDate: appointmentToDelete.appointmentDate,
+        timeSlot: appointmentToDelete.timeSlot,
+      };
+
+      await axios.delete(
+        `http://localhost:9999/api/appointmentScheduleManagement/${deleteAppointmentId}`,
+        {
+          data: payload,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setShowDeleteModal(false);
+      setDeleteAppointmentId(null);
+      fetchAppointments();
+      message.success("Đã xóa cuộc hẹn thành công!");
+    } catch (error) {
+      console.error("Lỗi xóa appointment:", error.response?.data || error.message);
+      message.error("Xóa không thành công: " + (error.response?.data?.message || error.message));
+    }
   }
-}
-
-
-
 
   function cancelDelete() {
     setShowDeleteModal(false);
@@ -607,6 +537,65 @@ async function handleSubmit() {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  // Hàm xử lý xác nhận hoặc từ chối lịch hẹn
+  const handleUpdateStatus = async (appointmentId, newStatus) => {
+    if (!window.confirm(`Bạn có chắc muốn ${newStatus === 'confirmed' ? 'xác nhận' : 'từ chối'} lịch hẹn này?`)) return;
+
+    try {
+      // Cập nhật status lịch hẹn
+      const updateRes = await axios.patch(`http://localhost:9999/api/apm/${appointmentId}/status`, { status: newStatus });
+      console.log("Cập nhật trạng thái thành công:", updateRes.data);
+
+      if (newStatus === 'confirmed') {
+        const appointment = appointments.find(app => app._id === appointmentId);
+        if (appointment) {
+          const recordPayload = {
+            profileId: appointment.profileId,
+            doctorId: appointment.doctorId,
+            appointmentId: appointment._id,
+            department: appointment.department,
+            fullName: appointment.profileId?.name,
+            gender: appointment.profileId?.gender,
+            dateOfBirth: appointment.profileId?.dateOfBirth,
+            address: appointment.profileId?.address || '',
+            bhytCode: appointment.bhytCode || '',
+            identityNumber: appointment.profileId?.identityNumber || '',
+            admissionDate: new Date(),
+            dischargeDate: null,
+            admissionReason: appointment.symptoms || '',
+            admissionDiagnosis: '',
+            admissionLabTest: '',
+            dischargeDiagnosis: '',
+            treatmentSummary: '',
+            ethnicity: appointment.profileId?.ethnicity || '',
+            status: 'pending_clinical',
+            services: [],
+            docterAct: appointment.doctorId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          console.log("Payload tạo record:", recordPayload);
+
+          const res = await axios.post('http://localhost:9999/api/record', recordPayload);
+          console.log("Record created successfully:", res.data); // Log response từ server
+        }
+
+
+        if (res.data.success) {
+          message.success('Đã xác nhận và đẩy vào hàng đợi thành công!');
+        } else {
+          throw new Error(res.data.message || 'Lỗi không xác định khi tạo record');
+        }
+      } else {
+        message.success('Đã từ chối lịch hẹn thành công!');
+      }
+      fetchAppointments(); // Refresh danh sách
+    } catch (err) {
+      console.error("Lỗi update status hoặc tạo record:", err.response?.data || err.message);
+      message.error("Update thất bại. Vui lòng thử lại: " + (err.response?.data?.message || err.message));
+    }
   };
 
   const filteredDoctors = availableDoctors.filter((doc) =>
@@ -633,67 +622,69 @@ async function handleSubmit() {
         </Card.Header>
         <Card.Body>
           <Row className="mb-4">
-  <Col md={3}>
-    <InputGroup className="rounded-pill overflow-hidden shadow-sm">
-      <InputGroup.Text className="bg-white border-0">
-        <FaSearch />
-      </InputGroup.Text>
-      <FormControl
-        placeholder="Tìm bác sĩ, người dùng, số định danh..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="border-0"
-      />
-      {searchTerm && (
-        <InputGroup.Text
-          className="bg-white border-0"
-          onClick={handleClearFilters}
-          style={{ cursor: "pointer" }}
-        >
-          <FaTimes />
-        </InputGroup.Text>
-      )}
-    </InputGroup>
-  </Col>
-  <Col md={2}>
-    <Form.Select
-      value={statusFilter}
-      onChange={(e) => setStatusFilter(e.target.value)}
-      className="rounded-pill shadow-sm"
-    >
-      <option value="all">Tất cả trạng thái</option>
-      <option value="Booked">Đã đặt</option>
-      <option value="In-Progress">Đang diễn ra</option>
-      <option value="Completed">Hoàn thành</option>
-      <option value="Canceled">Đã hủy</option>
-    </Form.Select>
-  </Col>
+            <Col md={3}>
+              <InputGroup className="rounded-pill overflow-hidden shadow-sm">
+                <InputGroup.Text className="bg-white border-0">
+                  <FaSearch />
+                </InputGroup.Text>
+                <FormControl
+                  placeholder="Tìm bác sĩ, người dùng, số định danh..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-0"
+                />
+                {searchTerm && (
+                  <InputGroup.Text
+                    className="bg-white border-0"
+                    onClick={handleClearFilters}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <FaTimes />
+                  </InputGroup.Text>
+                )}
+              </InputGroup>
+            </Col>
+            <Col md={2}>
+              <Form.Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-pill shadow-sm"
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="pending_confirmation">Chờ xác nhận</option>
+                <option value="Booked">Đã đặt</option>
+                <option value="In-Progress">Đang diễn ra</option>
+                <option value="Completed">Hoàn thành</option>
+                <option value="Canceled">Đã hủy</option>
+                <option value="rejected">Bị từ chối</option>
+              </Form.Select>
+            </Col>
 
-  <Col md={3}>
-    <Form.Select
-      value={departmentFilter}
-      onChange={(e) => setDepartmentFilter(e.target.value)}
-      className="rounded-pill shadow-sm"
-    >
-      <option value="all">Tất cả khoa</option>
-      {departments.map((dept) => (
-        <option key={dept._id} value={dept._id}>
-          {dept.name}
-        </option>
-      ))}
-    </Form.Select>
-  </Col>
+            <Col md={3}>
+              <Form.Select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="rounded-pill shadow-sm"
+              >
+                <option value="all">Tất cả khoa</option>
+                {departments.map((dept) => (
+                  <option key={dept._id} value={dept._id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
 
-  <Col md={2}>
-    <Button
-      variant="outline-primary"
-      onClick={handleClearFilters}
-      className="rounded-pill w-100"
-    >
-      Xóa bộ lọc
-    </Button>
-  </Col>
-</Row>
+            <Col md={2}>
+              <Button
+                variant="outline-primary"
+                onClick={handleClearFilters}
+                className="rounded-pill w-100"
+              >
+                Xóa bộ lọc
+              </Button>
+            </Col>
+          </Row>
 
           <Row className="mb-4">
             <Col md={6}>
@@ -753,7 +744,7 @@ async function handleSubmit() {
                       <tr key={appointment._id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{formatDateTime(appointment.appointmentDate)}</td>
-                        <td>{appointment.doctorName || "Chưa có"}</td>
+                        <td>{appointment.doctorId?.name || "Chưa có"}</td>
                         <td>
                           {
                             departments.find((d) => d._id.toString() === appointment.department?.toString())?.name ||
@@ -761,10 +752,10 @@ async function handleSubmit() {
                           }
                         </td>
                         <td>{appointment.type === "Online" ? "Trực tuyến" : "Trực tiếp"}</td>
-                        <td>{appointment.userName || "Chưa có"}</td>
-                        <td>{appointment.userPhone || "Chưa có"}</td>
+                        <td>{appointment.userId?.name || "Chưa có"}</td>
+                        <td>{appointment.profileId?.phone || "Chưa có"}</td>
                         <td>
-                          {appointment.profileName ? (
+                          {appointment.profileId?.name ? (
                             <Button
                               variant="link"
                               className="p-0 text-decoration-underline text-primary"
@@ -772,7 +763,7 @@ async function handleSubmit() {
                                 handleViewProfile(appointment.profileId?._id || appointment.profileId)
                               }
                             >
-                              {appointment.profileName}
+                              {appointment.profileId?.name}
                             </Button>
                           ) : (
                             "Không có"
@@ -780,23 +771,38 @@ async function handleSubmit() {
                         </td>
                         <td>
                           <span
-                            className={`badge text-bg-${
-                              appointment.status === "Booked"
+                            className={`badge text-bg-${appointment.status === "pending_confirmation"
+                              ? "info"
+                              : appointment.status === "Booked"
                                 ? "warning"
                                 : appointment.status === "In-Progress"
-                                ? "info"
-                                : appointment.status === "Completed"
-                                ? "success"
-                                : "secondary"
-                            }`}
+                                  ? "info"
+                                  : appointment.status === "Completed"
+                                    ? "success"
+                                    : appointment.status === "Canceled"
+                                      ? "secondary"
+                                      : "danger" // rejected
+                              }`}
                           >
-                            {appointment.status === "Booked"
-                              ? "Đã đặt"
-                              : appointment.status === "In-Progress"
-                              ? "Đang khám"
-                              : appointment.status === "Completed"
-                              ? "Hoàn thành"
-                              : "Đã hủy"}
+                            {appointment.status === "pending_confirmation"
+                              ? "Chờ xác nhận"
+                              : appointment.status === "confirmed"
+                                ? "Đã xác nhận"
+                                : appointment.status === "rejected"
+                                  ? "Bị từ chối"
+                                  : appointment.status === "queued"
+                                    ? "Đang xếp hàng"
+                                    : appointment.status === "checked_in"
+                                      ? "Đã check-in"
+                                      : appointment.status === "in_progress"
+                                        ? "Đang khám"
+                                        : appointment.status === "completed"
+                                          ? "Hoàn thành"
+                                          : appointment.status === "canceled"
+                                            ? "Đã hủy"
+                                            : appointment.status === "pending_cancel"
+                                              ? "Chờ hủy"
+                                              : "Trạng thái không xác định"}
                           </span>
                         </td>
                         <td>
@@ -805,12 +811,36 @@ async function handleSubmit() {
                           </Badge>
                         </td>
                         <td>
-                          <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(appointment)}>
-                            <FaEdit />
-                          </Button>
-                          <Button variant="outline-danger" size="sm" onClick={() => handleDeleteClick(appointment._id)}>
-                            <FaTrash />
-                          </Button>
+                          {appointment.status === "pending_confirmation" ? (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => handleUpdateStatus(appointment._id, 'confirmed')}
+                                className="me-2"
+                              >
+                                Xác nhận
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => handleUpdateStatus(appointment._id, 'rejected')}
+                              >
+                                Từ chối
+                              </Button>
+                            </>
+                          ) : appointment.status === "Booked" || appointment.status === "In-Progress" ? (
+                            <>
+                              <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(appointment)}>
+                                <FaEdit />
+                              </Button>
+                              <Button variant="outline-danger" size="sm" onClick={() => handleDeleteClick(appointment._id)}>
+                                <FaTrash />
+                              </Button>
+                            </>
+                          ) : (
+                            "-"
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -825,20 +855,20 @@ async function handleSubmit() {
                 </small>
                 <Pagination className="mb-0">
                   <Pagination.Prev
-                    onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                    onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
                     disabled={currentPage === 1}
                   />
                   {[...Array(totalPages).keys()].map((page) => (
                     <Pagination.Item
                       key={page + 1}
                       active={page + 1 === currentPage}
-                      onClick={() => handlePageChange(page + 1)}
+                      onClick={() => setCurrentPage(page + 1)}
                     >
                       {page + 1}
                     </Pagination.Item>
                   ))}
                   <Pagination.Next
-                    onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                    onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
                     disabled={currentPage === totalPages}
                   />
                 </Pagination>
@@ -875,6 +905,7 @@ async function handleSubmit() {
                     }}
                     className="rounded-pill"
                   />
+                  {formErrors.appointmentDate && <div className="text-danger small">{formErrors.appointmentDate}</div>}
                 </Form.Group>
               </Col>
               <Col md={6}>
@@ -894,6 +925,7 @@ async function handleSubmit() {
                       </option>
                     ))}
                   </Form.Select>
+                  {formErrors.department && <div className="text-danger small">{formErrors.department}</div>}
                 </Form.Group>
               </Col>
             </Row>
@@ -912,6 +944,7 @@ async function handleSubmit() {
                       <option key={doc._id} value={doc._id}>{doc.name}</option>
                     ))}
                   </Form.Select>
+                  {formErrors.doctorId && <div className="text-danger small">{formErrors.doctorId}</div>}
                 </Form.Group>
               </Col>
               <Col md={6}>
@@ -932,6 +965,7 @@ async function handleSubmit() {
                         </option>
                       ))}
                   </Form.Select>
+                  {formErrors.timeSlot && <div className="text-danger small">{formErrors.timeSlot}</div>}
                 </Form.Group>
               </Col>
             </Row>
@@ -954,6 +988,7 @@ async function handleSubmit() {
                   Tìm kiếm
                 </Button>
               </InputGroup>
+              {formErrors.identityNumber && <div className="text-danger small">{formErrors.identityNumber}</div>}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Chọn Hồ sơ</Form.Label>
@@ -1080,6 +1115,8 @@ async function handleSubmit() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+
     </Container>
   );
 };

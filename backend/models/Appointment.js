@@ -19,7 +19,7 @@ const appointmentSchema = new mongoose.Schema({
     status: { type: String, enum: ['Available', 'Booked'], default: 'Booked' }
   },
   symptoms: { type: String, required: true }, // Triệu chứng ban đầu
-  bhytCode: { type: String, unique: true }, // Mã BHYT optional
+  bhytCode: { type: String, unique: true, sparse: true }, // Mã BHYT optional
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Null cho offline
   room: { type: String } // Phòng khám, gán khi confirm
 }, { timestamps: true });
