@@ -327,10 +327,9 @@ const AppRoutes = () => {
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="medicalrecord" element={<MedicalRecord />} />
-            <Route path="medicines" element={<MedicineManagement />} />
-            <Route path="schedule" element={<ReceptionistScheduleManager />} />
-            <Route path="profile" element={<ProfileReceptionist />} />
-            <Route path="attendance" element={<ReceptionistAttendance />} />
+            <Route path="schedule" element={<StaffScheduleManager />} />
+            <Route path="profile" element={<ProfileStaff />} />
+            <Route path="attendance" element={<StaffAttendance />} />
           </Route>
 
           {/* Pharmacist Routes */}
@@ -345,6 +344,7 @@ const AppRoutes = () => {
             <Route index element={<InvoiceManagement />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<PharmacistAttendance />} />
+            <Route path="medicines" element={<MedicineManagement />} />
           </Route>
 
           {/* HR Manager Routes */}

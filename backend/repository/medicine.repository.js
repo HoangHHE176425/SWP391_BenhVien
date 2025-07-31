@@ -17,6 +17,7 @@ const countMedicines = async (searchTerm) => {
 const getMedicinesWithPagination = async (skip, limit, searchTerm) => {
     const query = searchTerm ? { name: { $regex: searchTerm, $options: 'i' } } : {}; // Tìm kiếm theo tên thuốc
 
+    query['isActive'] = true;
     const medicines = await Medicine.find(query)
         .populate('supplier')
         .skip(skip) // Bỏ qua các bản ghi trước đó

@@ -30,9 +30,11 @@ const MedicineManagement = () => {
   const [totalMedicines, setTotalMedicines] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [medicinesPerPage] = useState(8);
   const [showModal, setShowModal] = useState(false);
   const [editMedicine, setEditMedicine] = useState(null);
+  const [filterMode, setFilterMode] = useState("all");
 
   useEffect(() => {
     const fetchMedicines = async () => {
@@ -41,7 +43,8 @@ const MedicineManagement = () => {
         console.log("API Response:", res.data);
         if (Array.isArray(res.data.medicines)) {
           setMedicines(res.data.medicines);
-          setTotalMedicines(res.data.totalMedicines);  // Tổng số thuốc
+          setTotalMedicines(res.data.totalMedicines);
+          setTotalPages(res.data.totalPages);
         } else {
           setMedicines([]);
         }
@@ -52,17 +55,23 @@ const MedicineManagement = () => {
     };
 
     fetchMedicines();
-  }, [currentPage, searchTerm]); // Khi currentPage thay đổi, sẽ gọi lại API
+  }, [currentPage, searchTerm]);
 
   useEffect(() => {
-    // khi searchTerm thay đổi, về lại trang đầu
     setCurrentPage(1);
   }, [searchTerm]);
 
-  // Tính toán tổng số trang
-  const totalPages = Math.ceil(totalMedicines / medicinesPerPage);
+  useEffect(() => {
+    
+  }, [filterMode]);
 
-  // Handle chuyển trang
+  useEffect(() => {
+    const lowStockList = medicines.find(isLowStock);
+    const isExpiringList = medicines.find(isExpiring);
+    if (!lowStockList && !isExpiringList) return;
+    alert("Đang có thuốc sắp hết hàng hoặc hết hạn!");
+  }, []);
+
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -79,30 +88,15 @@ const MedicineManagement = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Xác nhận xoá thuốc này?")) {
-      try {
-        await axios.delete(`/api/receptionist/medicines/${id}`);
-        // Sau khi xóa, gọi lại fetch để cập nhật dữ liệu và phân trang
-        const fetchAfterDelete = async () => {
-          try {
-            const res = await axios.get(`/api/receptionist/medicinesall?page=${currentPage}&limit=${medicinesPerPage}&searchTerm=${searchTerm}`);
-            console.log("API Response after delete:", res.data);
-            if (Array.isArray(res.data.medicines)) {
-              setMedicines(res.data.medicines);
-              setTotalMedicines(res.data.totalMedicines);
-            } else {
-              setMedicines([]);
-            }
-          } catch (error) {
-            setMedicines([]);
-            console.error("Error fetching after delete:", error);
-          }
-        };
-        fetchAfterDelete();
-      } catch (error) {
-        console.error("Error deleting medicine:", error);
-      }
+  const handleDisable = async (medicine) => {
+    const reason = prompt("Nhập lý do ngừng kinh doanh:");
+    if (!reason) return;
+
+    try {
+      await axios.put(`/api/staff/medicines/${medicine._id}/disable`, { reason });
+      setMedicines(prevState => prevState.map(m => m._id === medicine._id ? { ...m, isActive: false, disableReason: reason } : m));
+    } catch (error) {
+      console.error("Error disabling medicine:", error);
     }
   };
 
@@ -136,19 +130,46 @@ const MedicineManagement = () => {
     }
   };
 
+  const applyFilter = (medicines) => {
+    if (filterMode === "low-stock") {
+      return medicines.filter(isLowStock);
+    } else if (filterMode === "expiring") {
+      return medicines.filter(isExpiring);
+    }
+    return medicines;
+  };
+
+  const isLowStock = (m) => {
+    return m.quantity < 10 && m.isActive;
+  }
+
+  const isExpiring = (m) => {
+    const now = new Date();
+    const in30Days = new Date(now);
+    in30Days.setDate(now.getDate() + 30);
+    return new Date(m.expirationDate) <= in30Days && m.isActive;
+  }
+
+  const filteredMedicines = applyFilter(medicines);
+
   return (
     <div className="medicine-page">
       <h2 className="medicinepage-section-title">Quản lý danh mục thuốc</h2>
 
       <MedicineSearchBar search={searchTerm} setSearch={setSearchTerm} onAdd={handleAdd} />
 
+      <div className="btn-group">
+        <button className="btn btn-outline-primary" onClick={() => setFilterMode("all")}>Tất cả</button>
+        <button className="btn btn-outline-warning" onClick={() => setFilterMode("low-stock")}>Sắp hết hàng</button>
+        <button className="btn btn-outline-danger" onClick={() => setFilterMode("expiring")}>Sắp hết hạn</button>
+      </div>
+
       <MedicineTable
-        medicines={medicines}
+        medicines={filteredMedicines}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDisable={handleDisable}
       />
 
-      {/* Pagination */}
       <div className="d-flex justify-content-center py-4">
         <h5 className="text-muted">Tổng số thuốc: {totalMedicines}</h5>
       </div>
@@ -161,10 +182,7 @@ const MedicineManagement = () => {
         >
           Trước
         </button>
-
-        {/* Chữ trang được căn giữa */}
         <span className="mx-3">{`Trang ${currentPage} / ${totalPages}`}</span>
-
         <button
           className="btn btn-secondary ms-2"
           onClick={() => handlePageChange(currentPage + 1)}
@@ -174,7 +192,6 @@ const MedicineManagement = () => {
         </button>
       </div>
 
-      {/* Modal */}
       <MedicineFormModal
         show={showModal}
         onHide={() => setShowModal(false)}
