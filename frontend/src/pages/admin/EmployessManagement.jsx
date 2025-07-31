@@ -113,7 +113,6 @@ function EmployeeManagement() {
   return (
     <div>
       <h1>Quản Lý Nhân Viên</h1>
-
       {/* Bộ lọc */}
       <div
         style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}
@@ -133,6 +132,9 @@ function EmployeeManagement() {
           <Option value="Admin">Quản trị viên</Option>
           <Option value="Receptionist">Lễ tân</Option>
           <Option value="Doctor">Bác sĩ</Option>
+          <Option value="HRManager">Quản lý nhân viên</Option>
+          <Option value="Pharmacist">Dược sĩ</Option>
+          <Option value="Accountant">Kế toán</Option>
         </Select>
 
         <Select
@@ -277,9 +279,12 @@ function EmployeeManagement() {
           </Form.Item>
           <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
             <Select>
-              <Option value="Admin">Quản trị viên</Option>
-              <Option value="Receptionist">Lễ tân</Option>
-              <Option value="Doctor">Bác sĩ</Option>
+          <Option value="Admin">Quản trị viên</Option>
+          <Option value="Receptionist">Lễ tân</Option>
+          <Option value="Doctor">Bác sĩ</Option>
+          <Option value="HRManager">Quản lý nhân viên</Option>
+          <Option value="Pharmacist">Dược sĩ</Option>
+          <Option value="Accountant">Kế toán</Option>
             </Select>
           </Form.Item>
           <Form.Item
@@ -343,9 +348,12 @@ function EmployeeManagement() {
           </Form.Item>
           <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
             <Select>
-              <Option value="Admin">Quản trị viên</Option>
-              <Option value="Receptionist">Lễ tân</Option>
-              <Option value="Doctor">Bác sĩ</Option>
+          <Option value="Admin">Quản trị viên</Option>
+          <Option value="Receptionist">Lễ tân</Option>
+          <Option value="Doctor">Bác sĩ</Option>
+          <Option value="HRManager">Quản lý nhân viên</Option>
+          <Option value="Pharmacist">Dược sĩ</Option>
+          <Option value="Accountant">Kế toán</Option>
             </Select>
           </Form.Item>
           <Form.Item
