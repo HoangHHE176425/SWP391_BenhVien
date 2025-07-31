@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../../../axiosInstance";
 import "../../assets/css/MedicineManagement.css";
-import MedicineTable from "../../components/receptionist/MedicineTable";
-import MedicineSearchBar from "../../components/receptionist/MedicineSearchBar";
-import MedicineFormModal from "../../components/receptionist/MedicineFormModal";
+import MedicineTable from "../../components/pharmacist/MedicineTable";
+import MedicineSearchBar from "../../components/pharmacist/MedicineSearchBar";
+import MedicineFormModal from "../../components/pharmacist/MedicineFormModal";
 
 const EMPTY_MEDICINE = {
   name: "",

@@ -15,6 +15,7 @@ import DoctorLayout from "./components/doctor/DoctorLayout";
 import ReceptionistLayout from "./components/receptionist/ReceptionistLayout";
 import AdminLayout from "./components/admin/AdminLayout";
 // import receptionistLayout from "./components/receptionist/receptionistLayout";
+import StaffLayout from "./components/staff/StaffLayout.jsx";
 
 // Pages
 import UserMedicalProfile from "./pages/UserMedicalProfile";
