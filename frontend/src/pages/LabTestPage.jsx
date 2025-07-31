@@ -105,7 +105,7 @@ const UserMedicalProfileDetail = () => {
       const res = await axios.get(`/api/record`, {
         params: {
           status: 'pending_clinical',
-          doctorAct: doctor._id
+          docterAct: doctor._id
         }
       });
       console.log(res.data);
