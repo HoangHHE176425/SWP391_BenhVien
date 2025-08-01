@@ -1,4 +1,5 @@
 const Medicine = require('../models/Medicine');
+const mongoose = require('mongoose');
 
 async function createMedicine(data) {
     return await Medicine.create(data);
@@ -47,7 +48,6 @@ const getMedicinesWithPagination = async (skip, limit, searchTerm = '', filterMo
             query.expirationDate = { $lte: in30Days };
         }
 
-        // Log the query for debugging
         console.log("Query:", JSON.stringify(query));
         console.log("Skip:", skip, "Limit:", limit);
 
@@ -78,6 +78,46 @@ async function deleteMedicine(id) {
     return await Medicine.findByIdAndDelete(id);
 }
 
+async function processTransaction(items) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const updatedMedicines = [];
+
+        // Validate and update stock for each item
+        for (const item of items) {
+            const { medicineId, quantity } = item;
+            if (!mongoose.isValidObjectId(medicineId)) {
+                throw new Error(`Invalid medicine ID: ${medicineId}`);
+            }
+
+            const medicine = await Medicine.findOne({
+                _id: medicineId,
+                isActive: true,
+                quantity: { $gte: quantity },
+            }).session(session);
+
+            if (!medicine) {
+                throw new Error(`Medicine ${medicineId} is unavailable or has insufficient stock`);
+            }
+
+            medicine.quantity -= quantity;
+            medicine.lastUpdated = new Date();
+            await medicine.save({ session });
+            updatedMedicines.push(medicine);
+        }
+
+        await session.commitTransaction();
+        return updatedMedicines;
+    } catch (error) {
+        await session.abortTransaction();
+        console.error("Transaction error:", error);
+        throw new Error(`Transaction failed: ${error.message}`);
+    } finally {
+        session.endSession();
+    }
+}
+
 module.exports = {
     createMedicine,
     getAllMedicines,
@@ -86,4 +126,5 @@ module.exports = {
     getMedicineById,
     updateMedicine,
     deleteMedicine,
+    processTransaction,
 };

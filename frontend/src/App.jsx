@@ -14,8 +14,6 @@ import HrmanagerLayout from "./layouts/HrmanagerLayout";
 import DoctorLayout from "./components/doctor/DoctorLayout";
 import ReceptionistLayout from "./components/receptionist/ReceptionistLayout";
 import AdminLayout from "./components/admin/AdminLayout";
-// import receptionistLayout from "./components/receptionist/receptionistLayout";
-import StaffLayout from "./components/staff/StaffLayout.jsx";
 
 // Pages
 import UserMedicalProfile from "./pages/UserMedicalProfile";
@@ -57,7 +55,6 @@ import AppointmentScheduleManagement from "./pages/receptionist/AppointmentSched
 import NotificationManagement from "./pages/receptionist/NotificationManagement";
 import UserManagement from "./pages/receptionist/UserManagement";
 import MedicalRecord from "./pages/receptionist/MedicalRecord";
-import MedicineManagement from "./pages/receptionist/MedicineManagement";
 import NotificationCenter from "./pages/NotificationCenter";
 import NotificationDetail from "./pages/NotificationDetail";
 import HealthCalculatorPage from "./pages/HealthCalculatorPage";
@@ -87,6 +84,7 @@ import CreateInvoice2 from "./components/receptionist/CreateInvoiceTest.jsx";
 import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
 import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
 import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
+import MedicineManagement from "./pages/pharmacist/MedicineManagement.jsx";
 import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
 import SendApplication from "./pages/doctor/SendApplication.jsx";
 import SendApplicationManager from "./pages/hrmanager/sendApplicationManager.jsx";

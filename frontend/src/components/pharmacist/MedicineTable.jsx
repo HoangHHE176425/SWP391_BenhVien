@@ -1,5 +1,5 @@
 import React from "react";
-import { FaPen, FaTrashAlt } from "react-icons/fa";
+import { FaPen, FaBan } from "react-icons/fa";
 
 
 const MedicineTable = ({ medicines, onEdit, onDisable }) => (
@@ -32,13 +32,11 @@ const MedicineTable = ({ medicines, onEdit, onDisable }) => (
           <td>{med.supplier?.email}</td>
           <td className="medicine-actions">
             <FaPen className="btn-edit" onClick={() => onEdit(med)} />
-            <button
-              className="btn btn-warning"
-              onClick={() => onDisable(med)}
-              disabled={!med.isActive}
-            >
-              Disable
-            </button>
+            <FaBan
+              className={`btn-disable ${!med.isActive ? "disabled" : ""}`}
+              onClick={() => med.isActive && onDisable(med)}
+              title={med.isActive ? "Vô hiệu hóa" : "Đã vô hiệu hóa"}
+            />
           </td>
         </tr>
       ))}

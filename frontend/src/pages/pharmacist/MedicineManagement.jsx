@@ -4,6 +4,7 @@ import "../../assets/css/MedicineManagement.css";
 import MedicineTable from "../../components/pharmacist/MedicineTable";
 import MedicineSearchBar from "../../components/pharmacist/MedicineSearchBar";
 import MedicineFormModal from "../../components/pharmacist/MedicineFormModal";
+import PharmacyTransactionModal from "../../components/pharmacist/PharmacyTransactionModal";
 
 const EMPTY_MEDICINE = {
     name: "",
@@ -36,6 +37,7 @@ const MedicineManagement = () => {
     const [editMedicine, setEditMedicine] = useState(null);
     const [filterMode, setFilterMode] = useState("all");
     const [error, setError] = useState(null);
+    const [showTransactionModal, setShowTransactionModal] = useState(false);
 
     useEffect(() => {
         const fetchMedicines = async () => {
@@ -128,6 +130,7 @@ const MedicineManagement = () => {
             );
         } catch (error) {
             console.error("Error disabling medicine:", error);
+            setError("Không thể vô hiệu hóa thuốc. Vui lòng thử lại.");
         }
     };
 
@@ -161,11 +164,33 @@ const MedicineManagement = () => {
                     }
                 } catch (error) {
                     console.error("Error fetching after submit:", error);
+                    setError("Không thể tải danh sách thuốc. Vui lòng thử lại sau.");
                 }
             };
             fetchAfterSubmit();
         } catch (error) {
             console.error("Error submitting medicine:", error);
+            setError("Không thể lưu thuốc. Vui lòng thử lại.");
+        }
+    };
+
+    const handleTransactionSubmit = async (transactionData) => {
+        try {
+            const response = await axios.post(`/api/pharmacist/transactions`, transactionData);
+            console.log("Transaction Response:", response.data);
+            // Refresh medicines list
+            const res = await axios.get(`/api/pharmacist/medicinesall`, {
+                params: { page: currentPage, limit: medicinesPerPage, searchTerm, filterMode },
+            });
+            if (Array.isArray(res.data.medicines)) {
+                setMedicines(res.data.medicines);
+                setTotalMedicines(res.data.totalMedicines || 0);
+                setTotalPages(res.data.totalPages || 0);
+            }
+            alert("Giao dịch hoàn tất!");
+        } catch (error) {
+            console.error("Error processing transaction:", error);
+            throw error; // Let the modal handle the error display
         }
     };
 
@@ -178,14 +203,26 @@ const MedicineManagement = () => {
             <MedicineSearchBar search={searchTerm} setSearch={setSearchTerm} onAdd={handleAdd} />
 
             <div className="btn-group">
-                <button className="btn btn-outline-primary" onClick={() => setFilterMode("all")}>
+                <button
+                    className={`btn btn-outline-primary ${filterMode === "all" ? "active" : ""}`}
+                    onClick={() => setFilterMode("all")}
+                >
                     Tất cả
                 </button>
-                <button className="btn btn-outline-warning" onClick={() => setFilterMode("low-stock")}>
+                <button
+                    className={`btn btn-outline-warning ${filterMode === "low-stock" ? "active" : ""}`}
+                    onClick={() => setFilterMode("low-stock")}
+                >
                     Sắp hết hàng
                 </button>
-                <button className="btn btn-outline-danger" onClick={() => setFilterMode("expiring")}>
+                <button
+                    className={`btn btn-outline-danger ${filterMode === "expiring" ? "active" : ""}`}
+                    onClick={() => setFilterMode("expiring")}
+                >
                     Sắp hết hạn
+                </button>
+                <button className="btn btn-outline-success" onClick={() => setShowTransactionModal(true)}>
+                    Tạo giao dịch
                 </button>
             </div>
 
@@ -219,6 +256,13 @@ const MedicineManagement = () => {
                 onSubmit={handleSubmit}
                 editMedicine={editMedicine}
                 emptyMedicine={EMPTY_MEDICINE}
+            />
+
+            <PharmacyTransactionModal
+                show={showTransactionModal}
+                onHide={() => setShowTransactionModal(false)}
+                medicines={medicines}
+                onSubmit={handleTransactionSubmit}
             />
         </div>
     );
