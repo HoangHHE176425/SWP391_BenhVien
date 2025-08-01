@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Typography, message, Table, Tag } from "antd";
 import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
+dayjs.extend(isSameOrAfter);
 const { Title, Text } = Typography;
-
 const DoctorAttendance = () => {
   const [loading, setLoading] = useState(true);
   const [attendanceData, setAttendanceData] = useState([]);
@@ -19,24 +20,19 @@ const DoctorAttendance = () => {
 
   const fetchAllSchedules = async () => {
     try {
-      const res = await fetch(`http://localhost:9999/api/attendance/all-schedules/${doctor._id}`);
+      const res = await fetch(`http://localhost:9999/api/attendance/doctor/schedules/all/${doctor._id}`)
       const data = await res.json();
-      if (Array.isArray(data.schedules)) {
-        setAllSchedules(data.schedules);
-      } else {
-        message.warning("Không có lịch làm việc.");
-        setAllSchedules([]);
-      }
+      setAllSchedules(Array.isArray(data.schedules) ? data.schedules : []);
     } catch (err) {
-      console.error("❌ Lỗi fetch lịch làm việc:", err);
-      message.error("Lỗi khi tải toàn bộ lịch làm việc");
+      console.error("Lỗi fetch lịch làm việc:", err);
+      message.error("Lỗi khi tải lịch làm việc");
     }
   };
 
   const fetchAttendanceHistory = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:9999/api/attendance/history/${doctor._id}`);
+      const res = await fetch(`http://localhost:9999/api/attendance/doctor/history/${doctor._id}`)
       const data = await res.json();
       setAttendanceData(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -45,64 +41,84 @@ const DoctorAttendance = () => {
       setLoading(false);
     }
   };
+
   const getIPAddress = async () => {
     try {
       const res = await fetch("https://api.ipify.org?format=json");
       const data = await res.json();
       return data.ip;
     } catch (err) {
-      console.error("Không thể lấy IP", err);
       return "unknown";
     }
   };
-  const getLocation = () =>
-  new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      return resolve(null);
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      () => resolve(null),
-      { timeout: 5000 }
-    );
-  });
 
+  const getLocation = () =>
+    new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        }),
+        () => resolve(null),
+        { timeout: 5000 }
+      );
+    });
 
   const handleCheckInBySchedule = async (schedule) => {
-    try {
-      const ipAddress = await getIPAddress();
-      const location = await getLocation();
+  const now = dayjs();
 
-      const res = await fetch("http://localhost:9999/api/attendance/check-in", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId: doctor._id,
-          scheduleId: schedule._id,
-          date: schedule.date,
-          timeSlots: schedule.timeSlots,
-          department: schedule.department?._id || schedule.department,
-          ipAddress,
-          location,
-        }),
-      });
+  const latestEndTime = dayjs(
+    Math.max(...schedule.timeSlots.map(slot => new Date(slot.endTime).getTime()))
+  );
 
-      if (!res.ok) throw new Error((await res.json()).message);
-      message.success("Check-in thành công");
-      fetchAttendanceHistory();
-    } catch (err) {
-      message.error("❌ Check-in thất bại: " + err.message);
-    }
-  };
+  if (now.isAfter(latestEndTime)) {
+    message.warning("Đã quá giờ làm, không thể check-in.");
+    return;
+  }
+
+  // ✅ Cho phép check-in trễ tối đa 1 phút
+  const isInGracePeriod = schedule.timeSlots.some(slot => {
+    const start = dayjs(slot.startTime);
+    const graceEnd = start.add(1, 'minute');
+    return now.isSameOrAfter(start) && now.isBefore(graceEnd);
+  });
+
+  if (!isInGracePeriod) {
+    message.warning("Chưa đến giờ hoặc đã trễ hơn 1 phút sau giờ bắt đầu.");
+    return;
+  }
+
+  try {
+    const ipAddress = await getIPAddress();
+    const location = await getLocation();
+
+    const res = await fetch("http://localhost:9999/api/attendance/doctor/check-in", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: doctor._id,
+        scheduleId: schedule._id,
+        date: schedule.date,
+        timeSlots: schedule.timeSlots,
+        department: schedule.department?._id || schedule.department,
+        ipAddress,
+        location,
+      }),
+    });
+
+    if (!res.ok) throw new Error((await res.json()).message);
+    message.success("Check-in thành công");
+    fetchAttendanceHistory();
+  } catch (err) {
+    message.error("Check-in thất bại: " + err.message);
+  }
+};
+
 
   const handleCheckOutBySchedule = async (schedule) => {
     try {
-      const res = await fetch("http://localhost:9999/api/attendance/check-out", {
+      const res = await fetch("http://localhost:9999/api/attendance/doctor/check-out", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,34 +128,35 @@ const DoctorAttendance = () => {
       });
 
       const result = await res.json();
-
-      if (!res.ok) {
-        throw new Error(result.message || "Lỗi không xác định");
-      }
+      if (!res.ok) throw new Error(result.message || "Lỗi không xác định");
 
       message.success("Check-out thành công");
       fetchAttendanceHistory();
     } catch (err) {
-      console.error("❌ Check-out error:", err);
-      message.error("❌ Check-out thất bại: " + err.message);
+      message.error("Check-out thất bại: " + err.message);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Available": return "green";
-      case "Booked": return "orange";
-      case "Unavailable": return "red";
-      default: return "default";
-    }
+  const getStatusTag = (status) => {
+  const map = {
+    Present: { color: "green", label: "Hoàn thành" },
+    "Late-Arrival": { color: "gold", label: "Đến muộn" },
+    "Left-Early": { color: "blue", label: "Về sớm" },
+    "Left-Late": { color: "orange", label: "Check-out muộn" },
+    "Checked-In": { color: "processing", label: "Đang làm" },
+    Absent: { color: "red", label: "Vắng mặt" }, 
+    "On-Leave": { color: "cyan", label: "Nghỉ phép" },
+    Invalid: { color: "default", label: "Không hợp lệ" },
+  };
+      const tag = map[status] || { color: "default", label: status || "--" };
+    return <Tag color={tag.color}>{tag.label}</Tag>;
   };
 
-  // ✅ Lọc lịch làm việc hôm nay
   const today = new Date().toISOString().split("T")[0];
-  const todaySchedules = allSchedules.filter(schedule => {
-    const scheduleDate = new Date(schedule.date).toISOString().split("T")[0];
-    return scheduleDate === today;
-  });
+const todaySchedules = allSchedules.filter(schedule =>
+  dayjs(schedule.date).isSame(dayjs(), 'day')
+);
+
 
   const scheduleColumns = [
     {
@@ -158,40 +175,35 @@ const DoctorAttendance = () => {
       render: (slots) =>
         slots.map((slot, i) => (
           <div key={i}>
-            {dayjs(slot.startTime).format("HH:mm")} - {dayjs(slot.endTime).format("HH:mm")}{" "}
+            {dayjs(slot.startTime).format("HH:mm")} - {dayjs(slot.endTime).format("HH:mm")}
           </div>
         )),
     },
     {
       title: "Check-in",
       render: (record) => {
-        const matched = attendanceData.find(
-          (a) => a.scheduleId?.toString() === record._id?.toString() && a.checkInTime
-        );
+        const matched = attendanceData.find(a => a.scheduleId === record._id && a.checkInTime);
         return matched ? dayjs(matched.checkInTime).format("HH:mm:ss") : <Tag color="default">--</Tag>;
       },
     },
     {
       title: "Check-out",
       render: (record) => {
-        const matched = attendanceData.find(a => a.scheduleId?.toString() === record._id && a.checkOutTime);
+        const matched = attendanceData.find(a => a.scheduleId === record._id && a.checkOutTime);
         return matched ? dayjs(matched.checkOutTime).format("HH:mm:ss") : <Tag color="default">--</Tag>;
       },
     },
     {
       title: "Trạng thái",
       render: (record) => {
-        const matched = attendanceData.find(a => a.scheduleId?.toString() === record._id);
-        if (!matched) return <Tag color="red">Chưa điểm danh</Tag>;
-        if (matched.checkInTime && !matched.checkOutTime) return <Tag color="orange">Đang làm</Tag>;
-        if (matched.checkInTime && matched.checkOutTime) return <Tag color="green">Hoàn thành</Tag>;
-        return <Tag color="default">--</Tag>;
+        const matched = attendanceData.find(a => a.scheduleId === record._id);
+        return matched ? getStatusTag(matched.status) : <Tag color="red">Chưa điểm danh</Tag>;
       },
     },
     {
       title: "Hành động",
       render: (schedule) => {
-        const matched = attendanceData.find(a => a.scheduleId?.toString() === schedule._id?.toString());
+        const matched = attendanceData.find(a => a.scheduleId === schedule._id);
         const isCheckedIn = !!matched?.checkInTime;
         const isCheckedOut = !!matched?.checkOutTime;
 
