@@ -13,6 +13,7 @@ const {
   changeStatus,
   getAllDepartments,
   getUserLog,
+  getEmployeeLog,
 } = require("../../controller/admin/adminService");
 
 const {
@@ -54,6 +55,7 @@ adminRouter.post("/createEmp", authAdminMiddleware, createEmployees);
 adminRouter.put("/updEmp/:id", authAdminMiddleware, editEmployees);
 adminRouter.delete("/delEmp/:id", authAdminMiddleware, delEmployees);
 adminRouter.get("/getDepart", authAdminMiddleware, getAllDepartments);
+adminRouter.get("/employee-log/:id", authAdminMiddleware, getEmployeeLog);
 
 // ---------------------- STATISTICS ----------------------
 
