@@ -11,5 +11,9 @@ scheduleRouter.delete('/schedule-management/schedule/:id', authReceptionistMiddl
 
 scheduleRouter.get('/departments', authReceptionistMiddleware, receptionistController.getAllDepartments);
 scheduleRouter.get('/employees', authReceptionistMiddleware, receptionistController.getEmployeesByDepartment);
+scheduleRouter.get('/schedule-management/schedule-log/:id',authReceptionistMiddleware,receptionistController.getScheduleLogs);
+scheduleRouter.put('/schedule-management/schedule/:id/toggle-status',authReceptionistMiddleware,receptionistController.toggleScheduleStatus);
+scheduleRouter.get('/employees/all', authReceptionistMiddleware, receptionistController.getAllEmployees);
+
 
 module.exports = scheduleRouter;

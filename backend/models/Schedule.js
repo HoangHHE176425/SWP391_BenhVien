@@ -16,10 +16,15 @@ const scheduleSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  createdBy: { // ✅ thêm dấu phẩy ở đây 👇
+  createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Employee',
     required: true
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
   },
   timeSlots: [{
     startTime: { type: Date, required: true },
