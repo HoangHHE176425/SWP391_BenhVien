@@ -4,6 +4,7 @@ import {
   UserOutlined,
   CalendarOutlined,
   LogoutOutlined,
+  MedicineBoxOutlined,
 } from "@ant-design/icons";
 
 const PharmacistSidebar = () => {
@@ -15,6 +16,11 @@ const PharmacistSidebar = () => {
       label: "Xem Hồ Sơ Cá Nhân",
       icon: <UserOutlined />,
     },
+    {
+      to: "/pharmacist/medicines",
+      label: "Xem Danh Sách Thuốc",
+      icon: <MedicineBoxOutlined />,
+    }
   ];
   const handleLogout = () => {
     localStorage.removeItem("user");

@@ -21,6 +21,7 @@
   background-color: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   flex: 1;
+  font-size: 14px;
 }
 
 /* Nút thêm thuốc */
@@ -37,6 +38,85 @@
 
 .medicine-add-btn:hover {
   background-color: #1d4ed8;
+}
+
+/* Button group for filter buttons */
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-group .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+/* Active filter button styles */
+.btn-group .btn-outline-primary {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.btn-group .btn-outline-primary.active {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.btn-group .btn-outline-primary.active:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.btn-group .btn-outline-warning {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.btn-group .btn-outline-warning.active {
+  background-color: #f59e0b;
+  color: #1f2937;
+  border-color: #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
+}
+
+.btn-group .btn-outline-warning.active:hover {
+  background-color: #d97706;
+  border-color: #d97706;
+}
+
+.btn-group .btn-outline-danger {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.btn-group .btn-outline-danger.active {
+  background-color: #dc2626;
+  color: white;
+  border-color: #dc2626;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+
+.btn-group .btn-outline-danger.active:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn-group .btn-outline-success {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.btn-group .btn-outline-success:hover {
+  background-color: #059669;
+  color: white;
+  border-color: #059669;
 }
 
 /* Bảng danh sách thuốc */
@@ -94,15 +174,18 @@
   color: #1d4ed8;
 }
 
-.medicine-actions .btn-delete {
-  color: #dc2626;
+.medicine-actions .btn-disable {
+  color: #f59e0b; /* Matches warning color for consistency */
 }
 
-.medicine-actions .btn-delete:hover {
-  color: #b91c1c;
+.medicine-actions .btn-disable:hover {
+  color: #d97706;
 }
 
-
+.medicine-actions .btn-disable.disabled {
+  color: #94a3b8; /* Grayed out for disabled state */
+  cursor: not-allowed;
+}
 
 /* Phân trang tròn */
 .medicine-pagination {
@@ -157,4 +240,26 @@
 .form-control {
   font-size: 14px;
   border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+}
+
+/* Modal transaction */
+.modal-body .row {
+  margin-bottom: 10px;
+}
+
+.modal-body .form-select,
+.modal-body .form-control {
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+/* Alert messages */
+.alert-danger {
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 20px;
 }

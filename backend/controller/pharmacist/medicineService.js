@@ -1,4 +1,5 @@
 const medicineRepo = require('../../repository/medicine.repository');
+const PharmacyTransaction = require('../../models/PharmacyTransaction');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -30,7 +31,7 @@ const getAllMedicines = async (req, res) => {
         jwt.verify(token, process.env.JWT_SECRET);
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 8; // Changed default to 8 to match frontend
+        const limit = parseInt(req.query.limit) || 8;
         const skip = (page - 1) * limit;
         const searchTerm = req.query.searchTerm || '';
         const filterMode = req.query.filterMode || 'all';
@@ -101,6 +102,73 @@ const disableMedicine = async (req, res) => {
     }
 };
 
+// Xử lý giao dịch mua thuốc
+const processPharmacyTransaction = async (req, res) => {
+    try {
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized: No token" });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { patientId, prescriptionId, paymentMethod, items } = req.body;
+
+        if (!patientId || !items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ message: "Patient ID and items are required" });
+        }
+
+        // Calculate total amount and prepare transaction items
+        const transactionItems = [];
+        let totalAmount = 0;
+
+        for (const item of items) {
+            const { medicineId, quantity } = item;
+            if (!medicineId || !quantity || quantity <= 0) {
+                return res.status(400).json({ message: "Invalid item data" });
+            }
+
+            const medicine = await medicineRepo.getMedicineById(medicineId);
+            if (!medicine || !medicine.isActive) {
+                return res.status(400).json({ message: `Medicine ${medicineId} is unavailable` });
+            }
+
+            const price = medicine.unitPrice * quantity;
+            totalAmount += price;
+            transactionItems.push({
+                medicine: medicineId,
+                quantity,
+                price,
+            });
+        }
+
+        // Process stock updates
+        const updatedMedicines = await medicineRepo.processTransaction(
+            items.map(item => ({ medicineId: item.medicineId, quantity: item.quantity }))
+        );
+
+        // Create pharmacy transaction
+        const transaction = await PharmacyTransaction.create({
+            prescription: prescriptionId || null,
+            pharmacist: decoded.id || null,
+            patient: patientId,
+            items: transactionItems,
+            totalAmount,
+            paid: true, // Assume payment is confirmed
+            paymentMethod: paymentMethod || 'cash',
+            createdAt: new Date(),
+        });
+
+        res.status(201).json({
+            message: "Transaction completed",
+            transaction,
+            updatedMedicines,
+        });
+    } catch (err) {
+        console.error("Error in processPharmacyTransaction:", err);
+        res.status(500).json({ message: "Error processing transaction", error: err.message });
+    }
+};
+
 // Export các hàm chính
 module.exports = {
     createMedicine,
@@ -108,4 +176,5 @@ module.exports = {
     getMedicineById,
     updateMedicine,
     disableMedicine,
+    processPharmacyTransaction,
 };
