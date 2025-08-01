@@ -128,6 +128,7 @@ const MedicineManagement = () => {
                     m._id === medicine._id ? { ...m, isActive: false, disableReason: reason } : m
                 )
             );
+            alert('Biên bản kiểm kê đã được cập nhật cho thuốc này.');
         } catch (error) {
             console.error("Error disabling medicine:", error);
             setError("Không thể vô hiệu hóa thuốc. Vui lòng thử lại.");
@@ -178,7 +179,6 @@ const MedicineManagement = () => {
         try {
             const response = await axios.post(`/api/pharmacist/transactions`, transactionData);
             console.log("Transaction Response:", response.data);
-            // Refresh medicines list
             const res = await axios.get(`/api/pharmacist/medicinesall`, {
                 params: { page: currentPage, limit: medicinesPerPage, searchTerm, filterMode },
             });
@@ -190,7 +190,7 @@ const MedicineManagement = () => {
             alert("Giao dịch hoàn tất!");
         } catch (error) {
             console.error("Error processing transaction:", error);
-            throw error; // Let the modal handle the error display
+            throw error;
         }
     };
 

@@ -4,7 +4,7 @@ const pharmacyTransactionSchema = new mongoose.Schema({
   prescription: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' },
   pharmacist: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Dược sĩ CÁI NÀY CỦA M, ADD NÓ R LẬP 1 CÁI CRD
 
-  patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient' },
+  patient: { type: String, required: true },
 
   items: [
     {
@@ -16,7 +16,7 @@ const pharmacyTransactionSchema = new mongoose.Schema({
 
   totalAmount: Number,
   paid: { type: Boolean, default: false },
-  paymentMethod: { type: String, enum: ['cash', 'insurance', 'online'] },
+  paymentMethod: { type: String, enum: ['tien mat', 'online'] },
   createdAt: { type: Date, default: Date.now }
 });
 

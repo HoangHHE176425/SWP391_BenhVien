@@ -5,6 +5,7 @@ import {
   CalendarOutlined,
   LogoutOutlined,
   MedicineBoxOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 
 const PharmacistSidebar = () => {
@@ -20,7 +21,12 @@ const PharmacistSidebar = () => {
       to: "/pharmacist/medicines",
       label: "Xem Danh Sách Thuốc",
       icon: <MedicineBoxOutlined />,
-    }
+    },
+    {
+      to: "/pharmacist/transactions",
+      label: "Lịch Sử Giao Dịch",
+      icon: <HistoryOutlined />
+    },
   ];
   const handleLogout = () => {
     localStorage.removeItem("user");
