@@ -81,9 +81,14 @@ const attendanceSchema = new mongoose.Schema({
 // ✅ Tự động set `date` từ `checkInTime` và tính `status`
 attendanceSchema.pre('save', function (next) {
   if (this.isModified('checkInTime') || !this.date) {
-    const dateOnly = new Date(this.checkInTime);
+    const dateOnly = new Date(this.checkInTime || this.date);
     dateOnly.setHours(0, 0, 0, 0);
     this.date = dateOnly;
+  }
+
+  // ❗ Nếu đang là On-Leave thì bỏ qua check timeSlots
+  if (this.status === 'On-Leave') {
+    return next();
   }
 
   if (!this.timeSlots || this.timeSlots.length === 0) {
@@ -100,16 +105,15 @@ attendanceSchema.pre('save', function (next) {
   const latestEnd = Math.max(...endTimes);
   const now = Date.now();
 
-  const gracePeriod = 1 * 60 * 1000; // ✅ Cho phép trễ tối đa 1 phút
+  const gracePeriod = 1 * 60 * 1000;
 
-  // ✅ Logic xét trạng thái với grace period
   if (checkIn && checkOut) {
     const late = checkIn > (earliestStart + gracePeriod);
     const early = checkOut < (latestEnd - gracePeriod);
     const over = checkOut > (latestEnd + gracePeriod);
 
     if (late && early) {
-      this.status = 'Late-Arrival'; // có thể tạo thêm 'Late-And-Early' nếu muốn
+      this.status = 'Late-Arrival';
     } else if (late) {
       this.status = 'Late-Arrival';
     } else if (early) {
@@ -121,7 +125,7 @@ attendanceSchema.pre('save', function (next) {
     }
   } else if (checkIn && !checkOut) {
     if (now > (latestEnd + gracePeriod)) {
-      this.status = 'Absent'; 
+      this.status = 'Absent';
     } else {
       this.status = 'Checked-In';
     }
@@ -129,6 +133,7 @@ attendanceSchema.pre('save', function (next) {
 
   next();
 });
+
 
 
 module.exports = mongoose.model('Attendance', attendanceSchema);
