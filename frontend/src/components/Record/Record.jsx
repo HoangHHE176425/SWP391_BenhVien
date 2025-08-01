@@ -236,6 +236,9 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         admissionLabTest: record.admissionLabTest || "",
       });
       setSelectedServices(services);
+      if (record.docterAct) {
+        fetchDocterActs(services);
+      }
     }
   };
 
