@@ -259,7 +259,7 @@ module.exports.getAppointments = async (req, res) => {
   const { profileId, status, startDate, endDate, createdBy, page = 1, limit = 10 } = req.query;
 
   try {
-    const query = { type: 'Online' }; // SỬA: Lọc mặc định cho online
+    const query = {}; // SỬA: Lọc mặc định cho online
     if (profileId) query.profileId = profileId;
     if (status) query.status = status;
     if (createdBy) query.createdBy = createdBy;
@@ -324,12 +324,15 @@ module.exports.getPendingAppointments = async (req, res) => {
 // };
 
 module.exports.getAllQueues = async (req, res) => {
-  const { room, page = 1, limit = 10 } = req.query;
+  const { room, doctorId, page = 1, limit = 10 } = req.query; // SỬA: Thêm doctorId vào query params
 
   try {
     const filter = {};
     if (room) {
-      filter['queueEntries.room'] = room; // Filter theo room trong queueEntries
+      filter['queueEntries.room'] = room; // Giữ filter theo room
+    }
+    if (doctorId) {
+      filter['queueEntries.doctorId'] = doctorId; // SỬA: Filter theo doctorId trong array queueEntries
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -341,18 +344,18 @@ module.exports.getAllQueues = async (req, res) => {
     const queues = await Queue.find(filter)
       .populate({
         path: 'queueEntries.appointmentId',
-        select: 'appointmentDate symptoms type status' // Populate thông tin lịch hẹn
+        select: 'appointmentDate symptoms type status' 
       })
       .populate({
         path: 'queueEntries.profileId',
-        select: 'name phone' // Populate tên và SĐT bệnh nhân
+        select: 'name phone' 
       })
       .populate({
         path: 'queueEntries.doctorId',
-        select: 'name' // Populate tên bác sĩ
+        select: 'name' 
       })
-      .populate('department', 'name') // Populate tên khoa
-      .sort({ date: -1 }) // Sort theo ngày mới nhất
+      .populate('department', 'name') 
+      .sort({ date: -1 }) 
       .skip(skip)
       .limit(parseInt(limit));
 
