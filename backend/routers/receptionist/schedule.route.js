@@ -18,5 +18,7 @@ scheduleRouter.get('/employees/all', authReceptionistMiddleware, receptionistCon
 // Điểm danh
 scheduleRouter.get('/attendances', authReceptionistMiddleware, receptionistController.getAllAttendances);
 scheduleRouter.get('/schedule-management/schedule/:id/attendances', authReceptionistMiddleware, receptionistController.getAttendancesBySchedule);
+scheduleRouter.post('/attendance', authReceptionistMiddleware, receptionistController.markAttendance);
+scheduleRouter.post('/attendance/on-leave', authReceptionistMiddleware, receptionistController.markAsOnLeave);
 
 module.exports = scheduleRouter;
