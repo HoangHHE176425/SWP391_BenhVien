@@ -656,6 +656,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                                     <span>Số lượng:</span>
                                     <InputNumber
                                       min={1}
+                                      max={item.medicine.quantity}
                                       value={item.quantity}
                                       onChange={(value) => handleUpdateMedicine(index, 'quantity', value)}
                                       style={{ width: '80px' }}

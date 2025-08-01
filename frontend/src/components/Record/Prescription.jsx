@@ -188,7 +188,7 @@ const Prescription = ({ visible, onCancel, onConfirm }) => {
             )}
 
             {/* Hiển thị danh sách thuốc đã chọn */}
-            {selectedMedicines.length > 0 && (
+            {/* {selectedMedicines.length > 0 && (
                 <div style={{ marginTop: 16, padding: 16, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
                     <Title level={5}>Thuốc đã chọn:</Title>
                     {selectedMedicines.map(medicine => (
@@ -225,7 +225,7 @@ const Prescription = ({ visible, onCancel, onConfirm }) => {
                         </div>
                     ))}
                 </div>
-            )}
+            )} */}
         </Modal>
     );
 };
