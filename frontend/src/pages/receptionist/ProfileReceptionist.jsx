@@ -11,7 +11,7 @@ const ProfileReceptionist = () => {
     fullname: user?.name || "",
     phone: user?.phone || "",
   });
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+  const [profilePicture, setProfilePicture] = useState(user?.avatar || null);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +28,7 @@ const ProfileReceptionist = () => {
       fullname: user?.name || "",
       phone: user?.phone || "",
     });
-    setProfilePicture(user?.profilePicture || null);
+    setProfilePicture(user?.avatar || null);
   }, [user]);
 
   const handleInputChange = (e) => {
@@ -56,7 +56,6 @@ const ProfileReceptionist = () => {
           },
           body: uploadFormData,
         });
-
         const uploadData = await uploadRes.json();
         if (!uploadRes.ok) throw new Error(uploadData.msg || "Upload ảnh thất bại");
 
@@ -74,7 +73,7 @@ const ProfileReceptionist = () => {
           name: formData.fullname,
           phone: formData.phone,
           status: "active",
-          profilePicture: updatedProfilePicture,
+          avatar: updatedProfilePicture,
         }),
       });
 
@@ -85,7 +84,7 @@ const ProfileReceptionist = () => {
         ...user,
         name: formData.fullname,
         phone: formData.phone,
-        profilePicture: updatedProfilePicture,
+        avatar: updatedProfilePicture,
       };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       login(updatedUser);
