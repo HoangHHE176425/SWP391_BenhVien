@@ -1,11 +1,15 @@
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import {
   Button,
   DatePicker,
   Form,
   Input,
+  InputNumber,
   message,
+  Popconfirm,
   Radio,
   Select,
+  Space,
   Typography
 } from "antd";
 import axios from "axios";
@@ -13,6 +17,7 @@ import dayjs from "dayjs";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import "../../assets/css/UserMedicalProfile.css";
+import Prescription from "./Prescription";
 
 const { Title } = Typography;
 
@@ -65,6 +70,10 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
   const [services, setServices] = useState([]);
   const [docterActs, setDocterActs] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [prescriptionVisible, setPrescriptionVisible] = useState(false);
+  const [selectedMedicines, setSelectedMedicines] = useState([]);
+  const [prescription, setPrescription] = useState([]);
+  const [editingMedicineIndex, setEditingMedicineIndex] = useState(null);
 
   // Hàm kiểm tra quyền chỉnh sửa dựa trên trạng thái
   const getFormPermissions = (status) => {
@@ -73,25 +82,29 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         return {
           isDisabled: true,
           showLabTest: false,
-          editableFields: []
+          editableFields: [],
+          isPrescription: false
         };
       case 'pending_re-examination':
         return {
           isDisabled: true,
           showLabTest: true,
-          editableFields: ['admissionReason', 'admissionDiagnosis']
+          editableFields: ['admissionReason', 'admissionDiagnosis'],
+          isPrescription: true
         };
       case 'pending_clinical':
         return {
           isDisabled: true,
           showLabTest: false,
-          editableFields: []
+          editableFields: [],
+          isPrescription: true
         };
       default:
         return {
           isDisabled: false,
           showLabTest: false,
-          editableFields: ['all']
+          editableFields: ['all'],
+          isPrescription: true
         };
     }
   };
@@ -169,6 +182,9 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
       });
       setSelectedRecord(null);
       setSelectedServices([]);
+      setSelectedMedicines([]);
+      setPrescription([]);
+      setEditingMedicineIndex(null);
   };
 
   const fetchListRecord = async () => {
@@ -187,6 +203,12 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
 
   // Xử lý lưu phiếu khám
   const handleSaveMedicalRecord = async (values) => {
+    // Thêm prescription vào values để gửi sang backend
+    const formData = {
+      ...values,
+      prescription: prescription
+    };
+
     if (selectedRecord) {
         if (selectedRecord.status === 'done') {
             message.error("Phiếu khám này đã hoàn thành, không thể chỉnh sửa");
@@ -196,12 +218,12 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
             message.error("Vui lòng đợi kết quả xét nghiệm");
             return;
         }
-        await onUpdateRecord({...selectedRecord,...values, _id: selectedRecord._id, status: selectedRecord.status === 'pending_re-examination' ? 'done' : selectedRecord.status});
+        await onUpdateRecord({...selectedRecord,...formData, _id: selectedRecord._id, status: selectedRecord.status === 'pending_re-examination' ? 'done' : selectedRecord.status});
         if (selectedRecord.status === 'pending_re-examination') {
             handleRestTree();
         }
     } else {
-        await onSaveRecord(values);
+        await onSaveRecord(formData);
         if (values.services.length === 0) {
             handleRestTree();
         }
@@ -236,9 +258,26 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         admissionLabTest: record.admissionLabTest || "",
       });
       setSelectedServices(services);
+      
+      // Load prescription nếu có
+      if (record.prescription && record.prescription.length > 0) {
+        setSelectedMedicines(record.prescription);
+        setPrescription(record.prescription.map(item => ({
+          medicine: item.medicine,
+          quantity: item.quantity,
+          note: item.note || ''
+        })));
+      } else {
+        setSelectedMedicines([]);
+        setPrescription([]);
+      }
+      
       if (record.docterAct) {
         fetchDocterActs(services);
       }
+    } else {
+      setSelectedMedicines([]);
+      setPrescription([]);
     }
   };
 
@@ -247,6 +286,85 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     
     fetchDocterActs(values);
     setSelectedServices(values || []);
+  };
+
+  const handlePrescriptionConfirm = (medicines) => {
+    // Kiểm tra và gộp thuốc trùng _id
+    const mergedMedicines = medicines.reduce((acc, currentMedicine) => {
+      const existingIndex = acc.findIndex(item => item.medicine._id === currentMedicine.medicine._id);
+      
+      if (existingIndex !== -1) {
+        // Nếu đã tồn tại, cộng quantity
+        acc[existingIndex].quantity += currentMedicine.quantity;
+      } else {
+        // Nếu chưa tồn tại, thêm mới với note rỗng
+        acc.push({
+          ...currentMedicine,
+          note: ''
+        });
+      }
+      
+      return acc;
+    }, [...selectedMedicines]); // Bắt đầu với danh sách thuốc hiện tại
+
+    setSelectedMedicines(mergedMedicines);
+    
+    // Cập nhật prescription để gửi sang backend
+    const prescriptionData = mergedMedicines.map(item => ({
+      medicine: item.medicine._id,
+      quantity: item.quantity,
+      note: item.note || ''
+    }));
+    setPrescription(prescriptionData);
+    
+    setPrescriptionVisible(false);
+  };
+
+  const handleOpenPrescription = () => {
+    setPrescriptionVisible(true);
+  };
+
+  // Hàm cập nhật thuốc (số lượng hoặc ghi chú)
+  const handleUpdateMedicine = (index, field, value) => {
+    const updatedMedicines = [...selectedMedicines];
+    updatedMedicines[index] = {
+      ...updatedMedicines[index],
+      [field]: value
+    };
+    
+    setSelectedMedicines(updatedMedicines);
+    
+    // Cập nhật prescription
+    const prescriptionData = updatedMedicines.map(item => ({
+      medicine: item.medicine._id,
+      quantity: item.quantity,
+      note: item.note || ''
+    }));
+    setPrescription(prescriptionData);
+  };
+
+  // Hàm xóa thuốc
+  const handleDeleteMedicine = (index) => {
+    const updatedMedicines = selectedMedicines.filter((_, i) => i !== index);
+    setSelectedMedicines(updatedMedicines);
+    
+    // Cập nhật prescription
+    const prescriptionData = updatedMedicines.map(item => ({
+      medicine: item.medicine._id,
+      quantity: item.quantity,
+      note: item.note || ''
+    }));
+    setPrescription(prescriptionData);
+  };
+
+  // Hàm bắt đầu chỉnh sửa
+  const handleStartEdit = (index) => {
+    setEditingMedicineIndex(index);
+  };
+
+  // Hàm kết thúc chỉnh sửa
+  const handleFinishEdit = () => {
+    setEditingMedicineIndex(null);
   };
 
   return (
@@ -489,6 +607,140 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
               )}
             </div>
 
+            <div className="form-section">
+              <div className="form-section-title">IV. ĐƠN THUỐC</div>
+              <div className="form-row">
+                <div className="form-field full-width">
+                  <Button 
+                    type="dashed" 
+                    onClick={handleOpenPrescription}
+                    style={{ width: '100%', height: '40px' }}
+                    disabled={selectedRecord && !getFormPermissions(selectedRecord.status).isPrescription}
+                  >
+                    {selectedMedicines.length > 0 
+                      ? `Đã chọn ${selectedMedicines.length} loại thuốc` 
+                      : 'Chọn thuốc kê đơn'
+                    }
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Hiển thị danh sách thuốc đã chọn */}
+              {selectedMedicines.length > 0 && (
+                <div className="form-row">
+                  <div className="form-field full-width">
+                    <div style={{ 
+                      padding: '12px', 
+                      border: '1px solid #d9d9d9', 
+                      borderRadius: '6px',
+                      backgroundColor: '#fafafa'
+                    }}>
+                      <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
+                        Thuốc đã chọn:
+                      </div>
+                      {selectedMedicines.map((item, index) => (
+                        <div key={index} style={{ 
+                          padding: '8px 0',
+                          borderBottom: index < selectedMedicines.length - 1 ? '1px solid #f0f0f0' : 'none'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                                {item.medicine.name}
+                              </div>
+                              
+                              {editingMedicineIndex === index ? (
+                                // Chế độ chỉnh sửa
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span>Số lượng:</span>
+                                    <InputNumber
+                                      min={1}
+                                      value={item.quantity}
+                                      onChange={(value) => handleUpdateMedicine(index, 'quantity', value)}
+                                      style={{ width: '80px' }}
+                                    />
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span>Ghi chú:</span>
+                                    <Input.TextArea
+                                      value={item.note || ''}
+                                      onChange={(e) => handleUpdateMedicine(index, 'note', e.target.value)}
+                                      placeholder="Nhập ghi chú cho thuốc..."
+                                      rows={2}
+                                      style={{ fontSize: '12px' }}
+                                    />
+                                  </div>
+                                  <Space>
+                                    <Button 
+                                      type="primary" 
+                                      size="small"
+                                      onClick={handleFinishEdit}
+                                    >
+                                      Lưu
+                                    </Button>
+                                    <Button 
+                                      size="small"
+                                      onClick={handleFinishEdit}
+                                    >
+                                      Hủy
+                                    </Button>
+                                  </Space>
+                                </div>
+                              ) : (
+                                // Chế độ xem
+                                <div>
+                                  <div style={{ marginBottom: '4px' }}>
+                                    <span style={{ fontWeight: '500' }}>Số lượng:</span> {item.quantity}
+                                  </div>
+                                  {item.note && (
+                                    <div style={{ marginBottom: '4px' }}>
+                                      <span style={{ fontWeight: '500' }}>Ghi chú:</span> {item.note}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {editingMedicineIndex !== index && (
+                              <Space>
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<EditOutlined />}
+                                  onClick={() => handleStartEdit(index)}
+                                  disabled={selectedRecord && !getFormPermissions(selectedRecord.status).isPrescription}
+                                >
+                                  Sửa
+                                </Button>
+                                <Popconfirm
+                                  title="Xóa thuốc này?"
+                                  description="Bạn có chắc chắn muốn xóa thuốc này khỏi đơn thuốc?"
+                                  onConfirm={() => handleDeleteMedicine(index)}
+                                  okText="Có"
+                                  cancelText="Không"
+                                >
+                                  <Button
+                                    type="text"
+                                    size="small"
+                                    danger
+                                    icon={<DeleteOutlined />}
+                                    disabled={selectedRecord && !getFormPermissions(selectedRecord.status).isPrescription}
+                                  >
+                                    Xóa
+                                  </Button>
+                                </Popconfirm>
+                              </Space>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {!isHiddenSaveButton && <div style={{ textAlign: 'center', marginTop: '20px' }}>
                 <Button type="primary" htmlType="submit" size="large">
                   {selectedRecord ? 'Cập nhật phiếu khám' : 'Lưu phiếu khám'}
@@ -503,6 +755,13 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
           </div>
         )}
       </div>
+
+      {/* Modal Prescription */}
+      <Prescription 
+        visible={prescriptionVisible}
+        onCancel={() => setPrescriptionVisible(false)}
+        onConfirm={handlePrescriptionConfirm}
+      />
     </div>
   );
 };

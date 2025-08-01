@@ -35,6 +35,9 @@ class RecordService {
             .populate('profileId')
             .populate('doctorId')
             .populate('department')
+            .populate({
+                path: 'prescription.medicine'
+              })
             .sort({ createdAt: -1 });
             res.status(200).json({ success: true, data: records });
         } catch (error) {
@@ -74,7 +77,6 @@ class RecordService {
              .populate('doctorId')
              .populate('department');
 
-             console.log(req.body.status);
 
             if (req.body.status === "done") {
                 await Appointment.findByIdAndUpdate(req.body.appointmentId, {

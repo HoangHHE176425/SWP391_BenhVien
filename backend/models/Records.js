@@ -21,9 +21,17 @@ const recordsSchema = new mongoose.Schema({
   treatmentSummary: { type: String },
   ethnicity: { type: String },
   status: { type: String, enum: ['pending_clinical', 'pending_re-examination', 'done'], default: 'pending_clinical' },
+  isPaid: { type: Boolean, default: false },
+  paidAt: { type: Date },
+  prescription: [{
+    medicine: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine' },
+    quantity: { type: Number, required: true, min: 1 },
+    note: { type: String, default: '' }
+  }],
+  prescriptionNote: { type: String, default: '' },
   // Danh sách dịch vụ đã chỉ định
   services: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Services' }],
-  docterAct: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true}, // bác sĩ thực hiện
+  docterAct: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee'}, // bác sĩ thực hiện
   createdAt: { type: Date, required: true, index: true },
   updatedAt: { type: Date, required: true, index: true },
 });
