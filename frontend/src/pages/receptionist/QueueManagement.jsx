@@ -1,55 +1,89 @@
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  Container,
-  Spinner,
-  Form,
-  Pagination,
-  Row,
-  Col,
-  Card,
-  Badge,
-  Button,
-} from "react-bootstrap";
 import axios from "axios";
-import { message } from "antd";
-import moment from "moment"; // Để format và lọc ngày
+import moment from "moment";
+import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import {
+  Table, Button, Input, DatePicker, Select, 
+  Space, message, Typography, Divider, Modal, Tag, Spin, Pagination
+} from "antd";
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
-const QueueManagement = () => {
+const { Title } = Typography;
+const { Option } = Select;
+const { Search } = Input;
+
+dayjs.extend(isSameOrBefore);
+
+function QueueManagement() {
   const [queues, setQueues] = useState([]);
-  const [groupedQueues, setGroupedQueues] = useState({}); // Nhóm theo room
+  const [filteredQueues, setFilteredQueues] = useState([]); // Thêm state filteredQueues
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [roomFilter, setRoomFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState(moment().format("YYYY-MM-DD")); // Mặc định hôm nay
+  const [dateFilter, setDateFilter] = useState(null); // Sử dụng giống Receptionist, null ban đầu
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [departments, setDepartments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState(null);
+  const [filterRole, setFilterRole] = useState('Doctor'); // Mặc định lọc Doctor
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [departmentDetailVisible, setDepartmentDetailVisible] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
-  const fetchQueues = async () => {
+  const token = localStorage.getItem("token"); 
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchAllDoctors();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDoctor) {
+      fetchQueues(selectedDoctor._id);
+    }
+  }, [selectedDoctor, currentPage]);
+
+  useEffect(() => {
+    // Lọc queues theo dateFilter, chỉ lấy queues của selectedDoctor
+    let result = queues;
+    if (dateFilter) {
+      result = result.filter(q =>
+        dayjs(q.date).format('YYYY-MM-DD') === dateFilter.format('YYYY-MM-DD')
+      );
+    }
+    setFilteredQueues(result);
+  }, [queues, dateFilter]);
+
+  const fetchAllDoctors = async () => {
+    try {
+      const res = await axios.get('/api/receptionist/employees/all');
+      // Lọc chỉ lấy employee có role 'Doctor'
+      const doctorsList = res.data.filter(emp => emp.role === 'Doctor');
+      setDoctors(doctorsList);
+    } catch (err) {
+      message.error('Không thể tải danh sách bác sĩ');
+    }
+  };
+
+  const fetchQueues = async (doctorId) => {
     setLoading(true);
     try {
       const params = {
-        room: roomFilter,
+        doctorId,
         page: currentPage,
         limit: itemsPerPage,
       };
       const res = await axios.get("http://localhost:9999/api/apm/queues", { params });
+      console.log("API Response for doctorId", doctorId, ":", res.data); // Debug
       setQueues(res.data.queues || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalItems(res.data.total || 0);
-
-      // Nhóm theo room từ queueEntries
-      const grouped = res.data.queues.reduce((acc, queue) => {
-        queue.queueEntries.forEach((entry) => {
-          const room = entry.room;
-          if (!acc[room]) acc[room] = [];
-          acc[room].push({ ...entry, date: queue.date }); // Thêm date từ queue
-        });
-        return acc;
-      }, {});
-      setGroupedQueues(grouped);
     } catch (err) {
       console.error("Lỗi tải danh sách hàng đợi:", err.response?.data || err.message);
       setError("Không tải được danh sách hàng đợi.");
@@ -58,14 +92,25 @@ const QueueManagement = () => {
     }
   };
 
-  useEffect(() => {
-    fetchQueues();
-  }, [currentPage, roomFilter]);
+  const fetchDepartments = async () => {
+    try {
+      const res = await axios.get('/api/receptionist/departments');
+      setDepartments(res.data || []);
+    } catch (err) {
+      message.error('Không thể tìm được các khoa');
+    }
+  };
 
-  // Hàm lọc entries theo dateFilter
-  const filterEntriesByDate = (entries) => {
-    if (!dateFilter) return entries;
-    return entries.filter((entry) => moment(entry.date).format("YYYY-MM-DD") === dateFilter);
+  const handleViewQueue = (doctor) => {
+    setSelectedDoctor(doctor);
+    setDateFilter(null); // Reset dateFilter khi chuyển bác sĩ
+    fetchQueues(doctor._id);
+  };
+
+  const clearFilters = () => {
+    setSearchText('');
+    setFilterDepartment(null);
+    setFilterRole('Doctor'); // Reset về Doctor
   };
 
   const formatDateTime = (isoString) => {
@@ -73,134 +118,267 @@ const QueueManagement = () => {
     return moment(isoString).format("DD/MM/YYYY HH:mm");
   };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+  const doctorColumns = [
+    {
+      title: 'Mã bác sĩ',
+      dataIndex: 'employeeCode',
+      key: 'employeeCode',
+      render: (_, record) => (
+        <Button type="link" onClick={() => {
+          setSelectedDoctor(record);
+          setDetailModalVisible(true);
+        }}>
+          {record.employeeCode}
+        </Button>
+      )
+    },
+    {
+      title: 'Khoa',
+      render: (record) => {
+        if (!record.department) return 'N/A';
+        const depId = typeof record.department === 'object' ? record.department._id : record.department;
+        const department = departments.find(d => d._id === depId);
+        return department ? (
+          <Button type="link" onClick={() => {
+            setSelectedDepartment(department);
+            setDepartmentDetailVisible(true);
+          }}>
+            {department.departmentCode || department.name}
+          </Button>
+        ) : 'N/A';
+      }
+    },
+    {
+      title: 'Tên',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Vai trò',
+      dataIndex: 'role',
+      key: 'role',
+    },
+    {
+      title: 'Hành động',
+      render: (record) => (
+        <Button type="link" onClick={() => handleViewQueue(record)}>
+          Xem hàng đợi
+        </Button>
+      )
+    }
+  ];
+
+  const queueColumns = [
+    {
+      title: 'STT',
+      render: (_, __, index) => index + 1
+    },
+    {
+      title: 'Thứ tự',
+      dataIndex: 'position',
+      key: 'position',
+    },
+    {
+      title: 'Bệnh nhân',
+      render: (entry) => entry.profileId?.name || "Chưa có"
+    },
+    {
+      title: 'SĐT',
+      render: (entry) => entry.profileId?.phone || "Chưa có"
+    },
+    {
+      title: 'Bác sĩ',
+      render: (entry) => entry.doctorId?.name || "Chưa có"
+    },
+    {
+      title: 'Triệu chứng',
+      render: (entry) => entry.appointmentId?.symptoms || "Chưa có"
+    },
+    {
+      title: 'Trạng thái',
+      render: (entry) => (
+        <Tag color={entry.status === "queued" ? "warning" : "default"}>
+          {entry.status === "queued" ? "Đang chờ" : entry.status}
+        </Tag>
+      )
+    }
+  ];
 
   return (
-    <Container fluid className="py-5 bg-light">
-      <Card className="shadow-lg border-0 rounded-3">
-        <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
-          <h4 className="mb-0">Quản lý hàng đợi - Tổng số: {totalItems}</h4>
-          <Button variant="secondary" onClick={fetchQueues}>
-            Tải lại
-          </Button>
-        </Card.Header>
-        <Card.Body>
-          <Row className="mb-4">
-            <Col md={3}>
-              <Form.Control
-                type="text"
-                placeholder="Filter theo tên phòng..."
-                value={roomFilter}
-                onChange={(e) => setRoomFilter(e.target.value)}
-                className="rounded-pill shadow-sm mb-2"
-              />
-            </Col>
-            <Col md={3}>
-              <Form.Control
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="rounded-pill shadow-sm"
-              />
-            </Col>
-          </Row>
+    <div style={{ padding: 24 }}>
+      <Title level={3}>Quản lý hàng đợi</Title>
+
+      {!selectedDoctor ? (
+        <>
+          <Divider />
+          <Title level={4}>Danh sách bác sĩ</Title>
+
+          <Space style={{ marginBottom: 16 }} wrap>
+            <Search
+              placeholder="Tìm theo tên hoặc mã bác sĩ"
+              onSearch={(value) => setSearchText(value)}
+              onChange={(e) => setSearchText(e.target.value)}
+              value={searchText}
+              style={{ width: 300 }}
+              allowClear
+            />
+            <Select
+              placeholder="Lọc theo vai trò"
+              style={{ width: 200 }}
+              allowClear
+              value={filterRole}
+              onChange={setFilterRole}
+              disabled // Mặc định Doctor, không cho đổi
+            >
+              <Option value="Doctor">Bác sĩ</Option>
+            </Select>
+            <Select
+              placeholder="Lọc theo khoa"
+              style={{ width: 200 }}
+              allowClear
+              value={filterDepartment}
+              onChange={setFilterDepartment}
+            >
+              {departments.map(dep => (
+                <Option key={dep._id} value={dep._id}>
+                  {dep.name}
+                </Option>
+              ))}
+            </Select>
+            <Button onClick={clearFilters}>
+              Xóa bộ lọc
+            </Button>
+          </Space>
+
+          <Table
+            rowKey="_id"
+            dataSource={doctors.filter(emp => {
+              const lower = searchText.toLowerCase();
+              const matchText =
+                emp.name?.toLowerCase().includes(lower) ||
+                emp.employeeCode?.toLowerCase().includes(lower);
+              const matchRole = filterRole ? emp.role === filterRole : true;
+              const matchDepartment = filterDepartment
+                ? emp.department === filterDepartment || emp.department?._id === filterDepartment
+                : true;
+              return matchText && matchRole && matchDepartment;
+            })}
+            columns={doctorColumns}
+          />
+        </>
+      ) : (
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => {
+                setSelectedDoctor(null);
+                setQueues([]);
+              }}
+            >
+              Quay lại
+            </Button>
+          </div>
+
+          <Space style={{ marginBottom: 16 }} wrap>
+            <DatePicker
+              placeholder="Lọc theo ngày"
+              onChange={value => {
+                setDateFilter(value); // Sử dụng dayjs object trực tiếp
+                setCurrentPage(1); // Reset về trang 1 khi đổi ngày
+              }}
+              style={{ width: 200 }}
+              value={dateFilter}
+              allowClear // Cho phép xóa ngày
+            />
+            <Button onClick={() => fetchQueues(selectedDoctor._id)}>Tải lại</Button>
+          </Space>
+
+          <Divider />
+          <Title level={4}>Hàng đợi của {selectedDoctor.name}</Title>
 
           {loading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" />
+            <div style={{ textAlign: 'center', padding: '50px 0' }}>
+              <Spin size="large" />
             </div>
           ) : error ? (
-            <div className="text-center py-5 text-danger">
+            <div style={{ textAlign: 'center', padding: '50px 0', color: 'red' }}>
               <h5>{error}</h5>
-              <Button variant="primary" onClick={fetchQueues}>
+              <Button type="primary" onClick={() => fetchQueues(selectedDoctor._id)}>
                 Thử lại
               </Button>
             </div>
-          ) : Object.keys(groupedQueues).length === 0 ? (
-            <p className="text-muted text-center">Không có hàng đợi nào.</p>
+          ) : queues.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#888' }}>Không có hàng đợi nào.</p>
           ) : (
-            <>
-              {Object.keys(groupedQueues).map((room) => {
-                const filteredEntries = filterEntriesByDate(groupedQueues[room]);
-                return (
-                  <Card key={room} className="mb-4">
-                    <Card.Header className="bg-secondary text-white">
-                      <h5 className="mb-0">Phòng: {room}</h5>
-                    </Card.Header>
-                    <Card.Body>
-                      {filteredEntries.length === 0 ? (
-                        <p className="text-muted text-center">Lịch trống</p>
-                      ) : (
-                        <div className="table-responsive">
-                          <Table striped hover className="table-align-middle">
-                            <thead className="table-primary">
-                              <tr>
-                                <th>STT</th>
-                                <th>Thứ tự</th>
-                                <th>Bệnh nhân</th>
-                                <th>SĐT</th>
-                                <th>Bác sĩ</th>
-                                <th>Triệu chứng</th>
-                                <th>Trạng thái</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredEntries.map((entry, index) => (
-                                <tr key={entry._id || index}>
-                                  <td>{index + 1}</td>
-                                  <td>{entry.position}</td>
-                                  <td>{entry.profileId?.name || "Chưa có"}</td>
-                                  <td>{entry.profileId?.phone || "Chưa có"}</td>
-                                  <td>{entry.doctorId?.name || "Chưa có"}</td>
-                                  <td>{entry.appointmentId?.symptoms || "Chưa có"}</td>
-                                  <td>
-                                    <Badge variant={entry.status === "queued" ? "warning" : "secondary"}>
-                                      {entry.status === "queued" ? "Đang chờ" : entry.status}
-                                    </Badge>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-                );
-              })}
-
-              <div className="d-flex justify-content-between align-items-center mt-4">
-                <small className="text-muted">
-                  Hiển thị từ {(currentPage - 1) * itemsPerPage + 1} đến {Math.min(currentPage * itemsPerPage, totalItems)} / {totalItems}
-                </small>
-                <Pagination className="mb-0">
-                  <Pagination.Prev
-                    onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-                    disabled={currentPage === 1}
-                  />
-                  {[...Array(totalPages).keys()].map((page) => (
-                    <Pagination.Item
-                      key={page + 1}
-                      active={page + 1 === currentPage}
-                      onClick={() => handlePageChange(page + 1)}
-                    >
-                      {page + 1}
-                    </Pagination.Item>
-                  ))}
-                  <Pagination.Next
-                    onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                  />
-                </Pagination>
-              </div>
-            </>
+            <Table
+              rowKey="_id"
+              dataSource={filteredQueues
+                .flatMap(q => q.queueEntries.filter(entry => 
+                  entry.doctorId?._id === selectedDoctor._id || entry.doctorId === selectedDoctor._id
+                ))}
+              columns={queueColumns}
+              pagination={false} // Sử dụng phân trang riêng
+            />
           )}
-        </Card.Body>
-      </Card>
-    </Container>
+
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <Pagination
+              current={currentPage}
+              total={totalItems}
+              pageSize={itemsPerPage}
+              onChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        </>
+      )}
+
+      <Modal
+        title="Chi tiết bác sĩ"
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={null}
+      >
+        {selectedDoctor ? (
+          <div>
+            <p><strong>Tên:</strong> {selectedDoctor.name}</p>
+            <p><strong>Email:</strong> {selectedDoctor.email}</p>
+            <p><strong>Vai trò:</strong> {selectedDoctor.role}</p>
+            <p><strong>Trạng thái:</strong> {selectedDoctor.status}</p>
+            <p><strong>Khoa:</strong> {selectedDoctor.department?.name || 'Không rõ'}</p>
+            <p><strong>Chuyên môn:</strong> {selectedDoctor.specialization}</p>
+            <p><strong>Số điện thoại:</strong> {selectedDoctor.phone}</p>
+          </div>
+        ) : (
+          <p>Đang tải...</p>
+        )}
+      </Modal>
+
+      <Modal
+        title="Chi tiết khoa"
+        open={departmentDetailVisible}
+        onCancel={() => setDepartmentDetailVisible(false)}
+        footer={null}
+      >
+        {selectedDepartment ? (
+          <div>
+            <p><strong>Mã khoa:</strong> {selectedDepartment.departmentCode}</p>
+            <p><strong>Tên khoa:</strong> {selectedDepartment.name}</p>
+            <p><strong>Mô tả:</strong> {selectedDepartment.description || 'Không có'}</p>
+            {selectedDepartment.image && (
+              <img
+                src={selectedDepartment.image}
+                alt="Ảnh khoa"
+                style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8 }}
+              />
+            )}
+          </div>
+        ) : (
+          <p>Đang tải...</p>
+        )}
+      </Modal>
+    </div>
   );
-};
+}
 
 export default QueueManagement;
