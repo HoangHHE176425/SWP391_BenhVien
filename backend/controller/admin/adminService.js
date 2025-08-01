@@ -4,6 +4,7 @@ const User = require("../../models/User");
 const Employee = require("../../models/Employee");
 const Department = require("../../models/Department");
 const UserLog = require("../../models/UserLog");
+const EmployeeLog = require("../../models/EmployeeLog");
 
 // ---------------------- USER CONTROLLERS ----------------------
 
@@ -88,7 +89,7 @@ module.exports.editUsers = async (req, res) => {
       "status",
       "password",
     ]; // 🔐 lọc những trường cho phép cập nhật và log
-
+    
     updatableFields.forEach((field) => {
       if (updates[field] !== undefined && field !== "password") {
         const current = user[field];
@@ -219,10 +220,20 @@ module.exports.createEmployees = async (req, res) => {
       phone: req.body.phone || "",
       role: req.body.role,
       department: req.body.department || null,
-      status: "active",
+      status: req.body.status || "active",
+      specialization: req.body.specialization || "",
     });
 
     const newEmployee = await employee.save();
+    
+    // ✅ Ghi log
+    await EmployeeLog.create({
+      employee: newEmployee._id,
+      actionType: "create",
+      actionBy: req.user?.id || null,
+      description: `Tạo nhân viên mới: ${newEmployee.name}`,
+    });
+
     res.status(201).json(newEmployee);
   } catch (err) {
     console.error(err);
@@ -232,41 +243,95 @@ module.exports.createEmployees = async (req, res) => {
 
 module.exports.editEmployees = async (req, res) => {
   try {
-    const updateFields = { ...req.body };
-
-    if (updateFields.password) {
-      updateFields.password = await bcrypt.hash(updateFields.password, 10);
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
     }
 
-    const updatedEmployee = await Employee.findByIdAndUpdate(
-      req.params.id,
-      updateFields,
-      { new: true }
-    );
+    const updates = { ...req.body };
+    const changes = {};
 
-    if (!updatedEmployee) {
-      return res.status(404).json({ message: "Employee not found" });
+    // Nếu có cập nhật password
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+      changes["password"] = { from: oldPassword, to: newPasswordPlainText };
+    }
+
+    // Các trường cho phép ghi log thay đổi
+    const updatableFields = [
+      "name",
+      "email",
+      "phone",
+      "role",
+      "status",
+      "specialization",
+      "department",
+    ];
+
+    updatableFields.forEach((field) => {
+      if (updates[field] !== undefined) {
+        const current = employee[field];
+        const next = updates[field];
+
+        if (String(current) !== String(next)) {
+          changes[field] = { from: current, to: next };
+          employee[field] = next;
+        }
+      }
+    });
+
+    const updatedEmployee = await employee.save();
+
+    // ✅ Ghi log nếu có thay đổi
+    if (Object.keys(changes).length > 0) {
+      await EmployeeLog.create({
+        employee: updatedEmployee._id,
+        actionType: "update",
+        actionBy: req.user?.id || null,
+        changes,
+        description: "Cập nhật thông tin nhân viên",
+      });
     }
 
     res.json(updatedEmployee);
   } catch (err) {
+    console.error("❌ editEmployees error:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports.changeEmployeeStatus = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
-    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
-    employee.status = employee.status === "active" ? "inactive" : "active";
+    const oldStatus = employee.status;
+    const newStatus = oldStatus === "active" ? "inactive" : "active";
+
+    employee.status = newStatus;
     await employee.save();
 
-    res.json({ message: `Employee status updated to ${employee.status}` });
+    // ✅ Ghi log
+    await EmployeeLog.create({
+      employee: employee._id,
+      actionType: "changeStatus",
+      actionBy: req.user?.id || null, // cần token xác thực để lấy ID người thực hiện
+      changes: {
+        status: { from: oldStatus, to: newStatus },
+      },
+      description: `Đã đổi trạng thái từ ${oldStatus} sang ${newStatus}`,
+    });
+
+    res.json({ message: `Employee status updated to ${newStatus}` });
   } catch (err) {
+    console.error("❌ Error changing employee status:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports.delEmployees = async (req, res) => {
   try {
@@ -276,6 +341,17 @@ module.exports.delEmployees = async (req, res) => {
     res.json({ message: "Employee deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+module.exports.getEmployeeLog = async (req, res) => {
+  try {
+    const logs = await EmployeeLog.find({ employee: req.params.id })
+      .sort({ createdAt: -1 })
+      .populate("actionBy", "name employeeCode");
+
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ message: "Không thể lấy log", error: err.message });
   }
 };
 
