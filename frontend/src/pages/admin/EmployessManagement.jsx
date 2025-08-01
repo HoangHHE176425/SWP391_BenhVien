@@ -17,6 +17,8 @@ import {
 import axios from "axios";
 import moment from "moment";
 import "../../assets/css/AdminPages.css";
+import { Switch } from "antd";
+
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
@@ -32,6 +34,9 @@ function EmployeeManagement() {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
+  const [logDrawerVisible, setLogDrawerVisible] = useState(false);
+  const [employeeLogs, setEmployeeLogs] = useState([]);
+  const [logEmployee, setLogEmployee] = useState(null);
 
   const fetchEmployees = async () => {
     try {
@@ -65,6 +70,10 @@ function EmployeeManagement() {
       message.error("Delete failed");
     }
   };
+  const getDepartmentNameById = (id) => {
+    const found = departments.find(dep => dep._id === id);
+    return found ? found.name || found.departmentCode : id; // fallback là ID nếu không tìm thấy
+  };
 
   const handleEdit = (employee) => {
     setEditingEmployee(employee);
@@ -72,6 +81,18 @@ function EmployeeManagement() {
       ...employee,
       department: employee.department?._id || undefined,
     });
+  };
+  const toggleStatus = async (record) => {
+    try {
+      const updatedStatus = record.status === "active" ? "inactive" : "active";
+      await axios.put(`/api/admin/updEmp/${record._id}`, {
+        status: updatedStatus,
+      });
+      message.success("Trạng thái đã được cập nhật");
+      fetchEmployees(); // cập nhật lại bảng
+    } catch (err) {
+      message.error("Không thể đổi trạng thái");
+    }
   };
 
   const handleEditSubmit = async () => {
@@ -98,16 +119,30 @@ function EmployeeManagement() {
       notification.error({ message: "Create failed" });
     }
   };
+  const fetchEmployeeLogs = async (employee) => {
+    try {
+      const res = await axios.get(`/api/admin/employee-log/${employee._id}`);
+      setEmployeeLogs(res.data);
+      setLogEmployee(employee);
+      setLogDrawerVisible(true);
+    } catch (err) {
+      message.error("Không thể tải lịch sử log");
+    }
+  };
 
   const filteredEmployees = employees.filter((emp) => {
-    const matchName = emp.name.toLowerCase().includes(searchText.toLowerCase());
+    const keyword = searchText.toLowerCase();
+    const matchNameOrCode =
+      emp.name.toLowerCase().includes(keyword) ||
+      emp.employeeCode?.toLowerCase().includes(keyword);
+
     const matchStatus = statusFilter ? emp.status === statusFilter : true;
     const matchRole = roleFilter ? emp.role === roleFilter : true;
     const matchDate = dateRange
       ? new Date(emp.createdAt) >= dateRange[0] &&
         new Date(emp.createdAt) <= dateRange[1]
       : true;
-    return matchName && matchStatus && matchRole && matchDate;
+    return matchNameOrCode && matchStatus && matchRole && matchDate;
   });
 
   return (
@@ -118,7 +153,7 @@ function EmployeeManagement() {
         style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}
       >
         <Input
-          placeholder="Tìm kiếm theo tên"
+          placeholder="Tìm theo tên hoặc mã nhân viên"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
@@ -177,14 +212,14 @@ function EmployeeManagement() {
         dataSource={filteredEmployees}
         columns={[
           {
-            title: "Tên",
-            dataIndex: "name",
+            title: "Mã",
+            dataIndex: "employeeCode",
             render: (text, record) => (
               <Button type="link" onClick={() => setViewingEmployee(record)}>
                 {text}
               </Button>
             ),
-            sorter: (a, b) => a.name.localeCompare(b.name),
+            sorter: (a, b) => a.name.localeCompare(b.employeeCode),
           },
           { title: "Email", dataIndex: "email" },
           { title: "Vai trò", dataIndex: "role" },
@@ -206,12 +241,16 @@ function EmployeeManagement() {
           {
             title: "Hành động",
             render: (_, record) => (
-              <Space>
-                <Button onClick={() => handleEdit(record)}>Chỉnh sửa</Button>
-                <Button danger onClick={() => handleDelete(record._id)}>
-                  Xoá
-                </Button>
-              </Space>
+            <Space>
+              <Button onClick={() => handleEdit(record)}>Chỉnh sửa</Button>
+              <Switch
+                checked={record.status === "active"}
+                checkedChildren="Bật"
+                unCheckedChildren="Tắt"
+                onChange={() => toggleStatus(record)}
+              />
+              <Button type="link" onClick={() => fetchEmployeeLogs(record)}>Xem log</Button>
+            </Space>
             ),
           },
         ]}
@@ -249,9 +288,6 @@ function EmployeeManagement() {
             </Descriptions.Item>
             <Descriptions.Item label="Số điện thoại">
               {viewingEmployee.phone || "—"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ngày tạo">
-              {moment(viewingEmployee.createdAt).format("YYYY-MM-DD HH:mm")}
             </Descriptions.Item>
           </Descriptions>
         )}
@@ -321,53 +357,109 @@ function EmployeeManagement() {
 
       {/* Modal tạo mới */}
       <Modal
-        title="Thêm Nhân Viên Mới"
-        open={createModalVisible}
-        onCancel={() => setCreateModalVisible(false)}
-        onOk={handleCreate}
-        okText="Tạo"
-        destroyOnHidden
-      >
-        <Form form={createForm} layout="vertical">
-          <Form.Item label="Tên" name="name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[{ required: true, type: "email" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Mật khẩu"
-            name="password"
-            rules={[{ required: true }]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
-            <Select>
-          <Option value="Admin">Quản trị viên</Option>
-          <Option value="Receptionist">Lễ tân</Option>
-          <Option value="Doctor">Bác sĩ</Option>
-          <Option value="HRManager">Quản lý nhân viên</Option>
-          <Option value="Pharmacist">Dược sĩ</Option>
-          <Option value="Accountant">Kế toán</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Trạng thái"
-            name="status"
-            rules={[{ required: true }]}
-          >
-            <Select>
-              <Option value="active">Đang hoạt động</Option>
-              <Option value="inactive">Ngưng hoạt động</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+  title="Thêm Nhân Viên Mới"
+  open={createModalVisible}
+  onCancel={() => setCreateModalVisible(false)}
+  onOk={handleCreate}
+  okText="Tạo"
+  destroyOnClose
+>
+  <Form form={createForm} layout="vertical">
+    <Form.Item label="Tên" name="name" rules={[{ required: true }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item label="Mật khẩu" name="password" rules={[{ required: true }]}>
+      <Input.Password />
+    </Form.Item>
+    <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
+      <Select>
+        <Option value="Admin">Quản trị viên</Option>
+        <Option value="Receptionist">Lễ tân</Option>
+        <Option value="Doctor">Bác sĩ</Option>
+        <Option value="HRManager">Quản lý nhân viên</Option>
+        <Option value="Pharmacist">Dược sĩ</Option>
+        <Option value="Accountant">Kế toán</Option>
+      </Select>
+    </Form.Item>
+
+    <Form.Item label="Phòng ban" name="department" rules={[{ required: true }]}>
+      <Select placeholder="Chọn phòng ban">
+        {departments.map((dep) => (
+          <Option key={dep._id} value={dep._id}>
+            {dep.name}
+          </Option>
+        ))}
+      </Select>
+    </Form.Item>
+
+    <Form.Item label="Chuyên môn" name="specialization">
+      <Input placeholder="Nhập chuyên môn (nếu có)" />
+    </Form.Item>
+
+    {/* ✅ Thêm Số điện thoại */}
+    <Form.Item label="Số điện thoại" name="phone">
+      <Input placeholder="Nhập số điện thoại (nếu có)" />
+    </Form.Item>
+
+<Form.Item label="Trạng thái" name="status" initialValue="active">
+  <Select>
+    <Option value="active">Đang hoạt động</Option>
+    <Option value="inactive">Ngưng hoạt động</Option>
+  </Select>
+</Form.Item>
+
+  </Form>
+</Modal>
+
+<Drawer
+  title={`Lịch sử log - ${logEmployee?.name} (${logEmployee?.employeeCode})`}
+  placement="right"
+  onClose={() => setLogDrawerVisible(false)}
+  open={logDrawerVisible}
+  width={500}
+>
+  {employeeLogs.length === 0 ? (
+    <p>Không có log</p>
+  ) : (
+    <ul>
+      {employeeLogs.map((log, index) => (
+        <li key={index} style={{ marginBottom: 12 }}>
+          <p>
+            <strong>Thời gian:</strong> {moment(log.createdAt).format("DD/MM/YYYY HH:mm:ss")}
+          </p>
+          <p><strong>Loại:</strong> {log.actionType}</p>
+                <p>
+        <strong>Người thực hiện:</strong>{" "}
+        {log.actionBy?.name || "—"} ({log.actionBy?.employeeCode || "—"})
+      </p>
+          {log.description && <p><strong>Chi tiết:</strong> {log.description}</p>}
+          {log.changes && (
+            <div>
+              <strong>Thay đổi:</strong>
+              <ul>
+{Object.entries(log.changes).map(([field, val]) => {
+  const from = field === "department" ? getDepartmentNameById(val.from) : val.from;
+  const to = field === "department" ? getDepartmentNameById(val.to) : val.to;
+  return (
+    <li key={field}>
+      {field}: {from} → {to}
+    </li>
+  );
+})}
+
+              </ul>
+            </div>
+          )}
+          <hr />
+        </li>
+      ))}
+    </ul>
+  )}
+</Drawer>
+
     </div>
   );
 }
