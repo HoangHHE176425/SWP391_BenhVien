@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Modal, Button, Table } from "react-bootstrap";
+import { Row, Col, Modal, Button } from "react-bootstrap";
 import axios from "axios";
 import moment from 'moment';
-import "flatpickr/dist/themes/material_green.css";
 import "../../assets/css/AppointmentPage.css";
 
 const OfflineAppointmentPage = () => {
@@ -20,17 +19,15 @@ const OfflineAppointmentPage = () => {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [startWeekDate, setStartWeekDate] = useState(moment().startOf('week').format('YYYY-MM-DD'));
-  const [weekSlots, setWeekSlots] = useState([]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
   const [symptoms, setSymptoms] = useState("");
   const [bhytCode, setBhytCode] = useState("");
+  const [hasBhyt, setHasBhyt] = useState("no"); // Thêm state mới: "yes" hoặc "no" cho BHYT
   const [appointmentType, setAppointmentType] = useState("Offline");
-  const [doctorRoomMapping, setDoctorRoomMapping] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
+  // Các bước đã được tối ưu, bỏ bước datetime
   const steps = [
     { id: "profile", title: "Hồ sơ", desc: "" },
     { id: "department", title: "Chọn khoa", desc: "" },
@@ -78,37 +75,6 @@ const OfflineAppointmentPage = () => {
       setDoctors([]);
     }
   }, [selectedDepartment]);
-
-  // // Lấy lịch bác sĩ
-  // useEffect(() => {
-  //   if (selectedDoctor && startWeekDate) {
-  //     const fetchWeekSlots = async () => {
-  //       try {
-  //         const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`);
-  //         setWeekSlots(res.data.slots || []);
-  //       } catch (err) {
-  //         console.error("[ERROR] Fetch week slots:", err);
-  //         setWeekSlots([]);
-  //         setError("Không tải được lịch bác sĩ.");
-  //       }
-  //     };
-  //     fetchWeekSlots();
-  //   }
-  // }, [selectedDoctor, startWeekDate]);
-
-  // // Lấy mapping phòng - bác sĩ
-  // useEffect(() => {
-  //   const fetchDoctorRoomMapping = async () => {
-  //     try {
-  //       const res = await axios.get("http://localhost:9999/api/apm/doctor-room-mapping");
-  //       setDoctorRoomMapping(res.data.mapping || {});
-  //     } catch (err) {
-  //       console.error("[ERROR] Fetch doctor-room mapping:", err);
-  //       setError("Không tải được mapping phòng - bác sĩ.");
-  //     }
-  //   };
-  //   fetchDoctorRoomMapping();
-  // }, []);
 
   // Kiểm tra CCCD
   const handleCheckCccd = async () => {
@@ -190,20 +156,20 @@ const OfflineAppointmentPage = () => {
     }
   };
 
-  // Tạo lịch hẹn offline
+  // Tạo lịch hẹn offline (timeSlot tự động dựa trên thời gian hiện tại)
   const handleCreateAppointment = async () => {
     setLoading(true);
     setError(null);
 
-    if (!profileId || !selectedDoctor || !selectedDepartment || !selectedSlot) {
+    if (!profileId || !selectedDoctor || !selectedDepartment) {
       setError("Vui lòng chọn đầy đủ thông tin.");
       setLoading(false);
       return;
     }
 
-    const room = doctorRoomMapping[selectedDoctor];
-    if (!room) {
-      setError("Không tìm thấy phòng ứng với bác sĩ này.");
+    // Validation cho BHYT: Nếu chọn "Có" nhưng không nhập mã
+    if (hasBhyt === "yes" && (!bhytCode || !bhytCode.trim())) {
+      setError("Vui lòng nhập mã BHYT nếu bạn có.");
       setLoading(false);
       return;
     }
@@ -211,12 +177,14 @@ const OfflineAppointmentPage = () => {
     try {
       const now = moment();
       const startTime = now.startOf('minute').toISOString();
-      const endTime = now.add(30, 'minutes').toISOString();
+      const endTime = now.clone().add(30, 'minutes').toISOString(); // Sử dụng clone() để tránh mutate now
 
-      // Nếu dùng trực tiếp:
+      // Chuẩn hóa bhytCode dựa trên lựa chọn
+      const normalizedBhytCode = hasBhyt === "yes" ? (bhytCode.trim() || null) : null;
+
       await axios.post("http://localhost:9999/api/user/create-offline", {
         profileId,
-        doctorId,
+        doctorId: selectedDoctor,
         department: selectedDepartment,
         appointmentDate: now.toISOString(),
         timeSlot: {
@@ -225,17 +193,16 @@ const OfflineAppointmentPage = () => {
           status: "Booked"
         },
         symptoms: symptoms || "Không có triệu chứng",
-        bhytCode: bhytCode || "",
+        bhytCode: normalizedBhytCode,
         type: appointmentType,
         status: "confirmed",
-        room
       });
 
       setSuccess(true);
       setStep("confirm");
     } catch (err) {
       console.error("[ERROR] Create appointment:", err.response?.data || err);
-      setError("Đặt lịch thất bại.");
+      setError("Đặt lịch thất bại: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -403,95 +370,6 @@ const OfflineAppointmentPage = () => {
           </div>
         );
 
-      // case "datetime":
-      //   const defaultStartDate = startWeekDate || moment().isoWeekday(1).format('YYYY-MM-DD');
-
-      //   return (
-      //     <div className="p-4 bg-white rounded shadow-sm">
-      //       <h3 className="text-primary fw-bold mb-4">Chọn Ngày và Giờ</h3>
-      //       <div className="mb-3">
-      //         <label className="form-label">Chọn ngày bắt đầu (từ thứ 2)</label>
-      //         <input
-      //           type="date"
-      //           className="form-control"
-      //           value={defaultStartDate}
-      //           onChange={(e) => {
-      //             const selectedDate = moment(e.target.value);
-      //             if (selectedDate.isoWeekday() !== 1) {
-      //               setError("Vui lòng chọn ngày thứ 2 để hiển thị tuần.");
-      //             } else {
-      //               setError(null);
-      //               setStartWeekDate(selectedDate.format('YYYY-MM-DD'));
-      //             }
-      //           }}
-      //           min={moment().isoWeekday(1).format('YYYY-MM-DD')}
-      //         />
-      //       </div>
-      //       {weekSlots.length === 0 ? (
-      //         <p className="text-muted">Không có slot khả dụng cho ngày đã chọn.</p>
-      //       ) : (
-      //         <Table striped bordered hover className="custom-slot-table">
-      //           <thead>
-      //             <tr>
-      //               {Array.from({ length: 7 }).map((_, dayIdx) => {
-      //                 const dayDate = moment(defaultStartDate).add(dayIdx, 'days');
-      //                 const dayFormatted = dayDate.isoWeekday() >= 1 && dayDate.isoWeekday() <= 7
-      //                   ? dayDate.format('dddd (DD/MM/YYYY)')
-      //                   : null;
-      //                 return (
-      //                   <th key={dayIdx} className="text-center bg-primary text-white">
-      //                     {dayFormatted || "Không hiển thị"}
-      //                   </th>
-      //                 );
-      //               })}
-      //             </tr>
-      //           </thead>
-      //           <tbody>
-      //             <tr>
-      //               {Array.from({ length: 7 }).map((_, dayIdx) => {
-      //                 const dayDate = moment(defaultStartDate).add(dayIdx, 'days').format('YYYY-MM-DD');
-      //                 const daySlots = weekSlots
-      //                   .filter(slot => moment(slot.date).format('YYYY-MM-DD') === dayDate)
-      //                   .filter(slot => slot.status === "Available");
-      //                 return (
-      //                   <td key={dayIdx} className="align-middle">
-      //                     {daySlots.length === 0 ? (
-      //                       <p className="text-muted text-center">Không có slot khả dụng</p>
-      //                     ) : (
-      //                       daySlots.map((slot, slotIdx) => (
-      //                         <div key={slotIdx} className="form-check mb-2">
-      //                           <input
-      //                             type="radio"
-      //                             className="form-check-input"
-      //                             checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
-      //                             onChange={() => setSelectedSlot(slot)}
-      //                             disabled={slot.status !== "Available"}
-      //                           />
-      //                           <label className="form-check-label">
-      //                             {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
-      //                           </label>
-      //                         </div>
-      //                       ))
-      //                     )}
-      //                   </td>
-      //                 );
-      //               })}
-      //             </tr>
-      //           </tbody>
-      //         </Table>
-      //       )}
-      //       {error && <div className="alert alert-danger mt-3">{error}</div>}
-      //       <div className="d-flex justify-content-between mt-4">
-      //         <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
-      //           Quay Lại
-      //         </button>
-      //         <button className="btn btn-primary" onClick={() => setStep("details")} disabled={!selectedSlot}>
-      //           Tiếp Theo
-      //         </button>
-      //       </div>
-      //     </div>
-      //   );
-
       case "details":
         return (
           <div className="p-4 bg-white rounded shadow-sm">
@@ -508,7 +386,7 @@ const OfflineAppointmentPage = () => {
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label">Triệu chứng (không bắt buộc)</label>
+              <label className="form-label">Triệu chứng</label>
               <textarea
                 className="form-control"
                 value={symptoms}
@@ -517,24 +395,57 @@ const OfflineAppointmentPage = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Mã BHYT (không bắt buộc)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={bhytCode}
-                onChange={(e) => setBhytCode(e.target.value)}
-                placeholder="Nhập mã BHYT (nếu có)"
-              />
+              <label className="form-label">Bạn có BHYT không?</label>
+              <div className="d-flex">
+                <div className="form-check me-3">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="hasBhyt"
+                    id="hasBhytYes"
+                    value="yes"
+                    checked={hasBhyt === "yes"}
+                    onChange={(e) => {
+                      setHasBhyt(e.target.value);
+                      if (e.target.value === "no") setBhytCode(""); // Xóa mã nếu chọn Không
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="hasBhytYes">
+                    Có
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="hasBhyt"
+                    id="hasBhytNo"
+                    value="no"
+                    checked={hasBhyt === "no"}
+                    onChange={(e) => {
+                      setHasBhyt(e.target.value);
+                      setBhytCode(""); // Xóa mã nếu chọn Không
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="hasBhytNo">
+                    Không
+                  </label>
+                </div>
+              </div>
             </div>
-            <div className="mb-3">
-              <label className="form-label">Phòng khám</label>
-              <input
-                type="text"
-                className="form-control"
-                value={doctorRoomMapping[selectedDoctor] || "Chưa gán phòng"}
-                disabled
-              />
-            </div>
+            {hasBhyt === "yes" && (
+              <div className="mb-3">
+                <label className="form-label">Mã BHYT</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={bhytCode}
+                  onChange={(e) => setBhytCode(e.target.value)}
+                  placeholder="Nhập mã BHYT"
+                  required // Bắt buộc nếu chọn Có
+                />
+              </div>
+            )}
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             <div className="d-flex justify-content-between mt-4">
               <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
@@ -557,7 +468,7 @@ const OfflineAppointmentPage = () => {
               <button className="btn btn-primary" onClick={() => setStep("profile")}>
                 Đặt Thêm Lịch
               </button>
-              <button className="btn btn-outline-secondary" onClick={() => navigate("/appointment-schedule-management")}>
+              <button className="btn btn-outline-secondary" onClick={() => navigate("/appointments")}>
                 Quản lý Lịch
               </button>
             </div>
