@@ -205,6 +205,21 @@ setSchedules(sortedSchedules);
     fetchEmployeesByDepartment(value);
   };
   
+  const markAsOnLeave = async (scheduleId) => {
+    try {
+      await axios.post(`/api/receptionist/attendance/on-leave`, { scheduleId });
+
+      message.success("Đã cập nhật trạng thái nghỉ phép");
+      if (selectedEmployeeForLogs) {
+        fetchSchedules(selectedEmployeeForLogs._id);
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Không thể cập nhật trạng thái nghỉ phép");
+    }
+  };
+
+
   const handleAutoGenerateSchedule = async (values) => {
     const { department, employeeId, workingShifts, dateRange } = values;
     const [startDateRaw, endDateRaw] = dateRange;
@@ -433,7 +448,9 @@ setSchedules(sortedSchedules);
             onChange={() => toggleOverallStatus(record)}
           />
           <Button type="link" onClick={() => fetchScheduleLogs(record)}>Xem log</Button>
-          {/* <Button type="link" danger onClick={() => handleDelete(record._id)}>Xóa</Button> */}
+          <Button type="link" danger onClick={() => markAsOnLeave(record._id)}>
+            Nghỉ phép
+          </Button>
         </Space>
       )
     }
