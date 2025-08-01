@@ -85,6 +85,7 @@ import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
 import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
 import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
 import MedicineManagement from "./pages/pharmacist/MedicineManagement.jsx";
+import TransactionHistory from "./pages/pharmacist/TransactionHistory.jsx";
 import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
 import SendApplication from "./pages/doctor/SendApplication.jsx";
 import SendApplicationManager from "./pages/hrmanager/sendApplicationManager.jsx";
@@ -354,6 +355,7 @@ const AppRoutes = () => {
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<PharmacistAttendance />} />
             <Route path="medicines" element={<MedicineManagement />} />
+            <Route path="transactions" element={<TransactionHistory />} />
           </Route>
 
           {/* HR Manager Routes */}

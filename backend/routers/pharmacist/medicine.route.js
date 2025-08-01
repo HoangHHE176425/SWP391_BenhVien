@@ -8,5 +8,6 @@ router.get('/medicines/:id', medicineService.getMedicineById);
 router.put('/medicines/:id', medicineService.updateMedicine);
 router.put('/medicines/:id/disable', medicineService.disableMedicine);
 router.post('/transactions', medicineService.processPharmacyTransaction);
+router.get('/transactions', medicineService.getTransactionHistory);
 
 module.exports = router;

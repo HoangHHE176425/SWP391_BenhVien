@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
-const PharmacyTransactionModal = ({ show, onHide, medicines, onSubmit }) => {
+const PharmacyTransactionModal = ({ show, onHide, medicines, patients = [], onSubmit }) => {
     const [transactionItems, setTransactionItems] = useState([{ medicineId: "", quantity: "" }]);
     const [patientId, setPatientId] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("cash");
+    const [paymentMethod, setPaymentMethod] = useState("tien mat");
     const [error, setError] = useState(null);
 
     const handleAddTransactionItem = () => {
@@ -23,7 +23,7 @@ const PharmacyTransactionModal = ({ show, onHide, medicines, onSubmit }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!patientId || transactionItems.some(item => !item.medicineId || !item.quantity || item.quantity <= 0)) {
+        if (patientId !== "not_a_patient" && (!patientId || transactionItems.some(item => !item.medicineId || !item.quantity || item.quantity <= 0))) {
             setError("Vui lòng điền đầy đủ thông tin bệnh nhân và các mục thuốc.");
             return;
         }
@@ -48,13 +48,14 @@ const PharmacyTransactionModal = ({ show, onHide, medicines, onSubmit }) => {
                 <Modal.Body>
                     {error && <div className="alert alert-danger">{error}</div>}
                     <div className="mb-3">
-                        <Form.Label>Mã bệnh nhân</Form.Label>
-                        <Form.Control
-                            type="text"
+                        <Form.Label>Bệnh nhân</Form.Label>
+                        <Form.Select
                             value={patientId}
                             onChange={(e) => setPatientId(e.target.value)}
-                            required
-                        />
+                        >
+                            <option value="">Chọn bệnh nhân</option>
+                            <option value="not_a_patient">Không phải bệnh nhân</option>
+                        </Form.Select>
                     </div>
                     <div className="mb-3">
                         <Form.Label>Phương thức thanh toán</Form.Label>
@@ -63,7 +64,6 @@ const PharmacyTransactionModal = ({ show, onHide, medicines, onSubmit }) => {
                             onChange={(e) => setPaymentMethod(e.target.value)}
                         >
                             <option value="cash">Tiền mặt</option>
-                            <option value="insurance">Bảo hiểm</option>
                             <option value="online">Trực tuyến</option>
                         </Form.Select>
                     </div>
