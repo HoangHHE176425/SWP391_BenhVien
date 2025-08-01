@@ -14,7 +14,7 @@ const prescriptionSchema = new mongoose.Schema({
         }
     ],
 
-    status: { type: String, enum: ['pending', 'processed', 'cancelled'], default: 'pending' },
+    status: { type: String, enum: ['confirmed', 'sold'], default: 'confirmed' }, // khi doctor tạo đơn thành công (biết là đã đủ số lượng rồi -> )
     createdAt: { type: Date, default: Date.now }
 });
 
