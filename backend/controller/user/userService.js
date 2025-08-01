@@ -224,69 +224,50 @@ const createOfflineAppointment = async (req, res) => {
     return res.status(400).json({ message: "doctorId không hợp lệ." });
   }
 
-  // Chuẩn hóa ngày appointmentDate để tìm lịch
+  // Chuẩn hóa ngày appointmentDate
   const appointmentDateObj = new Date(appointmentDate);
   if (isNaN(appointmentDateObj.getTime())) {
     return res.status(400).json({ message: "appointmentDate không hợp lệ." });
   }
 
-  const y = appointmentDateObj.getFullYear();
-  const m = appointmentDateObj.getMonth();
-  const d = appointmentDateObj.getDate();
+  // Chuẩn hóa bhytCode: Nếu rỗng hoặc undefined, lưu là null
+  const normalizedBhytCode = bhytCode && bhytCode.trim() ? bhytCode.trim() : null;
 
-  const startOfDay = new Date(y, m, d, 0, 0, 0, 0);
-  const endOfDay = new Date(y, m, d, 23, 59, 59, 999);
-
-  // Tìm lịch bác sĩ theo ngày
-  const doctorSchedule = await Schedule.findOne({
-    employeeId: new mongoose.Types.ObjectId(doctorId),
-    date: { $gte: startOfDay, $lte: endOfDay }
-  });
-
-  if (!doctorSchedule) {
-    return res.status(404).json({ message: "Không tìm thấy lịch làm việc của bác sĩ trong ngày này." });
+  // (Tùy chọn) Validation định dạng mã BHYT nếu có giá trị
+  if (normalizedBhytCode) {
+    const bhytCodeRegex = /^[A-Z]{2}\d{13}$/; // Ví dụ: định dạng mã BHYT Việt Nam (2 chữ + 13 số)
+    if (!bhytCodeRegex.test(normalizedBhytCode)) {
+      return res.status(400).json({ message: "Mã BHYT không đúng định dạng (2 chữ cái + 13 số)." });
+    }
   }
 
-  // Tìm timeSlot khớp
-  const selectedSlot = doctorSchedule.timeSlots.find(slot =>
-    new Date(slot.startTime).getTime() === new Date(timeSlot.startTime).getTime() &&
-    new Date(slot.endTime).getTime() === new Date(timeSlot.endTime).getTime()
-  );
+  // Tạo cuộc hẹn mới
+  try {
+    const newAppointment = new Appointment({
+      userId: null,
+      profileId,
+      doctorId,
+      department,
+      appointmentDate: appointmentDateObj,
+      type,
+      timeSlot: {
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+        status: "Booked",
+      },
+      symptoms,
+      bhytCode: normalizedBhytCode,
+      reminderSent: false,
+      createdBy: null,
+      room: type === 'Offline' ? room : null
+    });
 
-  if (!selectedSlot) {
-    return res.status(400).json({ message: "Không tìm thấy timeSlot phù hợp trong lịch bác sĩ." });
+    await newAppointment.save();
+    return res.status(201).json({ message: "Tạo lịch hẹn thành công", appointment: newAppointment });
+  } catch (err) {
+    console.error("Lỗi khi tạo lịch hẹn:", err);
+    return res.status(500).json({ message: "Lỗi server khi tạo lịch hẹn", error: err.message });
   }
-
-  if (selectedSlot.status === 'Booked') {
-    return res.status(400).json({ message: "Khung giờ đã được đặt. Vui lòng chọn thời gian khác." });
-  }
-
-  // Đánh dấu đã đặt và lưu lại lịch
-  selectedSlot.status = 'Booked';
-  await doctorSchedule.save();
-
-  // Tạo cuộc hẹn
-  const newAppointment = new Appointment({
-    userId: null,
-    profileId,
-    doctorId,
-    department,
-    appointmentDate: appointmentDateObj,
-    type,
-    timeSlot: {
-      startTime: timeSlot.startTime,
-      endTime: timeSlot.endTime,
-      status: "Booked",
-    },
-    symptoms,
-    bhytCode,
-    reminderSent: false,
-    createdBy: null,
-    room: type === 'Offline' ? room : null
-  });
-
-  await newAppointment.save();
-  return res.status(201).json({ message: "Tạo lịch hẹn thành công", appointment: newAppointment });
 };
 
 // Hiển thị toàn bộ danh sách đặt lịch của chính người dùng
