@@ -3,6 +3,7 @@ const Schedule = require('../../models/Schedule');
 const Department = require('../../models/Department');
 const Employee = require('../../models/Employee');
 const ScheduleLog = require('../../models/ScheduleLog');
+const Attendance = require('../../models/Attendance');
 
 // CRUD Schedule
 exports.createSchedule = async (req, res) => {
@@ -290,6 +291,35 @@ exports.getAllEmployees = async (req, res) => {
     res.status(200).json(employees);
   } catch (error) {
     console.error("❌ Error fetching employees:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.getAllAttendances = async (req, res) => {
+  try {
+    const attendances = await Attendance.find()
+      .populate('employeeId', 'name employeeCode')
+      .populate('scheduleId')
+      .populate('department', 'name')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(attendances);
+  } catch (error) {
+    console.error("❌ Error fetching all attendances:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAttendancesBySchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const attendances = await Attendance.find({ scheduleId: id })
+      .populate('employeeId', 'name employeeCode')
+      .populate('department', 'name');
+
+    res.status(200).json(attendances);
+  } catch (error) {
+    console.error("❌ Error fetching attendances by schedule:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
