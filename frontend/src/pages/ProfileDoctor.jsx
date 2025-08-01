@@ -13,9 +13,8 @@ const ProfileDoctor = () => {
     department: user?.department || "",
     specialization: user?.specialization || "",
   });
-  const [profilePicture, setProfilePicture] = useState(
-    user?.profilePicture || null
-  );
+  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +34,7 @@ const ProfileDoctor = () => {
       department: user?.department || "",
       specialization: user?.specialization || "",
     });
-    setProfilePicture(user?.profilePicture || null);
+    setProfilePicture(user?.avatar || null);
   }, [user]);
 
   useEffect(() => {
@@ -110,7 +109,7 @@ const ProfileDoctor = () => {
         name: formData.fullname,
         phone: formData.phone,
         status: "active",
-        profilePicture: updatedProfilePicture,
+        avatar: updatedProfilePicture,
       };
 
       // Chỉ thêm nếu có giá trị thực sự
