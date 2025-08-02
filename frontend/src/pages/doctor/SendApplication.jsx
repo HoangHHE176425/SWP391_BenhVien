@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Button, Input, Select, message, Typography, Card, Table, Tag } from "antd";
+import { Button, Input, Select, message, Typography, Card, Table, Tag, DatePicker } from "antd";
 import axios from "axios";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -236,6 +237,25 @@ ${name}`,
   },
 };
 
+const templateTypeLabels = {
+  leave: "Đơn xin nghỉ phép",
+  "urgent-leave": "Đơn xin nghỉ đột xuất",
+  "shift-change": "Đơn xin đổi ca trực",
+  overtime: "Đơn xin tăng ca",
+  "equipment-request": "Đơn đề nghị cấp vật tư y tế",
+  "medical-suggestion": "Đơn đề xuất chuyên môn",
+  complaint: "Đơn phản ánh nội bộ",
+  "work-confirmation": "Đơn xin xác nhận công tác",
+  "salary-confirmation": "Đơn xin xác nhận lương",
+  other: "Khác",
+  "low-stock-notification": "Thông báo thuốc sắp hết",
+  "incident-report": "Báo cáo sự cố y khoa",
+  "schedule-adjustment": "Yêu cầu điều chỉnh lịch trực",
+  "uniform-request": "Đề nghị cấp phát đồng phục",
+  "advance-request": "Đơn xin tạm ứng",
+  "supply-inventory-request": "Đề nghị kiểm kê vật tư",
+};
+
 const SendApplication = () => {
   const [view, setView] = useState("list"); // "list" or "form"
   const [templateType, setTemplateType] = useState("other");
@@ -244,7 +264,10 @@ const SendApplication = () => {
   const [fieldValues, setFieldValues] = useState([]);
   const [employeeInfo, setEmployeeInfo] = useState({ name: "", department: "" });
   const [applications, setApplications] = useState([]);
+  const [filteredApplications, setFilteredApplications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedDate, setSelectedDate] = useState(null);
 
   // Fetch employee info and applications
   useEffect(() => {
@@ -279,6 +302,7 @@ const SendApplication = () => {
 
         const res = await axios.get(`/api/applications/sender/${user._id}`);
         setApplications(res.data);
+        setFilteredApplications(res.data); // Initialize filteredApplications
       } catch (error) {
         console.error("❌ Lỗi khi tải danh sách đơn:", error);
         message.error("Không thể tải danh sách đơn.");
@@ -293,29 +317,53 @@ const SendApplication = () => {
     }
   }, [view]);
 
+  // Apply filters when statusFilter or selectedDate changes
+  useEffect(() => {
+    let filtered = applications;
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((app) => app.status === statusFilter);
+    }
+
+    // Filter by selected date
+    if (selectedDate) {
+      const selected = dayjs(selectedDate).startOf('day');
+      filtered = filtered.filter((app) => {
+        const createdAt = dayjs(app.createdAt);
+        return createdAt.isSame(selected, 'day');
+      });
+    }
+
+    setFilteredApplications(filtered);
+  }, [applications, statusFilter, selectedDate]);
+
   const handleTemplateChange = (value) => {
     setTemplateType(value);
     const selected = templates[value];
     if (selected && value !== "other") {
       setSubject(selected.subject || "");
       setFieldValues(new Array(selected.fields.length).fill(""));
+      setContent(selected.content(employeeInfo.name, employeeInfo.department, []));
     } else {
       setSubject("");
       setFieldValues([]);
+      setContent("");
     }
-    setContent(""); // reset content để user nhập tay
   };
 
   const handleFieldChange = (index, value) => {
     const newFieldValues = [...fieldValues];
     newFieldValues[index] = value;
     setFieldValues(newFieldValues);
+    if (templateType !== "other") {
+      setContent(templates[templateType].content(employeeInfo.name, employeeInfo.department, newFieldValues));
+    }
   };
 
   const handleContentChange = (e) => {
     setContent(e.target.value);
   };
-
 
   const handleSubmit = async () => {
     if (!subject || !content) {
@@ -348,6 +396,20 @@ const SendApplication = () => {
     }
   };
 
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+  };
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
+  const handleResetFilters = () => {
+    setStatusFilter("all");
+    setSelectedDate(null);
+    setFilteredApplications(applications);
+  };
+
   // Table columns for displaying applications
   const columns = [
     {
@@ -359,7 +421,7 @@ const SendApplication = () => {
       title: "Loại đơn",
       dataIndex: "templateType",
       key: "templateType",
-      render: (type) => type || "Khác",
+      render: (type) => templateTypeLabels[type] || "Khác",
     },
     {
       title: "Trạng thái",
@@ -370,7 +432,7 @@ const SendApplication = () => {
         if (status === "approved") color = "green";
         if (status === "rejected") color = "red";
         if (status === "processing") color = "orange";
-        return <Tag color={color}>{status || "pending"}</Tag>;
+        return <Tag color={color}>{status.toUpperCase()}</Tag>;
       },
     },
     {
@@ -397,9 +459,36 @@ const SendApplication = () => {
               Tạo Đơn Mới
             </Button>
           </div>
+          <div style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center" }}>
+            <div>
+              <Text strong>Lọc theo trạng thái:</Text>
+              <Select
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                style={{ width: 200, marginLeft: 8 }}
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="pending">Chờ duyệt</Option>
+                <Option value="processing">Đang xử lý</Option>
+                <Option value="approved">Đã duyệt</Option>
+                <Option value="rejected">Từ chối</Option>
+              </Select>
+            </div>
+            <div>
+              <Text strong>Lọc theo ngày gửi:</Text>
+              <DatePicker
+                value={selectedDate}
+                onChange={handleDateChange}
+                format="DD/MM/YYYY"
+                style={{ marginLeft: 8 }}
+                placeholder="Chọn ngày"
+              />
+            </div>
+            <Button onClick={handleResetFilters}>Xóa bộ lọc</Button>
+          </div>
           <Table
             columns={columns}
-            dataSource={applications}
+            dataSource={filteredApplications}
             rowKey="_id"
             loading={loading}
             pagination={{ pageSize: 10 }}
@@ -479,7 +568,7 @@ const SendApplication = () => {
             <div style={{ marginBottom: 30 }}>
               <Text strong>Chi tiết</Text>
               <Input.TextArea
-                placeholder={templateType === "other" ? "Nhập nội dung chi tiết" : ""}
+                placeholder={templateType === "other" ? "Nhập nội dung chi tiết" : "Nhập chi tiết bổ sung (tùy chọn)"}
                 value={content}
                 onChange={handleContentChange}
                 rows={6}
