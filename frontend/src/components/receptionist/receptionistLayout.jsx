@@ -33,6 +33,7 @@ const ReceptionistLayout = () => {
     { key: "2", path: "/receptionist/services", icon: <AppstoreOutlined />, label: "Quản Lý Dịch Vụ" },
     { key: "3", path: "/receptionist/departments", icon: <AppstoreOutlined />, label: "Quản Lý Khoa" },
     { key: "6", path: "/receptionist/appointments", icon: <CalendarOutlined />, label: "Lịch Hẹn" },
+    { key: "19", path: "/receptionist/queue", icon: <CalendarOutlined />, label: "Danh Sách Phòng Khám" },
     { key: "7", path: "/receptionist/notifications", icon: <BellOutlined />, label: "Quản Lý Thông Báo" },
     { key: "8", path: "/receptionist/users", icon: <UserOutlined />, label: "Quản Lý Người Dùng" },
     { key: "9", path: "/receptionist/medicalrecord", icon: <FileTextOutlined />, label: "Hồ Sơ Y Tế" },

@@ -38,9 +38,11 @@ import Changepass from "./pages/ChangePassword";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import SendQAForm from "./pages/sendQA";
+// import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import AccountManagement from "./pages/admin/AccountManagement";
 import EmployeeManagement from "./pages/admin/EmployessManagement";
+// import StaffLayout from "./components/staff/StaffLayout";
 import InvoiceUser from "./pages/InvoiceManagement";
 import BlogManagement from "./pages/receptionist/BlogManagement";
 import CategoryManagement from "./pages/receptionist/CategoryBlogManagement";
@@ -59,6 +61,18 @@ import MedicalRecord from "./pages/receptionist/MedicalRecord";
 import MedicineManagement from "./pages/receptionist/MedicineManagement";
 import NotificationCenter from "./pages/NotificationCenter";
 import NotificationDetail from "./pages/NotificationDetail";
+import OfflineAppointmentPage from "./pages/receptionist/OfflineAppointmentPage";
+import QueueManagementPage from "./pages/receptionist/QueueManagement.jsx";
+// import {
+//   PrivateRoute,
+//   PrivateRouteNotAllowUser,
+//   PrivateRouteByRole,
+// } from "./components/PrivateRoute";
+import "antd/dist/reset.css";
+// import AddMedicalRecord from "./components/AddMedicalRecord";
+// import ViewMedicalRecords from "./components/ViewMedicalRecord";
+// import CreateServicePage from "./components/staff/CreateServicePage";
+// import EditServicePage from "./components/staff/EditService";
 import HealthCalculatorPage from "./pages/HealthCalculatorPage";
 import BlogListPage from "./pages/BlogListPage";
 import NewsListPage from "./pages/NewsListPage";
@@ -76,6 +90,7 @@ import DepartmentDetail from "./pages/DepartmentDetail.jsx";
 import QAHistories from "./pages/QAHistories";
 import ProfileReceptionist from "./pages/receptionist/Profilereceptionist";
 import ProfileDoctor from "./pages/ProfileDoctor";
+// them FAQ
 import FAQList from "./pages/FAQ.jsx";
 import NutritionAdvice from "./pages/NutritionAdvice.jsx";
 import AppointmentSuccess from "./components/AppointmentSuccess.jsx";
@@ -84,6 +99,7 @@ import LabTestPage from "./pages/LabTestPage.jsx";
 import DoctorAppointments from "./pages/DoctorAppointment.jsx";
 import CreateInvoice2 from "./components/receptionist/CreateInvoiceTest.jsx";
 import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
+import FeedbackList from "./pages/ListFeedback.jsx";
 import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
 import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
 import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
@@ -113,23 +129,17 @@ import "antd/dist/reset.css";
 
 const DRAWER_WIDTH = 240;
 
-// RoleRedirect component to handle role-based redirection
+// Redirect logic based on role and current path
 const RoleRedirect = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    const role = (user?.role || "Patient").toLowerCase();
+    const role = user?.role || "patient";
     const path = location.pathname;
 
-    if (!user) {
-      // If no user, redirect to login unless already on login/register
-      if (!["/login", "/register", "/forgot-password", "/reset-password"].includes(path)) {
-        navigate("/login", { replace: true });
-      }
-      return;
-    }
+    if (!user) return;
 
     // Role-to-path mapping for redirection
     const roleToPath = {
@@ -145,7 +155,10 @@ const RoleRedirect = () => {
 
     // Redirect from root path "/"
     if (path === "/") {
-      navigate(roleToPath[role] || "/home", { replace: true });
+      if (role === "Admin") navigate("/admin", { replace: true });
+      else if (role === "Staff") navigate("/staff", { replace: true });
+      else if (role === "Doctor") navigate("/doctor", { replace: true });
+      else navigate("/home", { replace: true });
       return;
     }
 
@@ -223,7 +236,7 @@ const RoleRedirect = () => {
   return null;
 };
 
-// Main AppRoutes component
+// Main routes + layout
 const AppRoutes = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState("patient");
@@ -235,6 +248,7 @@ const AppRoutes = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const userRole = storedUser?.role?.toLowerCase() || "patient";
+
     setUser(storedUser);
     setRole(userRole);
   }, [location.pathname]);
@@ -262,27 +276,24 @@ const AppRoutes = () => {
         <RoleRedirect />
 
         <Routes>
-          {/* Doctor Routes */}
-          <Route
-            path="/doctor/*"
-            element={
-              <PrivateRouteByRole allowedRoles={["Doctor"]}>
-                <DoctorLayout />
-              </PrivateRouteByRole>
-            }
-          >
-            <Route index element={<DoctorAppointments />} />
+          <Route path="/doctor" element={<DoctorLayout />}>
             <Route path="medical-profile" element={<UserMedicalProfile />} />
             <Route path="medicine" element={<MedicinePage />} />
-            <Route path="appointments" element={<DoctorAppointments />} />
-            <Route path="notifications" element={<NotificationCenter />} />
-            <Route path="attendance" element={<DoctorAttendance />} />
-            <Route path="labtest" element={<LabTestPage />} />
+            <Route
+              path="appointments"
+              element={<DoctorAppointments/>}
+            />
+            <Route
+              path="notifications"
+              element={<div>Notifications Page</div>}
+            />
+            <Route path="/doctor/attendance" element={<DoctorAttendance />} />
+            <Route path="/doctor/labtest" element={<LabTestPage />} />
             <Route path="work-schedule" element={<WorkSchedulePage />} />
-            <Route path="profile" element={<ProfileDoctor />} />
           </Route>
 
-          {/* Admin Routes */}
+          <Route path="/" element={<HomePage />} />
+          {/* Admin Layout Routes */}
           <Route
             path="/admin/*"
             element={
@@ -310,7 +321,7 @@ const AppRoutes = () => {
             <Route index element={<BlogManagement />} />
             <Route path="blogs" element={<BlogManagement />} />
             <Route path="category-management" element={<CategoryManagement />} />
-            <Route path="invoices/create" element={<CreateInvoice2 />} />
+            <Route path="invoices/create" element={<CreateInvoice2/>}></Route>
             <Route path="services" element={<ServiceManagement />} />
             <Route path="services/create" element={<CreateServicePage />} />
             <Route path="services/edit/:id" element={<EditServicePage />} />
@@ -320,10 +331,17 @@ const AppRoutes = () => {
             <Route path="payments" element={<PaymentView />} />
             <Route path="news" element={<NewsManagement />} />
             <Route path="add/medicalrecords" element={<AddMedicalRecord />} />
-            <Route path="view/medicalrecords" element={<ViewMedicalRecords />} />
+            <Route
+              path="view/medicalrecords"
+              element={<ViewMedicalRecords />}
+            />
+
             <Route path="feedback" element={<FeedbackManagement />} />
             <Route path="qna" element={<QnAView />} />
-            <Route path="appointments" element={<AppointmentScheduleManagement />} />
+            <Route
+              path="appointments"
+              element={<AppointmentScheduleManagement />}
+            />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="medicalrecord" element={<MedicalRecord />} />
@@ -331,6 +349,8 @@ const AppRoutes = () => {
             <Route path="schedule" element={<ReceptionistScheduleManager />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<ReceptionistAttendance />} />
+            <Route path="offline-appointment" element={<OfflineAppointmentPage />} />
+            <Route path="queue" element={<QueueManagementPage/>} />
           </Route>
 
           {/* Pharmacist Routes */}
@@ -411,26 +431,34 @@ const AppRoutes = () => {
           <Route path="/not-found" element={<NotFoundPage />} />
           <Route path="/doctor/:doctorId" element={<DoctorDetail />} />
           <Route path="/medicines/:medicineId" element={<MedicineDetail />} />
-          <Route path="/service/:serviceId" element={<ServiceDetail />} />
+          <Route path="service/:serviceId" element={<ServiceDetail />} />
           <Route path="/department/:departmentId" element={<DepartmentDetail />} />
           <Route path="/myappointments" element={<ListAppointmentPage />} />
+          <Route path="/listfeedback" element={<FeedbackList />} />
+
+
+          {/* <Route path="/medicalrecord" element={<AddMedicalRecord />} />
+          <Route path="/medicalrecords" element={<ViewMedicalRecords />} /> */}
           <Route path="/payment" element={<InvoiceList />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/fail" element={<PaymentFail />} />
+          {/* <Route path="/labtests" element={<LabtestResult />} /> */}
           <Route path="/health/calculator" element={<HealthCalculatorPage />} />
+
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+
           <Route path="/changepass" element={<Changepass />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/notifications" element={<NotificationCenter />} />
           <Route path="/notifications/:id" element={<NotificationDetail />} />
           <Route path="/health/food" element={<NutritionAdvice />} />
           <Route path="/qahistory" element={<QAHistories />} />
           <Route path="/qa" element={<SendQAForm />} />
-          <Route path="/faq" element={<FAQList />} />
-          <Route path="/labtest" element={<LabTestPage />} />
-          <Route path="/test/:testId" element={<TestPageDetails />} />
+          <Route path="/faq" element={<FAQList />} /> {/*them FAQ cho user xem*/}
 
-          {/* Protected Routes */}
+          {/* Protected routes */}
           <Route
             path="/appointment"
             element={
@@ -455,9 +483,6 @@ const AppRoutes = () => {
               </PrivateRoute>
             }
           />
-
-          {/* Catch-all Route for 404 */}
-          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
 
@@ -466,7 +491,7 @@ const AppRoutes = () => {
   );
 };
 
-// Root App component
+// Root App component that wraps with <Router>
 const App = () => {
   return (
     <Router>

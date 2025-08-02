@@ -36,4 +36,6 @@ const recordsSchema = new mongoose.Schema({
   updatedAt: { type: Date, required: true, index: true },
 });
 
+recordsSchema.index({ appointmentId: 1 }); // SỬA: Thêm index để query nhanh theo appointment
+
 module.exports = mongoose.model('Records', recordsSchema);

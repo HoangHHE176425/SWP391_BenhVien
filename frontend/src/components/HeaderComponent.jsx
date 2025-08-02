@@ -17,6 +17,7 @@ import {
   BellOutlined,
   ApartmentOutlined,
   CustomerServiceOutlined,
+  CommentOutlined,
 } from "@ant-design/icons";
 import "../assets/css/Header.css";
 import MenuComponent from "./MenuComponent";
@@ -114,6 +115,9 @@ const Header = ({ onMenuClick, menuOpen }) => {
           </Link>
           <Link to="/medicines-home" className="header-link">
             <MedicineBoxOutlined /> <span>Thuốc</span>
+          </Link>
+          <Link to="/listfeedback" className="header-link">
+            <CommentOutlined /> <span>Phản Hồi</span>
           </Link>
           {user ? (
             <>

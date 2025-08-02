@@ -1,47 +1,53 @@
 const Profile = require("../../models/Profile");
 const User = require("../../models/User");
-// Tạo hồ sơ bệnh nhân
-exports.createProfile = async (req, res) => {
+const Patient = require("../../models/Patient");
+
+//tạo hồ sơ
+exports.CreateProfile = async (req, res) => {
+    const { identityNumber, name, dateOfBirth, gender, phone } = req.body;
+
+    // Validate input
+    if (!identityNumber || !name || !dateOfBirth || !gender || !phone) {
+        return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
+    }
+
     try {
-        const { name, dateOfBirth, identityNumber, gender } = req.body;
-        const userId = req.user.id;
-
-        const birthDate = new Date(dateOfBirth);
-        const now = new Date();
-
-        if (birthDate > now) {
-            return res.status(400).json({ message: 'Date of birth cannot be in the future' });
+        const existing = await Profile.findOne({ identityNumber });
+        if (existing) {
+            return res.status(400).json({ error: 'CCCD đã tồn tại' });
         }
 
-        const newProfile = new Profile({ userId, name, dateOfBirth, identityNumber, gender });
-        await newProfile.save();
+        // Tạo Profile
+        const profile = new Profile({ name, dateOfBirth, gender, identityNumber, phone });
+        await profile.save();
 
-        await User.findByIdAndUpdate(userId, {
-            $push: { profiles: newProfile._id }
-        });
+        // Tạo Patient 1-1
+        const patient = new Patient({ profileId: profile._id, createdBy: null });
+        await patient.save();
 
-        res.status(201).json({ message: 'Profile created successfully', profile: newProfile });
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to create profile', error: err.message });
+        // Gán patientId vào Profile
+        profile.patientId = patient._id;
+        await profile.save();
+
+        res.status(201).json({ message: 'Tạo Profile và Patient mới thành công', profile, patient });
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Lỗi server' });
     }
 };
 
-// Lấy danh sách hồ sơ của chính người dùng
-exports.getProfilesByUser = async (req, res) => {
+exports.getByCccd = async (req, res) => {
+    const { identityNumber } = req.query;
+
     try {
-        const userId = req.user.id;
-        const profiles = await Profile.find({ userId })
-            .populate('medicine', 'name')  // Populate tên thuốc từ Medicine
-            .populate('service', 'name')   // Populate tên dịch vụ từ Services
-            .populate('doctorId', 'name') // Populate tên bác sĩ từ Employee
-            .populate({
-                path: 'labTestId',         // Populate LabTest
-                populate: { path: 'services', select: 'name' }  // Populate services trong LabTest
-            });
-        res.status(200).json(profiles);
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to fetch profiles', error: err.message });
+        const profile = await Profile.findOne({ identityNumber }).populate('patientId');
+        if (profile) {
+            return res.json({profile });
+        }
+        return res.json({ profile: null});
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Lỗi server' });
     }
+
 };
 
 // Cập nhật hồ sơ bệnh nhân

@@ -3,12 +3,14 @@
   width: 52px;
   height: 52px;
 }
+
 .checkmark__circle {
   stroke: #007bff;
   stroke-width: 2;
   stroke-miterlimit: 10;
   animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
+
 .checkmark__check {
   stroke: #007bff;
   stroke-width: 2;
@@ -16,8 +18,11 @@
   stroke-linejoin: round;
   animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
+
 @keyframes stroke {
-  100% { stroke-dashoffset: 0; }
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* Styling for doctor selection */
@@ -25,7 +30,8 @@
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   padding: 20px;
-  min-height: 280px; /* Tăng chiều cao để phù hợp với 3 cột */
+  min-height: 280px;
+  /* Tăng chiều cao để phù hợp với 3 cột */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -118,4 +124,40 @@
   .doctor-card {
     min-height: 220px;
   }
+}
+
+.custom-slot-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.custom-slot-table th {
+  padding: 12px;
+  text-align: center;
+  background-color: #007bff !important;
+  /* Màu xanh đậm */
+  color: white !important;
+  font-weight: 600;
+  border: none;
+}
+
+.custom-slot-table td {
+  padding: 10px;
+  vertical-align: middle;
+  border: 1px solid #dee2e6;
+}
+
+.custom-slot-table .form-check {
+  margin: 5px 0;
+}
+
+.custom-slot-table .form-check-label {
+  margin-left: 8px;
+  font-size: 14px;
+}
+
+.custom-slot-table td p {
+  margin: 0;
+  padding: 10px;
 }

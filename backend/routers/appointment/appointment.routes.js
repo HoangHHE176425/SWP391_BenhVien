@@ -14,4 +14,18 @@ appointmentRouter.get('/paginated', apmServices.getDoctorsPaginated);
 //lay profile theo userid
 appointmentRouter.get('/:userId/profiles', apmServices.getProfilesByUserId);
 
+// appointmentRouter.put('/:id/status', apmServices.updateStatus);
+
+appointmentRouter.get('/pending', apmServices.getPendingAppointments);
+
+appointmentRouter.post('/queue/push/:appointmentId', apmServices.pushToQueue);
+
+appointmentRouter.patch('/:id/status', apmServices.updateStatus);
+
+appointmentRouter.get('/', apmServices.getAppointments);
+
+// appointmentRouter.get('/doctor-room-mapping', apmServices.getDoctorRoomMapping);
+
+appointmentRouter.get('/queues', apmServices.getAllQueues);
+
 module.exports = appointmentRouter;
