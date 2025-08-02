@@ -211,10 +211,8 @@ module.exports.updateStatus = async (req, res) => {
   }
 };
 
-// SỬA: Đẩy lịch vào hàng đợi, gán phòng từ payload, tính số thứ tự tự động
 module.exports.pushToQueue = async (req, res) => {
   const appointmentId = req.params.appointmentId;
-  const { room } = req.body;
 
   try {
     const appointment = await Appointment.findById(appointmentId);
@@ -222,13 +220,19 @@ module.exports.pushToQueue = async (req, res) => {
       return res.status(400).json({ error: 'Lịch hẹn không hợp lệ hoặc chưa confirmed' });
     }
 
-    appointment.room = room; // SỬA: Cập nhật phòng vào appointment
     appointment.status = 'waiting_for_doctor';
     await appointment.save();
 
-    let queue = await Queue.findOne({ department: appointment.department, date: appointment.appointmentDate, type: appointment.type });
+    let queue = await Queue.findOne({
+      doctorId: appointment.doctorId,
+      department: appointment.department,
+      date: appointment.appointmentDate,
+      type: appointment.type
+    });
+
     if (!queue) {
       queue = new Queue({
+        doctorId: appointment.doctorId,
         department: appointment.department,
         date: appointment.appointmentDate,
         type: appointment.type,
@@ -236,19 +240,22 @@ module.exports.pushToQueue = async (req, res) => {
       });
     }
 
-    const position = queue.queueEntries.length + 1; // SỬA: Tính số thứ tự tự động
+    const position = queue.queueEntries.length + 1;
 
     queue.queueEntries.push({
       appointmentId: appointment._id,
       profileId: appointment.profileId,
       doctorId: appointment.doctorId,
-      room: room,
       status: 'waiting_for_doctor',
-      position: position // SỬA: Thêm số thứ tự
+      position: position
     });
+
     await queue.save();
 
-    res.json({ message: 'Đẩy vào hàng đợi thành công', queueEntry: queue.queueEntries[queue.queueEntries.length - 1] });
+    res.json({
+      message: 'Đẩy vào hàng đợi thành công',
+      queueEntry: queue.queueEntries[queue.queueEntries.length - 1]
+    });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Lỗi server' });
   }

@@ -8,7 +8,6 @@ const queueSchema = new mongoose.Schema({
     appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment', required: true },
     profileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true },
     doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true }, // Thêm để biết bác sĩ
-    room: { type: String, required: true }, // Phòng khám
     position: { type: Number, min: 1 }, // Tính tự động
     status: { 
       type: String, 

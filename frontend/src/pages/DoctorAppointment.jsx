@@ -57,7 +57,6 @@ const DoctorAppointments = () => {
             profileId: entry.profileId, // Để hiển thị tên và phone
             symptoms: entry.appointmentId.symptoms, // Triệu chứng
             position: entry.position, // Vị trí trong hàng đợi
-            room: entry.room, // Phòng
           }));
 
         console.log('Today:', today.toLocaleDateString('vi-VN'), 'Filtered appointments:', validAppointments);

@@ -120,23 +120,16 @@ const AppointmentScheduleManagement = () => {
     }
   };
 
-  // Đẩy vào hàng đợi (Giai đoạn 3)
   const handlePushToQueue = async (appointment) => {
     setIsFormLoading(true);
 
     try {
       const doctorId = appointment.doctorId?._id || appointment.doctorId;
-      const room = appointment.doctorId?.room;
 
-      if (!room) {
-        message.error("Không tìm thấy phòng ứng với bác sĩ này");
-        return;
-      }
-
-      const payload = { room };
-      const queueRes = await axios.post(`http://localhost:9999/api/apm/queue/push/${appointment._id}`, payload);
+      // Gửi request mà không cần payload chứa room
+      const queueRes = await axios.post(`http://localhost:9999/api/apm/queue/push/${appointment._id}`, {});
       console.log("Pushed to queue:", queueRes.data);
-      message.success("Đã đẩy vào hàng đợi thành công với phòng " + room + "!");4
+      message.success("Đã đẩy vào hàng đợi thành công!");
 
       fetchAppointments(statusFilter);
     } catch (queueError) {
