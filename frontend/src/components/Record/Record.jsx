@@ -74,6 +74,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
   const [selectedMedicines, setSelectedMedicines] = useState([]);
   const [prescription, setPrescription] = useState([]);
   const [editingMedicineIndex, setEditingMedicineIndex] = useState(null);
+  const [departments, setDepartments] = useState([]);
 
   // Hàm kiểm tra quyền chỉnh sửa dựa trên trạng thái
   const getFormPermissions = (status) => {
@@ -119,7 +120,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
   };
 
   useEffect(() => {
-    fetchService();
+    fetchDepartment();
   }, []);
 
   // Tự động điền thông tin khi có appointment được chọn
@@ -133,6 +134,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
   useEffect(() => {
     if (!selectedAppointment) return;
     fetchListRecord();
+    fetchDocterActs(undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAppointment]);
 
@@ -147,26 +149,35 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     }
   };
 
-  const fetchDocterActs = async (services) => {
+  const fetchDepartment = async () => {
+    try {
+      const res = await axios.get(`/api/departments`);
+      setDepartments(res.data.departments || []);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách dịch vụ:", error);
+      setServices([]);
+    }
+  };
+
+  const fetchDocterActs = async (department) => {
     try {
       const params = new URLSearchParams();
-      if (services && services.length > 0) {
-        services.forEach(service => {
-          params.append('services', service);
-        });
-      }
+      if (department)  params.append('departmentId', department);
+      
       const res = await axios.get(`/api/doctor/doctor?${params.toString()}`);
-      setDocterActs(res.data || []);
+      setDocterActs(res?.data?.doctors || []);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách docterActs:", error);
   }}
 
   const resetForm = () => {
+    const doctor = JSON.parse(localStorage.getItem("user"));
     medicalForm.setFieldsValue({
         fullName: selectedAppointment.profileId.name || "",
         gender: selectedAppointment.profileId.gender || "",
         dateOfBirth: selectedAppointment.profileId.dateOfBirth ? dayjs(selectedAppointment.profileId.dateOfBirth) : null,
         address: selectedAppointment.profileId.address || "",
+        doctorId: doctor._id,
         bhytCode: false,
         identityNumber: selectedAppointment.profileId.identityNumber || "",
         admissionDate: null,
@@ -176,12 +187,11 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         dischargeDiagnosis: "",
         treatmentSummary: "",
         ethnicity: selectedAppointment.profileId.ethnicity || "",
-        services: [],
+        department: "",
         docterAct: "",
         admissionLabTest: "",
       });
       setSelectedRecord(null);
-      setSelectedServices([]);
       setSelectedMedicines([]);
       setPrescription([]);
       setEditingMedicineIndex(null);
@@ -224,9 +234,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         }
     } else {
         await onSaveRecord(formData);
-        if (values.services.length === 0) {
-            handleRestTree();
-        }
+        handleRestTree();
     }
 
     await fetchListRecord();
@@ -238,7 +246,6 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     
     // Load thông tin từ record đã chọn vào form
     if (record) {
-      const services = record.services.map((service) => service._id) || [];
       medicalForm.setFieldsValue({
         fullName: record.fullName || "",
         gender: record.gender || "",
@@ -253,12 +260,10 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         dischargeDiagnosis: record.dischargeDiagnosis || "",
         treatmentSummary: record.treatmentSummary || "",
         ethnicity: record.ethnicity || "",
-        services: services,
+        department: record.department || "",
         docterAct: record.docterAct || "",
         admissionLabTest: record.admissionLabTest || "",
       });
-      setSelectedServices(services);
-      
       // Load prescription nếu có
       if (record.prescription && record.prescription.length > 0) {
         setSelectedMedicines(record.prescription);
@@ -285,7 +290,6 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     medicalForm.setFieldValue('docterAct', '');
     
     fetchDocterActs(values);
-    setSelectedServices(values || []);
   };
 
   const handlePrescriptionConfirm = (medicines) => {
@@ -571,17 +575,15 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                 </Form.Item>
               </div>
               <div className="form-row">
-                <Form.Item name="services" label="Chỉ định dịch vụ" className="form-field full-width">
-                  <Select 
-                    mode="multiple"
-                    allowClear  
-                    options={services?.map((service) => ({ label: service.name, value: service._id }))} 
+                <Form.Item name="department" label="Chỉ định khoa khám" className="form-field full-width">
+                  <Select  
+                    options={departments?.map((department) => ({ label: department.name, value: department._id }))} 
                     disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
                     onChange={handleSelectService}
                   />
                 </Form.Item>
               </div>
-              {selectedServices.length > 0 && (
+              {medicalForm.getFieldValue('department') && (
                 <div className="form-row">
                   <Form.Item name="docterAct" label="Do bác sĩ xét nghiệm" className="form-field full-width">
                     <Select 

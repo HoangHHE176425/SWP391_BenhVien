@@ -3,20 +3,29 @@ const Records = require("../../models/Records");
 
 class RecordService {
     async createRecord(req, res) {
+       console.log("🚀 ~ RecordService ~ createRecord ~ req:", req.body)
        try {
+        const {department, ...rest} = req.body;
+        const prescriptionCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const newRecord = new Records({
-            ...req.body,
+            ...rest,
+            ...(department && {department: department}),
+            ...(rest.prescription
+                && rest.prescription.length > 0 && {prescriptionCode: prescriptionCode}),
             createdAt: new Date(),
             updatedAt: new Date(),
-            status: req.body.services.length > 0 ? "pending_clinical" : "done",
+            status: "done",
         });
         const savedRecord = await newRecord.save();
-        await Appointment.findByIdAndUpdate(req.body.appointmentId, {
-            status: req.body.services.length > 0 ? "pending_clinical" : "done",
+        console.log('rest.docterAct', rest.docterAct);
+        await Appointment.findByIdAndUpdate(rest.appointmentId, {
+            ...(rest.docterAct && {doctorId: rest.docterAct}),
+            ...(!rest.docterAct && {status: "done"}),
             updatedAt: new Date(),
         });
         res.status(201).json({ success: true, data: savedRecord, message: "Record created successfully" });
        } catch (err) {
+        console.log("🚀 ~ RecordService ~ createRecord ~ err:", err)
         res.status(500).json({ success: false, message: err.message });
        }
     }
@@ -30,11 +39,9 @@ class RecordService {
                 ...(appointmentId && {appointmentId}),
                 ...(docterAct && {docterAct: docterAct})
             })
-            .populate('services')
             .populate('appointmentId', 'appointmentDate type status reminderSent')
             .populate('profileId')
             .populate('doctorId')
-            .populate('department')
             .populate({
                 path: 'prescription.medicine'
               })

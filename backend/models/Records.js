@@ -28,9 +28,9 @@ const recordsSchema = new mongoose.Schema({
     quantity: { type: Number, required: true, min: 1 },
     note: { type: String, default: '' }
   }],
-  prescriptionNote: { type: String, default: '' },
+  prescriptionCode: { type: String, required: false, unique: true, sparse: true },
   // Danh sách dịch vụ đã chỉ định
-  services: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Services' }],
+  department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
   docterAct: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee'}, // bác sĩ thực hiện
   createdAt: { type: Date, required: true, index: true },
   updatedAt: { type: Date, required: true, index: true },

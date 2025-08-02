@@ -269,12 +269,8 @@ module.exports.delEmployees = async (req, res) => {
 module.exports.getDoctorsByDepartment = async (req, res) => {
     const { departmentId } = req.query;
 
-    if (!departmentId) {
-        return res.status(400).json({ error: 'Cần departmentId' });
-    }
-
     try {
-        const doctors = await Employee.find({ role: 'Doctor', department: departmentId }).select('name _id specialization');
+        const doctors = await Employee.find({ role: 'Doctor', ...(departmentId && {department: departmentId}) }).select('name _id specialization');
         res.json({ doctors });
     } catch (error) {
         res.status(500).json({ error: error.message || 'Lỗi server' });
