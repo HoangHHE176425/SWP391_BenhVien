@@ -134,7 +134,7 @@ const UserMedicalProfileDetail = () => {
         params.append('identityNumber', identifyNumber);
       }
       
-      const res = await axios.get(`/api/appointments/aggregate?${params.toString()}`);
+      const res = await axios.get(`/api/apm/appointments/aggregate?${params.toString()}`);
       
       // Nếu đang trong modal search, lưu vào state riêng
       if (!isToday && status === false) {
