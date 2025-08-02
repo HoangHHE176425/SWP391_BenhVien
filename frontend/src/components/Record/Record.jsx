@@ -576,7 +576,8 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
               </div>
               <div className="form-row">
                 <Form.Item name="department" label="Chỉ định khoa khám" className="form-field full-width">
-                  <Select  
+                  <Select
+                    allowClear
                     options={departments?.map((department) => ({ label: department.name, value: department._id }))} 
                     disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
                     onChange={handleSelectService}

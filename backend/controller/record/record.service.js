@@ -3,9 +3,11 @@ const Records = require("../../models/Records");
 
 class RecordService {
     async createRecord(req, res) {
-       console.log("🚀 ~ RecordService ~ createRecord ~ req:", req.body)
        try {
         const {department, ...rest} = req.body;
+        if (department && ! rest.docterAct) {
+            return res.status(400).json({ success: false, message: "Cần chỉ định bác sĩ thực hiện" });
+        }
         const prescriptionCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const newRecord = new Records({
             ...rest,
