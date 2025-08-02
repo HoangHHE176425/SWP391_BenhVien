@@ -1,5 +1,19 @@
 const express = require("express");
 const adminRouter = express.Router();
+const multer = require("multer");
+const path = require("path");
+
+// Multer config – upload ảnh tạm vào thư mục temp/
+const uploadMulter = multer({
+  dest: "temp/",
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (extname && mimetype) return cb(null, true);
+    cb(new Error("Chỉ chấp nhận ảnh JPEG/PNG"));
+  },
+});
 
 const {
   getUserAccs,
@@ -51,8 +65,8 @@ adminRouter.get("/user-log/:id", authAdminMiddleware, getUserLog);
 // ---------------------- EMPLOYEE MANAGEMENT ----------------------
 
 adminRouter.get("/employees", authAdminMiddleware, getEmployees);
-adminRouter.post("/createEmp", authAdminMiddleware, createEmployees);
-adminRouter.put("/updEmp/:id", authAdminMiddleware, editEmployees);
+adminRouter.post("/createEmp", authAdminMiddleware, uploadMulter.single("avatar"), createEmployees);
+adminRouter.put("/updEmp/:id", authAdminMiddleware, uploadMulter.single("avatar"), editEmployees);
 adminRouter.delete("/delEmp/:id", authAdminMiddleware, delEmployees);
 adminRouter.get("/getDepart", authAdminMiddleware, getAllDepartments);
 adminRouter.get("/employee-log/:id", authAdminMiddleware, getEmployeeLog);

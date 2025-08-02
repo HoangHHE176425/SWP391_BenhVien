@@ -15,5 +15,10 @@ scheduleRouter.get('/schedule-management/schedule-log/:id',authReceptionistMiddl
 scheduleRouter.put('/schedule-management/schedule/:id/toggle-status',authReceptionistMiddleware,receptionistController.toggleScheduleStatus);
 scheduleRouter.get('/employees/all', authReceptionistMiddleware, receptionistController.getAllEmployees);
 
+// Điểm danh
+scheduleRouter.get('/attendances', authReceptionistMiddleware, receptionistController.getAllAttendances);
+scheduleRouter.get('/schedule-management/schedule/:id/attendances', authReceptionistMiddleware, receptionistController.getAttendancesBySchedule);
+scheduleRouter.post('/attendance', authReceptionistMiddleware, receptionistController.markAttendance);
+scheduleRouter.post('/attendance/on-leave', authReceptionistMiddleware, receptionistController.markAsOnLeave);
 
 module.exports = scheduleRouter;

@@ -10,7 +10,8 @@ const WorkSchedulePage = () => {
   const [filteredSchedules, setFilteredSchedules] = useState([])
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedStatus, setSelectedStatus] = useState(null)
-
+  const [selectedAttendanceStatus, setSelectedAttendanceStatus] = useState(null);
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -20,11 +21,32 @@ const WorkSchedulePage = () => {
 
         const resp = await fetch(`http://localhost:9999/api/work-schedule/doctor/${doctorId}`)
         const respJson = await resp.json()
-        const data = respJson.data || []
-        setSchedules(data)
-        setFilteredSchedules(data)
+        const schedules = respJson.schedules || []
+        const attendances = respJson.attendance || []
+
+        // Gắn attendance vào từng schedule theo scheduleId
+        const enriched = schedules.map(schedule => {
+          const att = attendances.find(a => a.scheduleId === schedule._id)
+          return { ...schedule, attendance: att || null }
+        })
+
+        // Sắp xếp theo ngày tăng dần + giờ bắt đầu đầu tiên
+        enriched.sort((a, b) => {
+          const dateA = dayjs(a.date).valueOf()
+          const dateB = dayjs(b.date).valueOf()
+          if (dateA === dateB) {
+            const aStart = a.timeSlots?.[0]?.startTime ? dayjs(a.timeSlots[0].startTime).valueOf() : 0
+            const bStart = b.timeSlots?.[0]?.startTime ? dayjs(b.timeSlots[0].startTime).valueOf() : 0
+            return aStart - bStart
+          }
+          return dateA - dateB
+        })
+
+        setSchedules(enriched)
+        setFilteredSchedules(enriched)
       } catch (err) {
-        message.error("Lỗi khi fetch lịch")
+        console.error(err)
+        message.error("Lỗi khi fetch lịch làm việc")
         setSchedules([])
         setFilteredSchedules([])
       }
@@ -36,47 +58,66 @@ const WorkSchedulePage = () => {
   const formatDate = (date) => dayjs(date).format("DD/MM/YYYY")
   const formatTime = (time) => dayjs(time).format("HH:mm")
 
+  const getAttendanceTag = (status) => {
+    const map = {
+      Present: { color: "green", label: "Hoàn thành" },
+      "Late-Arrival": { color: "gold", label: "Đến muộn" },
+      "Left-Early": { color: "blue", label: "Về sớm" },
+      "Left-Late": { color: "orange", label: "Check-out muộn" },
+      "Checked-In": { color: "processing", label: "Đang làm" },
+      Absent: { color: "red", label: "Vắng mặt" },
+      "On-Leave": { color: "cyan", label: "Nghỉ phép" },
+      Invalid: { color: "default", label: "Không hợp lệ" },
+    }
+
+    const tag = map[status] || { color: "default", label: "Chưa điểm danh" }
+    return <Tag color={tag.color}>{tag.label}</Tag>
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
-      case "Available":
-        return "green"
-      case "Booked":
-        return "orange"
-      case "Unavailable":
-        return "red"
-      default:
-        return "default"
+      case "Available": return "green"
+      case "Booked": return "orange"
+      case "Unavailable": return "red"
+      default: return "default"
     }
   }
 
   const handleDateChange = (date) => {
-    setSelectedDate(date)
-    applyFilters(date, selectedStatus)
-  }
+    setSelectedDate(date);
+    applyFilters(date, selectedStatus, selectedAttendanceStatus);
+  };
 
   const handleStatusChange = (status) => {
-    setSelectedStatus(status)
-    applyFilters(selectedDate, status)
+    setSelectedStatus(status);
+    applyFilters(selectedDate, status, selectedAttendanceStatus);
+  };
+
+  const applyFilters = (date, status, attendanceStatus) => {
+  let result = [...schedules];
+
+  if (date) {
+    const targetDate = date.startOf("day");
+    result = result.filter((item) =>
+      dayjs(item.date).isSame(targetDate, "day")
+    );
   }
 
-  const applyFilters = (date, status) => {
-    let result = [...schedules]
-
-    if (date) {
-      const targetDate = date.startOf("day")
-      result = result.filter((item) =>
-        dayjs(item.date).isSame(targetDate, "day")
-      )
-    }
-
-    if (status) {
-      result = result.filter((item) =>
-        item.timeSlots.some((slot) => slot.status === status)
-      )
-    }
-
-    setFilteredSchedules(result)
+  if (status) {
+    result = result.filter((item) =>
+      item.timeSlots.some((slot) => slot.status === status)
+    );
   }
+
+  if (attendanceStatus) {
+    result = result.filter((item) =>
+      item.attendance?.status === attendanceStatus
+    );
+  }
+
+  setFilteredSchedules(result);
+};
+
 
   const columns = [
     {
@@ -91,32 +132,25 @@ const WorkSchedulePage = () => {
       key: "departmentName",
     },
     {
-      title: "Khung Giờ",
+      title: "Khung Giờ & Trạng thái",
       dataIndex: "timeSlots",
       key: "timeSlots",
       render: (slots) => (
         <>
           {slots.map((slot, index) => (
             <div key={index}>
-              {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+              {formatTime(slot.startTime)} - {formatTime(slot.endTime)}{" "}
+              <Tag color={getStatusColor(slot.status)}>{slot.status}</Tag>
             </div>
           ))}
         </>
       ),
     },
     {
-      title: "Trạng thái",
-      dataIndex: "timeSlots",
-      key: "status",
-      render: (slots) => (
-        <>
-          {slots.map((slot, index) => (
-            <div key={index}>
-              <Tag color={getStatusColor(slot.status)}>{slot.status}</Tag>
-            </div>
-          ))}
-        </>
-      ),
+      title: "Điểm danh",
+      dataIndex: "attendance",
+      key: "attendance",
+      render: (attendance) => getAttendanceTag(attendance?.status),
     },
   ]
 
@@ -144,8 +178,27 @@ const WorkSchedulePage = () => {
           <Option value="Booked">Booked</Option>
         </Select>
       </Space>
+<Select
+  placeholder="Lọc theo điểm danh"
+  value={selectedAttendanceStatus}
+  onChange={(val) => {
+    setSelectedAttendanceStatus(val);
+    applyFilters(selectedDate, selectedStatus, val);
+  }}
+  allowClear
+  style={{ width: 200 }}
+>
+  <Option value="Present">Hoàn thành</Option>
+  <Option value="Late-Arrival">Đến muộn</Option>
+  <Option value="Left-Early">Về sớm</Option>
+  <Option value="Left-Late">Check-out muộn</Option>
+  <Option value="Checked-In">Đang làm</Option>
+  <Option value="Absent">Vắng mặt</Option>
+  <Option value="On-Leave">Nghỉ phép</Option>
+  <Option value="Invalid">Không hợp lệ</Option>
+</Select>
 
-      <Card bordered>
+      <Card variant="outlined">
         <Table
           rowKey="_id"
           columns={columns}

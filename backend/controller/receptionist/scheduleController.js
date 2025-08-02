@@ -3,6 +3,7 @@ const Schedule = require('../../models/Schedule');
 const Department = require('../../models/Department');
 const Employee = require('../../models/Employee');
 const ScheduleLog = require('../../models/ScheduleLog');
+const Attendance = require('../../models/Attendance');
 
 // CRUD Schedule
 exports.createSchedule = async (req, res) => {
@@ -291,5 +292,135 @@ exports.getAllEmployees = async (req, res) => {
   } catch (error) {
     console.error("❌ Error fetching employees:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.getAllAttendances = async (req, res) => {
+  try {
+    const attendances = await Attendance.find()
+      .populate('employeeId', 'name employeeCode')
+      .populate('scheduleId')
+      .populate('department', 'name')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(attendances);
+  } catch (error) {
+    console.error("❌ Error fetching all attendances:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAttendancesBySchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const attendances = await Attendance.find({ scheduleId: id })
+      .populate('employeeId', 'name employeeCode')
+      .populate('department', 'name');
+
+    res.status(200).json(attendances);
+  } catch (error) {
+    console.error("❌ Error fetching attendances by schedule:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+// ✅ Đánh dấu trạng thái điểm danh là "On-Leave"
+exports.markAsOnLeave = async (req, res) => {
+  try {
+    const { scheduleId } = req.body;
+    const userId = req.user?.userId;
+
+    if (!scheduleId) {
+      return res.status(400).json({ message: "Missing scheduleId" });
+    }
+
+    const schedule = await Schedule.findById(scheduleId);
+    if (!schedule) {
+      return res.status(404).json({ message: "Schedule not found" });
+    }
+
+    const existing = await Attendance.findOne({ scheduleId });
+
+    // ❗ Nếu đã có điểm danh (trạng thái khác 'Invalid' hoặc 'On-Leave') → chặn và ghi log
+    if (existing && existing.status !== 'Invalid' && existing.status !== 'On-Leave') {
+      await ScheduleLog.create({
+        schedule: scheduleId,
+        actionType: "error",
+        actionBy: userId,
+        employeeId: schedule.employeeId,
+        description: `Không thể chuyển sang nghỉ phép vì nhân viên đã điểm danh (${existing.status})`
+      });
+
+      return res.status(400).json({ message: "Không thể chuyển sang nghỉ phép vì đã có điểm danh" });
+    }
+
+    if (existing) {
+      existing.status = "On-Leave";
+      existing.timeSlots = [];
+      await existing.save();
+    } else {
+      await Attendance.create({
+        scheduleId,
+        employeeId: schedule.employeeId,
+        department: schedule.department,
+        date: schedule.date,
+        status: "On-Leave",
+        type: "Regular",
+        timeSlots: [],
+        createdBy: userId,
+      });
+    }
+
+    await ScheduleLog.create({
+      schedule: scheduleId,
+      actionType: "update",
+      actionBy: userId,
+      employeeId: schedule.employeeId,
+      description: `Cập nhật trạng thái điểm danh thành "Nghỉ phép"`
+    });
+
+    res.status(200).json({ message: "Đã đánh dấu nghỉ phép" });
+  } catch (err) {
+    console.error("❌ markAsOnLeave error:", err);
+    res.status(500).json({ message: "Lỗi máy chủ" });
+  }
+};
+
+
+exports.markAttendance = async (req, res) => {
+  try {
+    const { scheduleId, status } = req.body;
+    const receptionistId = req.user?.userId;
+
+    if (!scheduleId || !status) {
+      return res.status(400).json({ message: "scheduleId và status là bắt buộc" });
+    }
+
+    const schedule = await Schedule.findById(scheduleId);
+    if (!schedule) {
+      return res.status(404).json({ message: "Không tìm thấy lịch làm việc" });
+    }
+
+    const attendance = await Attendance.findOne({ scheduleId });
+
+    if (attendance) {
+      attendance.status = status;
+      await attendance.save();
+    } else {
+      await Attendance.create({
+        employeeId: schedule.employeeId,
+        department: schedule.department,
+        scheduleId,
+        date: schedule.date,
+        status,
+        type: "Regular", // hoặc "Leave" nếu muốn phân biệt
+        createdBy: receptionistId,
+        timeSlots: schedule.timeSlots
+      });
+    }
+
+    return res.status(200).json({ message: "Cập nhật trạng thái điểm danh thành công" });
+  } catch (err) {
+    console.error("❌ Error marking attendance:", err);
+    return res.status(500).json({ message: "Lỗi máy chủ" });
   }
 };

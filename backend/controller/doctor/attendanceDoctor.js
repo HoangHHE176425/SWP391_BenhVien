@@ -5,47 +5,39 @@ const Employee = require("../../models/Employee");
 const Schedule = require("../../models/Schedule");
 
 // ✅ Check-in: tạo bản ghi mới nếu hợp lệ
-// ✅ Check-in: tạo bản ghi mới nếu hợp lệ
 // ✅ Check-in
 exports.checkIn = async (req, res) => {
   try {
     const { employeeId, scheduleId, department, timeSlots, date, ipAddress, location } = req.body;
 
-    // Kiểm tra thông tin bắt buộc
     if (!employeeId || !scheduleId || !department || !date || !timeSlots || !Array.isArray(timeSlots)) {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc để điểm danh" });
     }
 
     const now = dayjs();
-
-    // Không cho check-in nếu đã quá giờ làm (giờ kết thúc của slot muộn nhất)
     const latestEnd = Math.max(...timeSlots.map(slot => new Date(slot.endTime).getTime()));
     if (now.valueOf() > latestEnd) {
       return res.status(400).json({ message: "Đã quá giờ làm, không thể check-in." });
     }
 
-    // Tránh double check-in
+    // ✅ Kiểm tra nếu đã có bản ghi attendance
     const existing = await Attendance.findOne({ employeeId, scheduleId });
+
     if (existing) {
+      if (existing.status === "On-Leave") {
+        return res.status(400).json({ message: "Bạn đang nghỉ phép, không thể check-in." });
+      }
       return res.status(400).json({ message: "Bạn đã check-in ca này rồi." });
     }
 
-    // ✅ Lấy giờ bắt đầu sớm nhất trong timeSlots
     const earliestSlot = timeSlots.reduce((min, slot) =>
       new Date(slot.startTime) < new Date(min.startTime) ? slot : min
     );
     const startTime = dayjs(earliestSlot.startTime);
     const graceUntil = startTime.add(1, "minute");
 
-    // 🕒 Log thời gian để debug
-    console.log("🕒 checkInTime:", now.format("HH:mm:ss"));
-    console.log("🕒 startTime:", startTime.format("HH:mm:ss"));
-    console.log("🕒 graceUntil:", graceUntil.format("HH:mm:ss"));
-
-    // ✅ Gán status
     const status = now.isAfter(graceUntil) ? "Late-Arrival" : "Present";
 
-    // ✅ Tạo bản ghi chấm công
     const newAttendance = new Attendance({
       employeeId,
       scheduleId,
@@ -66,7 +58,7 @@ exports.checkIn = async (req, res) => {
   }
 };
 
-// ✅ Check-out
+
 // ✅ Check-out
 exports.checkOut = async (req, res) => {
   try {
