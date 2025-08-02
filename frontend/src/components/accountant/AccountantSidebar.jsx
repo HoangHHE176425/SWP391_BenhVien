@@ -4,6 +4,11 @@ import {
   UserOutlined,
   CalendarOutlined,
   LogoutOutlined,
+  MedicineBoxOutlined,
+  HistoryOutlined,
+  FileTextOutlined,
+  BarChartOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 
 const AccountantSidebar = () => {
@@ -14,6 +19,36 @@ const AccountantSidebar = () => {
       to: "/accountant/profile",
       label: "Xem Hồ Sơ Cá Nhân",
       icon: <UserOutlined />,
+    },
+    {
+      to: "/accountant/attendance",
+      label: "Chấm Công",
+      icon: <CalendarOutlined />,
+    },
+    {
+      to: "/accountant/medicine-check",
+      label: "Kiểm Thuốc",
+      icon: <CheckCircleOutlined />,
+    },
+    {
+      to: "/accountant/medicine-management",
+      label: "Quản Lý Thuốc",
+      icon: <MedicineBoxOutlined />,
+    },
+    {
+      to: "/accountant/transactions",
+      label: "Lịch Sử Giao Dịch",
+      icon: <HistoryOutlined />,
+    },
+    {
+      to: "/accountant/reports",
+      label: "Báo Cáo",
+      icon: <FileTextOutlined />,
+    },
+    {
+      to: "/accountant/statistics",
+      label: "Thống Kê",
+      icon: <BarChartOutlined />,
     },
   ];
 
@@ -26,7 +61,7 @@ const AccountantSidebar = () => {
 
   return (
     <div style={styles.sidebar}>
-      <h2 style={styles.title}>Kế toán</h2>
+      <h2 style={styles.title}>Kế Toán</h2>
 
       {links.map(({ to, label, icon }) => (
         <NavLink
@@ -49,6 +84,7 @@ const AccountantSidebar = () => {
           ...styles.link,
           cursor: "pointer",
           color: "#ddd",
+          marginTop: "auto",
         }}
       >
         <span style={styles.icon}>

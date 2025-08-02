@@ -1,8 +1,10 @@
+/* eslint-disable */
 import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const PharmacyTransactionModal = ({ show, onHide, medicines, patients = [], onSubmit }) => {
     const [transactionItems, setTransactionItems] = useState([{ medicineId: "", quantity: "" }]);
+    const [patientSelection, setPatientSelection] = useState(""); // Tracks "Chọn bệnh nhân" or "Không phải bệnh nhân"
     const [patientId, setPatientId] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("tien mat");
     const [error, setError] = useState(null);
@@ -23,15 +25,34 @@ const PharmacyTransactionModal = ({ show, onHide, medicines, patients = [], onSu
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (patientId !== "not_a_patient" && (!patientId || transactionItems.some(item => !item.medicineId || !item.quantity || item.quantity <= 0))) {
-            setError("Vui lòng điền đầy đủ thông tin bệnh nhân và các mục thuốc.");
+        
+        // Validate transaction items for all cases
+        if (transactionItems.some(item => !item.medicineId || !item.quantity || item.quantity <= 0)) {
+            setError("Vui lòng điền đầy đủ thông tin các mục thuốc.");
+            return;
+        }
+        
+        // Validate patient selection
+        if (!patientSelection) {
+            setError("Vui lòng chọn loại bệnh nhân.");
+            return;
+        }
+        
+        // Validate patient ID only if "Chọn bệnh nhân" is selected
+        if (patientSelection === "select_patient" && !patientId) {
+            setError("Vui lòng chọn mã bệnh nhân.");
             return;
         }
         try {
-            await onSubmit({ patientId, paymentMethod, items: transactionItems });
+            await onSubmit({ 
+                patientId: patientSelection === "not_a_patient" ? "not_a_patient" : patientId, 
+                paymentMethod, 
+                items: transactionItems 
+            });
             setTransactionItems([{ medicineId: "", quantity: "" }]);
+            setPatientSelection("");
             setPatientId("");
-            setPaymentMethod("cash");
+            setPaymentMethod("tien mat");
             setError(null);
             onHide();
         } catch (error) {
@@ -50,20 +71,41 @@ const PharmacyTransactionModal = ({ show, onHide, medicines, patients = [], onSu
                     <div className="mb-3">
                         <Form.Label>Bệnh nhân</Form.Label>
                         <Form.Select
-                            value={patientId}
-                            onChange={(e) => setPatientId(e.target.value)}
+                            value={patientSelection}
+                            onChange={(e) => {
+                                setPatientSelection(e.target.value);
+                                setPatientId(""); // Reset patientId when selection changes
+                            }}
                         >
-                            <option value="">Chọn bệnh nhân</option>
+                            <option value="">Hãy lựa chọn</option>
+                            <option value="select_patient">Chọn bệnh nhân</option> {/* eslint-disable-line */}
                             <option value="not_a_patient">Không phải bệnh nhân</option>
                         </Form.Select>
                     </div>
+                    {patientSelection === "select_patient" && (
+                        <div className="mb-3">
+                            <Form.Label>Mã bệnh nhân</Form.Label>
+                            <Form.Select
+                                value={patientId}
+                                onChange={(e) => setPatientId(e.target.value)}
+                                required
+                            >
+                                <option value="">Chọn mã bệnh nhân</option>
+                                {patients.map((patient) => (
+                                    <option key={patient._id} value={patient.patientId}>
+                                        {patient.patientId} - {patient.name} ({patient.gender === 'Male' ? 'Nam' : patient.gender === 'Female' ? 'Nữ' : 'Khác'})
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </div>
+                    )}
                     <div className="mb-3">
                         <Form.Label>Phương thức thanh toán</Form.Label>
                         <Form.Select
                             value={paymentMethod}
                             onChange={(e) => setPaymentMethod(e.target.value)}
                         >
-                            <option value="cash">Tiền mặt</option>
+                            <option value="tien mat">Tiền mặt</option>
                             <option value="online">Trực tuyến</option>
                         </Form.Select>
                     </div>

@@ -28,6 +28,7 @@ const axios = axiosInstance;
 
 const MedicineManagement = () => {
     const [medicines, setMedicines] = useState([]);
+    const [patients, setPatients] = useState([]);
     const [totalMedicines, setTotalMedicines] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -71,7 +72,22 @@ const MedicineManagement = () => {
             }
         };
 
+        const fetchPatients = async () => {
+            try {
+                const res = await axios.get(`/api/user/patients`);
+                if (Array.isArray(res.data)) {
+                    setPatients(res.data);
+                } else {
+                    setPatients([]);
+                }
+            } catch (error) {
+                console.error("Error fetching patients:", error);
+                setPatients([]);
+            }
+        };
+
         fetchMedicines();
+        fetchPatients();
     }, [currentPage, searchTerm, filterMode]);
 
     useEffect(() => {
@@ -262,6 +278,7 @@ const MedicineManagement = () => {
                 show={showTransactionModal}
                 onHide={() => setShowTransactionModal(false)}
                 medicines={medicines}
+                patients={patients}
                 onSubmit={handleTransactionSubmit}
             />
         </div>

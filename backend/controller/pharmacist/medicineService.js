@@ -132,19 +132,26 @@ const processPharmacyTransaction = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { patientId, prescriptionId, paymentMethod, items } = req.body;
 
-        if (!patientId || !items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ message: "Patient ID and items are required" });
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ message: "Items are required" });
         }
 
-        // Validate patientId as a non-empty string
-        if (!patientId || typeof patientId !== 'string' || patientId.trim() === '') {
-            return res.status(400).json({ message: "Mã bệnh nhân phải là chuỗi hợp lệ" });
-        }
+        // Handle patient validation based on patientId
+        let patientIdentifier = "Không phải bệnh nhân"; // Default for non-patients
+        
+        if (patientId && patientId !== "not_a_patient") {
+            // Validate patientId as a non-empty string for actual patients
+            if (typeof patientId !== 'string' || patientId.trim() === '') {
+                return res.status(400).json({ message: "Mã bệnh nhân phải là chuỗi hợp lệ" });
+            }
 
-        // Optionally validate patient existence using user_code (assuming a User model)
-        const user = await mongoose.model('User').findOne({ user_code: patientId });
-        if (!user) {
-            return res.status(400).json({ message: `Mã bệnh nhân ${patientId} không tồn tại` });
+            // Validate patient existence using Patient model
+            const patient = await mongoose.model('Patient').findOne({ patientId: patientId });
+            if (!patient) {
+                return res.status(400).json({ message: `Mã bệnh nhân ${patientId} không tồn tại` });
+            }
+            
+            patientIdentifier = patientId; // Use actual patient ID
         }
 
         // Calculate total amount and prepare transaction items
@@ -184,11 +191,11 @@ const processPharmacyTransaction = async (req, res) => {
         const transaction = await PharmacyTransaction.create({
             prescription: prescriptionId || null,
             pharmacist: decoded.id || null,
-            patient: patientId, // Now a string (user_code)
+            patient: patientIdentifier, // Use patientIdentifier which handles both cases
             items: transactionItems,
             totalAmount,
             paid: true,
-            paymentMethod: paymentMethod || 'cash',
+            paymentMethod: paymentMethod || 'tien mat',
             createdAt: new Date(),
         });
 
