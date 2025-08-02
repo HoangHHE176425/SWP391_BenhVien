@@ -27,4 +27,6 @@ appointmentRouter.get('/', apmServices.getAppointments);
 
 appointmentRouter.get('/queues', apmServices.getAllQueues);
 
+appointmentRouter.put('/call/:appointmentId', apmServices.callPatientInQueue);
+
 module.exports = appointmentRouter;

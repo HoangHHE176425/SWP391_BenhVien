@@ -9,7 +9,7 @@ const appointmentSchema = new mongoose.Schema({
   type: { type: String, enum: ['Online', 'Offline'], required: true },
   status: {
     type: String,
-    enum: ['pending_confirmation', 'confirmed', 'rejected', 'queued', 'checked_in', 'in_progress', 'completed', 'canceled', 'pending_cancel'],
+    enum: ['pending_confirmation', 'confirmed', 'rejected', 'waiting_for_doctor', 'checked_in', 'in_progress', 'completed', 'canceled', 'pending_cancel'],
     default: 'pending_confirmation' // Default cho online
   },
   reminderSent: { type: Boolean, default: false },
@@ -19,7 +19,12 @@ const appointmentSchema = new mongoose.Schema({
     status: { type: String, enum: ['Available', 'Booked'], default: 'Booked' }
   },
   symptoms: { type: String, required: true }, // Triệu chứng ban đầu
-  bhytCode: { type: String, unique: true, sparse: true }, // Mã BHYT optional
+  bhytCode: {
+    type: String,
+    unique: true, // Giữ unique
+    sparse: true, // Thêm sparse để cho phép multiple null
+    default: null, // Default null nếu không có
+  },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Null cho offline
   room: { type: String } // Phòng khám, gán khi confirm
 }, { timestamps: true });

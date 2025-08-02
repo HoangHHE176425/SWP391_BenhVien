@@ -136,7 +136,7 @@ const AppointmentScheduleManagement = () => {
       const payload = { room };
       const queueRes = await axios.post(`http://localhost:9999/api/apm/queue/push/${appointment._id}`, payload);
       console.log("Pushed to queue:", queueRes.data);
-      message.success("Đã đẩy vào hàng đợi thành công với phòng " + room + "!");
+      message.success("Đã đẩy vào hàng đợi thành công với phòng " + room + "!");4
 
       fetchAppointments(statusFilter);
     } catch (queueError) {
@@ -235,7 +235,7 @@ const AppointmentScheduleManagement = () => {
                               ? "info"
                               : appointment.status === "confirmed"
                                 ? "primary"
-                                : appointment.status === "queued"
+                                : appointment.status === "waiting_for_doctor"
                                   ? "warning"
                                   : appointment.status === "rejected"
                                     ? "danger"
@@ -246,7 +246,7 @@ const AppointmentScheduleManagement = () => {
                               ? "Chờ xác nhận"
                               : appointment.status === "confirmed"
                                 ? "Đã xác nhận"
-                                : appointment.status === "queued"
+                                : appointment.status === "waiting_for_doctor"
                                   ? "Đang xếp hàng"
                                   : appointment.status === "rejected"
                                     ? "Bị từ chối"

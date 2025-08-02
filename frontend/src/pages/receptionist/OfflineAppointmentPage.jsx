@@ -468,7 +468,7 @@ const OfflineAppointmentPage = () => {
               <button className="btn btn-primary" onClick={() => setStep("profile")}>
                 Đặt Thêm Lịch
               </button>
-              <button className="btn btn-outline-secondary" onClick={() => navigate("/appointments")}>
+              <button className="btn btn-outline-secondary" onClick={() => navigate("/receptionist/appointments")}>
                 Quản lý Lịch
               </button>
             </div>

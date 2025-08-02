@@ -223,7 +223,7 @@ module.exports.pushToQueue = async (req, res) => {
     }
 
     appointment.room = room; // SỬA: Cập nhật phòng vào appointment
-    appointment.status = 'queued';
+    appointment.status = 'waiting_for_doctor';
     await appointment.save();
 
     let queue = await Queue.findOne({ department: appointment.department, date: appointment.appointmentDate, type: appointment.type });
@@ -243,7 +243,7 @@ module.exports.pushToQueue = async (req, res) => {
       profileId: appointment.profileId,
       doctorId: appointment.doctorId,
       room: room,
-      status: 'queued',
+      status: 'waiting_for_doctor',
       position: position // SỬA: Thêm số thứ tự
     });
     await queue.save();
@@ -251,6 +251,42 @@ module.exports.pushToQueue = async (req, res) => {
     res.json({ message: 'Đẩy vào hàng đợi thành công', queueEntry: queue.queueEntries[queue.queueEntries.length - 1] });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Lỗi server' });
+  }
+};
+
+module.exports.callPatientInQueue = async (req, res) => {
+  const { appointmentId } = req.params;
+
+  try {
+    // Tìm queue chứa entry với appointmentId
+    const queue = await Queue.findOne({ "queueEntries.appointmentId": appointmentId });
+
+    if (!queue) {
+      return res.status(404).json({ message: "Không tìm thấy hàng đợi chứa lịch hẹn này." });
+    }
+
+    // Tìm entry trong queueEntries
+    const entry = queue.queueEntries.find(entry => entry.appointmentId.toString() === appointmentId);
+
+    if (!entry) {
+      return res.status(404).json({ message: "Không tìm thấy entry cho lịch hẹn này." });
+    }
+
+    // Kiểm tra status hiện tại (ví dụ: chỉ cho gọi nếu 'waiting_for_doctor')
+    if (entry.status !== 'waiting_for_doctor') {
+      return res.status(400).json({ message: "Bệnh nhân không ở trạng thái chờ gọi." });
+    }
+
+    // Đổi status sang 'in_progress'
+    entry.status = 'in_progress';
+
+    // Lưu lại queue
+    await queue.save();
+
+    res.status(200).json({ message: "Đã gọi bệnh nhân vào khám thành công.", queueEntry: entry });
+  } catch (err) {
+    console.error("Lỗi khi gọi bệnh nhân vào khám:", err);
+    res.status(500).json({ message: "Lỗi server khi gọi bệnh nhân.", error: err.message });
   }
 };
 
@@ -344,18 +380,18 @@ module.exports.getAllQueues = async (req, res) => {
     const queues = await Queue.find(filter)
       .populate({
         path: 'queueEntries.appointmentId',
-        select: 'appointmentDate symptoms type status' 
+        select: 'appointmentDate symptoms type status'
       })
       .populate({
         path: 'queueEntries.profileId',
-        select: 'name phone' 
+        select: 'name phone'
       })
       .populate({
         path: 'queueEntries.doctorId',
-        select: 'name' 
+        select: 'name'
       })
-      .populate('department', 'name') 
-      .sort({ date: -1 }) 
+      .populate('department', 'name')
+      .sort({ date: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 

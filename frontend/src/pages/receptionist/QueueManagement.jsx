@@ -197,8 +197,8 @@ function QueueManagement() {
     {
       title: 'Trạng thái',
       render: (entry) => (
-        <Tag color={entry.status === "queued" ? "warning" : "default"}>
-          {entry.status === "queued" ? "Đang chờ" : entry.status}
+        <Tag color={entry.status === "waiting_for_doctor" ? "warning" : "default"}>
+          {entry.status === "waiting_for_doctor" ? "Đang chờ" : entry.status}
         </Tag>
       )
     }
