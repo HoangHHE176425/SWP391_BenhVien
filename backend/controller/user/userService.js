@@ -12,7 +12,6 @@ const serviceRepo = require("../../repository/service.repository");
 const departmentRepo = require("../../repository/department.repository");
 const medicineRepo = require("../../repository/medicine.repository");
 
-
 // Đặt lịch khám
 const getMyProfiles = async (req, res) => {
   try {
@@ -182,6 +181,18 @@ const createAppointment = async (req, res) => {
   selectedSlot.status = 'Booked';
   await doctorSchedule.save();
 
+  // Xử lý bhytCode: Optional, fallback null nếu rỗng, validation nếu có giá trị
+  let normalizedBhytCode = null;
+  if (bhytCode && bhytCode.trim()) {
+    normalizedBhytCode = bhytCode.trim();
+    const bhytCodeRegex = /^[A-Z]{2}\d{13}$/; // Định dạng 2 chữ cái + 13 số
+    if (!bhytCodeRegex.test(normalizedBhytCode)) {
+      return res.status(400).json({ message: "Mã BHYT không đúng định dạng (2 chữ cái + 13 số)." });
+    }
+  } else {
+    console.log('[DEBUG] bhytCode rỗng, lưu null.');
+  }
+
   // Tạo cuộc hẹn
   const newAppointment = new Appointment({
     userId: type === 'Online' ? userId : null,
@@ -196,13 +207,14 @@ const createAppointment = async (req, res) => {
       status: "Booked",
     },
     symptoms,
-    bhytCode,
+    bhytCode: normalizedBhytCode, // Lưu null nếu rỗng
     reminderSent: false,
     createdBy: userId,
     room: type === 'Offline' ? room : null
   });
 
   await newAppointment.save();
+  console.log('[DEBUG] Tạo lịch hẹn thành công với bhytCode:', normalizedBhytCode);
   return res.status(201).json({ message: "Tạo lịch hẹn thành công", appointment: newAppointment });
 };
 
@@ -230,15 +242,16 @@ const createOfflineAppointment = async (req, res) => {
     return res.status(400).json({ message: "appointmentDate không hợp lệ." });
   }
 
-  // Chuẩn hóa bhytCode: Nếu rỗng hoặc undefined, lưu là null
-  const normalizedBhytCode = bhytCode && bhytCode.trim() ? bhytCode.trim() : null;
-
-  // (Tùy chọn) Validation định dạng mã BHYT nếu có giá trị
-  if (normalizedBhytCode) {
-    const bhytCodeRegex = /^[A-Z]{2}\d{13}$/; // Ví dụ: định dạng mã BHYT Việt Nam (2 chữ + 13 số)
+  // Xử lý bhytCode: Optional, fallback null nếu rỗng, validation nếu có giá trị
+  let normalizedBhytCode = null;
+  if (bhytCode && bhytCode.trim()) {
+    normalizedBhytCode = bhytCode.trim();
+    const bhytCodeRegex = /^[A-Z]{2}\d{13}$/; // Định dạng 2 chữ cái + 13 số
     if (!bhytCodeRegex.test(normalizedBhytCode)) {
       return res.status(400).json({ message: "Mã BHYT không đúng định dạng (2 chữ cái + 13 số)." });
     }
+  } else {
+    console.log('[DEBUG] bhytCode rỗng, lưu null.');
   }
 
   // Tạo cuộc hẹn mới
@@ -256,13 +269,14 @@ const createOfflineAppointment = async (req, res) => {
         status: "Booked",
       },
       symptoms,
-      bhytCode: normalizedBhytCode,
+      bhytCode: normalizedBhytCode, // Lưu null nếu rỗng
       reminderSent: false,
       createdBy: null,
       room: type === 'Offline' ? room : null
     });
 
     await newAppointment.save();
+    console.log('[DEBUG] Tạo lịch hẹn offline thành công với bhytCode:', normalizedBhytCode);
     return res.status(201).json({ message: "Tạo lịch hẹn thành công", appointment: newAppointment });
   } catch (err) {
     console.error("Lỗi khi tạo lịch hẹn:", err);
@@ -281,7 +295,6 @@ const getAppointmentsByUser = async (req, res) => {
     // Lấy tổng số cuộc hẹn để tính toán tổng số trang
     const totalAppointments = await Appointment.countDocuments({ userId });
     const totalPages = Math.ceil(totalAppointments / limit);
-    // Lấy các cuộc hẹn theo phân trang
     const appointments = await Appointment.find({ userId })
       .populate('profileId doctorId')
       .populate("department", "name") // NEW: Populate department để lấy name
