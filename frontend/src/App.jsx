@@ -87,6 +87,8 @@ import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
 import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
 import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
 import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
+import SendApplication from "./pages/doctor/SendApplication.jsx";
+import SendApplicationManager from "./pages/hrmanager/sendApplicationManager.jsx";
 
 // Components
 import Header from "./components/HeaderComponent";
@@ -279,6 +281,7 @@ const AppRoutes = () => {
             <Route path="attendance" element={<DoctorAttendance />} />
             <Route path="labtest" element={<LabTestPage />} />
             <Route path="work-schedule" element={<WorkSchedulePage />} />
+            <Route path="sendApplication" element={<SendApplication />} />
             <Route path="profile" element={<ProfileDoctor />} />
           </Route>
 
@@ -359,6 +362,7 @@ const AppRoutes = () => {
             <Route index element={<InvoiceManagement />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<HrmanagerAttendance />} />
+            <Route path="sendApplicationManager" element={<SendApplicationManager />} />
           </Route>
 
           {/* Accountant Routes */}

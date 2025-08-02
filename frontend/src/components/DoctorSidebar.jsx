@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { BellOutlined } from "@ant-design/icons";
 import {
   UserOutlined,
   MedicineBoxOutlined,
@@ -19,6 +20,7 @@ const DoctorSidebar = () => {
     { to: "/doctor/work-schedule", label: "Xem Lịch Làm Việc", icon: <ScheduleOutlined /> },
     { to: "/doctor/profile", label: "Xem Hồ Sơ Cá Nhân", icon: <ScheduleOutlined /> },
     { to: "/doctor/attendance", label: "Điểm Danh", icon: <ScheduleOutlined /> },
+    { to: "/doctor/sendApplication", label: "Gửi Đơn", icon: <BellOutlined /> },
   ];
 
   const handleLogout = () => {

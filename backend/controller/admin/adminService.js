@@ -5,7 +5,15 @@ const Employee = require("../../models/Employee");
 const Department = require("../../models/Department");
 const UserLog = require("../../models/UserLog");
 const EmployeeLog = require("../../models/EmployeeLog");
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs").promises;
 
+// Cấu hình Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // ---------------------- USER CONTROLLERS ----------------------
 
 module.exports.createUser = async (req, res) => {
@@ -192,13 +200,17 @@ module.exports.getUserLog = async (req, res) => {
 
 module.exports.getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find({}, "-password")
+    const employees = await Employee.find() // KHÔNG truyền `{}` ở đây
+      .select("-password") // chỉ bỏ password
       .populate("department", "name");
+
     res.json(employees);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
+
 
 module.exports.getEmployeeById = async (req, res) => {
   try {
@@ -213,6 +225,19 @@ module.exports.getEmployeeById = async (req, res) => {
 module.exports.createEmployees = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    // ✅ Upload ảnh nếu có
+    let avatarUrl = "";
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "employees",
+      });
+      avatarUrl = result.secure_url;
+
+      // Xóa ảnh tạm
+      await fs.unlink(req.file.path).catch(() => {});
+    }
+
     const employee = new Employee({
       email: req.body.email,
       password: hashedPassword,
@@ -222,11 +247,13 @@ module.exports.createEmployees = async (req, res) => {
       department: req.body.department || null,
       status: req.body.status || "active",
       specialization: req.body.specialization || "",
+      avatar: avatarUrl, // ✅ Gán đường dẫn ảnh
     });
 
     const newEmployee = await employee.save();
-    
-    // ✅ Ghi log
+    console.log("✅ Lưu vào collection:", newEmployee.constructor.modelName);
+
+    // Log lại nếu muốn
     await EmployeeLog.create({
       employee: newEmployee._id,
       actionType: "create",
@@ -236,10 +263,11 @@ module.exports.createEmployees = async (req, res) => {
 
     res.status(201).json(newEmployee);
   } catch (err) {
-    console.error(err);
+    console.error("❌ createEmployees error:", err);
     res.status(400).json({ message: err.message });
   }
 };
+
 
 module.exports.editEmployees = async (req, res) => {
   try {
@@ -251,13 +279,17 @@ module.exports.editEmployees = async (req, res) => {
     const updates = { ...req.body };
     const changes = {};
 
-    // Nếu có cập nhật password
-    if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
-      changes["password"] = { from: oldPassword, to: newPasswordPlainText };
+    // Nếu có password mới
+    if (updates.password && typeof updates.password === "string" && updates.password.trim()) {
+      const hashed = await bcrypt.hash(updates.password, 10);
+      employee.password = hashed;
+      changes["password"] = { from: "••••", to: "••••" };
+    } else {
+      // ✅ Nếu không gửi mật khẩu mới → giữ nguyên mật khẩu cũ
+      employee.password = employee.password;
     }
 
-    // Các trường cho phép ghi log thay đổi
+
     const updatableFields = [
       "name",
       "email",
@@ -280,9 +312,18 @@ module.exports.editEmployees = async (req, res) => {
       }
     });
 
+    // ✅ Upload avatar nếu có
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "employees",
+      });
+      employee.avatar = result.secure_url;
+      changes["avatar"] = { from: employee.avatar, to: result.secure_url };
+      await fs.unlink(req.file.path).catch(() => {});
+    }
+
     const updatedEmployee = await employee.save();
 
-    // ✅ Ghi log nếu có thay đổi
     if (Object.keys(changes).length > 0) {
       await EmployeeLog.create({
         employee: updatedEmployee._id,
@@ -299,6 +340,7 @@ module.exports.editEmployees = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 module.exports.changeEmployeeStatus = async (req, res) => {

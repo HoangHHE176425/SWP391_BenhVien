@@ -153,9 +153,14 @@ const DoctorAttendance = () => {
   };
 
   const today = new Date().toISOString().split("T")[0];
-const todaySchedules = allSchedules.filter(schedule =>
-  dayjs(schedule.date).isSame(dayjs(), 'day')
-);
+const todaySchedules = allSchedules
+  .filter(schedule => dayjs(schedule.date).isSame(dayjs(), 'day'))
+  .sort((a, b) => {
+    const aStart = a.timeSlots?.[0]?.startTime ? new Date(a.timeSlots[0].startTime).getTime() : 0;
+    const bStart = b.timeSlots?.[0]?.startTime ? new Date(b.timeSlots[0].startTime).getTime() : 0;
+    return aStart - bStart;
+  });
+
 
 
   const scheduleColumns = [
@@ -206,13 +211,14 @@ const todaySchedules = allSchedules.filter(schedule =>
         const matched = attendanceData.find(a => a.scheduleId === schedule._id);
         const isCheckedIn = !!matched?.checkInTime;
         const isCheckedOut = !!matched?.checkOutTime;
+        const isOnLeave = matched?.status === "On-Leave";
 
         return (
           <div style={{ display: "flex", gap: 8 }}>
             <Button
               size="small"
               type="primary"
-              disabled={isCheckedIn}
+              disabled={isCheckedIn || isOnLeave}
               onClick={() => handleCheckInBySchedule(schedule)}
             >
               Check-In

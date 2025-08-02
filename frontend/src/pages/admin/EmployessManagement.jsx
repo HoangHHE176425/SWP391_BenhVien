@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Table,
   Button,
@@ -13,6 +13,7 @@ import {
   notification,
   Drawer,
   Descriptions,
+  Upload,
 } from "antd";
 import axios from "axios";
 import moment from "moment";
@@ -38,6 +39,18 @@ function EmployeeManagement() {
   const [employeeLogs, setEmployeeLogs] = useState([]);
   const [logEmployee, setLogEmployee] = useState(null);
 
+
+
+  const fetchEmployeeLogs = async (employee) => {
+  try {
+    const res = await axios.get(`/api/admin/employee-log/${employee._id}`);
+    setEmployeeLogs(res.data);
+    setLogEmployee(employee);
+    setLogDrawerVisible(true);
+  } catch (err) {
+    message.error("Không thể tải lịch sử log");
+  }
+};
   const fetchEmployees = async () => {
     try {
       const res = await axios.get("/api/admin/employees");
@@ -79,9 +92,14 @@ function EmployeeManagement() {
     setEditingEmployee(employee);
     form.setFieldsValue({
       ...employee,
+      _id: employee._id, // ⚠️ Cần thiết cho validator
       department: employee.department?._id || undefined,
     });
   };
+
+
+
+
   const toggleStatus = async (record) => {
     try {
       const updatedStatus = record.status === "active" ? "inactive" : "active";
@@ -96,39 +114,80 @@ function EmployeeManagement() {
   };
 
   const handleEditSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      await axios.put(`/api/admin/updEmp/${editingEmployee._id}`, values);
-      notification.success({ message: "Employee updated" });
-      setEditingEmployee(null);
-      fetchEmployees();
-    } catch (err) {
-      notification.error({ message: "Update failed" });
+  try {
+    const values = await form.validateFields();
+    const formData = new FormData();
+
+    Object.keys(values).forEach((key) => {
+    const val = values[key];
+    if (
+      key !== "avatarFile" &&
+      val !== undefined &&
+      (key !== "password" || val.trim() !== "")
+    ) {
+      formData.append(key, val);
     }
-  };
+  });
+
+
+    if (values.avatarFile?.[0]) {
+      formData.append("avatar", values.avatarFile[0].originFileObj);
+    }
+
+    await axios.put(`/api/admin/updEmp/${editingEmployee._id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    notification.success({ message: "Cập nhật thành công" });
+    setEditingEmployee(null);
+    fetchEmployees();
+  } catch (err) {
+    notification.error({ message: "Cập nhật thất bại" });
+  }
+};
+
 
   const handleCreate = async () => {
-    try {
-      const values = await createForm.validateFields();
-      await axios.post("/api/admin/createEmp", values);
-      notification.success({ message: "Employee created" });
-      setCreateModalVisible(false);
-      createForm.resetFields();
-      fetchEmployees();
-    } catch (err) {
-      notification.error({ message: "Create failed" });
+  try {
+    const values = await createForm.validateFields();
+
+    console.log("📝 Form values:", values);
+    console.log("📦 Ảnh gửi đi:", values.avatarFile?.[0]?.originFileObj);
+
+    const formData = new FormData();
+
+    for (const [key, val] of Object.entries(values)) {
+      if (key !== "avatarFile") {
+        formData.append(key, val);
+      }
     }
-  };
-  const fetchEmployeeLogs = async (employee) => {
-    try {
-      const res = await axios.get(`/api/admin/employee-log/${employee._id}`);
-      setEmployeeLogs(res.data);
-      setLogEmployee(employee);
-      setLogDrawerVisible(true);
-    } catch (err) {
-      message.error("Không thể tải lịch sử log");
+
+    // 👇 THÊM ẢNH
+    const avatarFile = values.avatarFile?.[0]?.originFileObj;
+    if (avatarFile) {
+      formData.append("avatar", avatarFile);
     }
-  };
+
+    await axios.post("/api/admin/createEmp", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    notification.success({ message: "Tạo nhân viên thành công" });
+    setCreateModalVisible(false);
+    createForm.resetFields();
+    fetchEmployees();
+  } catch (err) {
+    console.error("❌ Lỗi tạo nhân viên:", err);
+    notification.error({ message: "Tạo thất bại", description: err.message });
+  }
+};
+
+
+
 
   const filteredEmployees = employees.filter((emp) => {
     const keyword = searchText.toLowerCase();
@@ -144,7 +203,6 @@ function EmployeeManagement() {
       : true;
     return matchNameOrCode && matchStatus && matchRole && matchDate;
   });
-
   return (
     <div>
       <h1>Quản Lý Nhân Viên</h1>
@@ -171,7 +229,6 @@ function EmployeeManagement() {
           <Option value="Pharmacist">Dược sĩ</Option>
           <Option value="Accountant">Kế toán</Option>
         </Select>
-
         <Select
           placeholder="Trạng thái"
           onChange={(value) => setStatusFilter(value)}
@@ -259,39 +316,56 @@ function EmployeeManagement() {
 
       {/* Chi tiết nhân viên */}
       <Drawer
-        title="Chi Tiết Nhân Viên"
-        open={!!viewingEmployee}
-        onClose={() => setViewingEmployee(null)}
-        width={400}
-      >
-        {viewingEmployee && (
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="Tên">
-              {viewingEmployee.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="Email">
-              {viewingEmployee.email}
-            </Descriptions.Item>
-            <Descriptions.Item label="Vai trò">
-              {viewingEmployee.role}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              {viewingEmployee.status === "active"
-                ? "Đang hoạt động"
-                : "Ngưng hoạt động"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Phòng ban">
-              {viewingEmployee?.department?.name || "—"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Chuyên môn">
-              {viewingEmployee.specialization || "—"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Số điện thoại">
-              {viewingEmployee.phone || "—"}
-            </Descriptions.Item>
-          </Descriptions>
+  title="Chi Tiết Nhân Viên"
+  open={!!viewingEmployee}
+  onClose={() => setViewingEmployee(null)}
+  width={400}
+>
+  {viewingEmployee && (
+  <>
+    {console.log("🧍 Nhân viên đang xem:", viewingEmployee)}
+
+    <Descriptions column={1} bordered>
+      <Descriptions.Item label="Tên">{viewingEmployee.name}</Descriptions.Item>
+      <Descriptions.Item label="Email">{viewingEmployee.email}</Descriptions.Item>
+      <Descriptions.Item label="Vai trò">{viewingEmployee.role}</Descriptions.Item>
+      <Descriptions.Item label="Trạng thái">
+        {viewingEmployee.status === "active" ? "Đang hoạt động" : "Ngưng hoạt động"}
+      </Descriptions.Item>
+      <Descriptions.Item label="Phòng ban">
+        {viewingEmployee?.department?.name || "—"}
+      </Descriptions.Item>
+      <Descriptions.Item label="Chuyên môn">
+        {viewingEmployee.specialization || "—"}
+      </Descriptions.Item>
+      <Descriptions.Item label="Số điện thoại">
+        {viewingEmployee.phone || "—"}
+      </Descriptions.Item>
+
+      {/* ✅ Avatar */}
+      <Descriptions.Item label="Ảnh đại diện">
+        {viewingEmployee.avatar ? (
+          <img
+            src={viewingEmployee.avatar}
+            alt="avatar"
+            style={{
+              width: 100,
+              height: 100,
+              objectFit: "cover",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+            }}
+          />
+        ) : (
+          "Không có ảnh"
         )}
-      </Drawer>
+      </Descriptions.Item>
+    </Descriptions>
+  </>
+)}
+
+</Drawer>
+
 
       {/* Modal chỉnh sửa */}
       <Modal
@@ -303,59 +377,197 @@ function EmployeeManagement() {
         destroyOnHidden
       >
         <Form form={form} layout="vertical">
-          <Form.Item label="Tên" name="name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[{ required: true, type: "email" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
-            <Select>
-          <Option value="Admin">Quản trị viên</Option>
-          <Option value="Receptionist">Lễ tân</Option>
-          <Option value="Doctor">Bác sĩ</Option>
-          <Option value="HRManager">Quản lý nhân viên</Option>
-          <Option value="Pharmacist">Dược sĩ</Option>
-          <Option value="Accountant">Kế toán</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Trạng thái"
-            name="status"
-            rules={[{ required: true }]}
-          >
-            <Select>
-              <Option value="active">Đang hoạt động</Option>
-              <Option value="inactive">Ngưng hoạt động</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Phòng ban"
-            name="department"
-            rules={[{ required: true }]}
-          >
-            <Select placeholder="Chọn phòng ban">
-              {departments.map((dept) => (
-                <Option key={dept._id} value={dept._id}>
-                  {dept.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="Chuyên môn" name="specialization">
-            <Input />
-          </Form.Item>
-          <Form.Item label="Số điện thoại" name="phone">
-            <Input />
-          </Form.Item>
-        </Form>
+  {/* Tên */}
+  <Form.Item
+    label="Tên"
+    name="name"
+    rules={[
+      { required: true, message: "Vui lòng nhập tên" },
+      { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+      {
+        validator: (_, value) => {
+          if (value && value.trim().length === 0) {
+            return Promise.reject("Tên không được toàn khoảng trắng");
+          }
+          return Promise.resolve();
+        },
+      },
+    ]}
+  >
+    <Input />
+  </Form.Item>
+
+  {/* Email */}
+  <Form.Item
+    label="Email"
+    name="email"
+    rules={[
+      { required: true, message: "Vui lòng nhập email" },
+      { type: "email", message: "Email không hợp lệ" },
+    ]}
+  >
+    <Input />
+  </Form.Item>
+{/* Mật khẩu mới */}
+<Form.Item
+  label="Mật khẩu mới"
+  name="password"
+  rules={[
+    {
+      min: 6,
+      message: "Mật khẩu phải có ít nhất 6 ký tự",
+    },
+  ]}
+  hasFeedback
+>
+  <Input.Password placeholder="Nhập mật khẩu mới (nếu cần)" />
+</Form.Item>
+
+{/* Xác nhận mật khẩu */}
+<Form.Item
+  label="Xác nhận mật khẩu"
+  name="confirmPassword"
+  dependencies={["password"]}
+  hasFeedback
+  rules={[
+    ({ getFieldValue }) => ({
+      validator(_, value) {
+        const password = getFieldValue("password");
+        if (!password || password === value) {
+          return Promise.resolve();
+        }
+        return Promise.reject("Mật khẩu không khớp");
+      },
+    }),
+  ]}
+>
+  <Input.Password placeholder="Nhập lại mật khẩu" />
+</Form.Item>
+
+  {/* Vai trò */}
+  <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
+    <Select>
+      <Option value="Admin">Quản trị viên</Option>
+      <Option value="Receptionist">Lễ tân</Option>
+      <Option value="Doctor">Bác sĩ</Option>
+      <Option value="HRManager">Quản lý nhân viên</Option>
+      <Option value="Pharmacist">Dược sĩ</Option>
+      <Option value="Accountant">Kế toán</Option>
+    </Select>
+  </Form.Item>
+
+  {/* Trạng thái */}
+  <Form.Item label="Trạng thái" name="status" rules={[{ required: true }]}>
+    <Select>
+      <Option value="active">Đang hoạt động</Option>
+      <Option value="inactive">Ngưng hoạt động</Option>
+    </Select>
+  </Form.Item>
+
+  {/* Phòng ban */}
+  <Form.Item
+    label="Phòng ban"
+    name="department"
+    rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
+  >
+    <Select placeholder="Chọn phòng ban">
+      {departments.map((dept) => (
+        <Option key={dept._id} value={dept._id}>
+          {dept.name}
+        </Option>
+      ))}
+    </Select>
+  </Form.Item>
+
+  {/* Chuyên môn */}
+  <Form.Item
+    label="Chuyên môn"
+    name="specialization"
+    rules={[
+      {
+        max: 100,
+        message: "Chuyên môn không được vượt quá 100 ký tự",
+      },
+      {
+        validator: (_, value) => {
+          if (value && value.trim().length === 0) {
+            return Promise.reject("Chuyên môn không được toàn khoảng trắng");
+          }
+          return Promise.resolve();
+        },
+      },
+    ]}
+  >
+    <Input />
+  </Form.Item>
+
+  {/* Số điện thoại */}
+  <Form.Item
+  name="phone"
+  label="Số điện thoại"
+  normalize={(value) => value?.trim()}
+  rules={[
+    {
+      pattern: /^0\d{9}$/,
+      message: "Số điện thoại phải có 10 chữ số và bắt đầu bằng 0",
+    },
+    {
+      validator: async (_, value) => {
+        if (!value) return Promise.resolve();
+
+        const currentId = form.getFieldValue("_id");
+        const trimmed = value.trim();
+
+        // DEBUG LOG
+        console.log("🔍 Đang kiểm tra số:", trimmed);
+        console.log("➡️ ID hiện tại:", currentId);
+        console.log("📋 Danh sách:", employees.map(emp => ({
+          id: emp._id,
+          phone: emp.phone,
+        })));
+
+        const isDuplicate = employees.some(
+          (emp) =>
+            emp.phone?.trim() === trimmed &&
+            String(emp._id) !== String(currentId) // ✅ ép kiểu so sánh chính xác
+        );
+
+        if (isDuplicate) {
+          console.warn("⚠️ Trùng số điện thoại với nhân viên khác");
+          return Promise.reject("Số điện thoại đã tồn tại");
+        }
+
+        return Promise.resolve();
+
+      },
+    },
+  ]}
+>
+  <Input />
+</Form.Item>
+<Form.Item
+  label="Ảnh đại diện mới"
+  name="avatarFile"
+  valuePropName="fileList"
+  getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+>
+  <Upload
+    name="avatar"
+    listType="picture"
+    accept="image/*"
+    maxCount={1}
+    beforeUpload={() => false}
+    showUploadList={true}
+  >
+    <Button>Chọn ảnh mới</Button>
+  </Upload>
+</Form.Item>
+
+
+</Form>
+
       </Modal>
 
-      {/* Modal tạo mới */}
       <Modal
   title="Thêm Nhân Viên Mới"
   open={createModalVisible}
@@ -365,15 +577,73 @@ function EmployeeManagement() {
   destroyOnClose
 >
   <Form form={createForm} layout="vertical">
-    <Form.Item label="Tên" name="name" rules={[{ required: true }]}>
+    {/* Tên */}
+    <Form.Item
+      label="Tên"
+      name="name"
+      rules={[
+        { required: true, message: "Vui lòng nhập tên" },
+        { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+        {
+          validator: (_, value) => {
+            if (value && value.trim().length === 0) {
+              return Promise.reject("Tên không được toàn khoảng trắng");
+            }
+            return Promise.resolve();
+          },
+        },
+      ]}
+    >
       <Input />
     </Form.Item>
-    <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+
+    {/* Email */}
+    <Form.Item
+      label="Email"
+      name="email"
+      rules={[
+        { required: true, message: "Vui lòng nhập email" },
+        { type: "email", message: "Email không hợp lệ" },
+      ]}
+    >
       <Input />
     </Form.Item>
-    <Form.Item label="Mật khẩu" name="password" rules={[{ required: true }]}>
+
+    {/* Mật khẩu */}
+    <Form.Item
+      label="Mật khẩu"
+      name="password"
+      rules={[
+        { required: true, message: "Vui lòng nhập mật khẩu" },
+        { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+      ]}
+      hasFeedback
+    >
       <Input.Password />
     </Form.Item>
+
+    {/* Nhập lại mật khẩu */}
+    <Form.Item
+      label="Nhập lại mật khẩu"
+      name="confirmPassword"
+      dependencies={["password"]}
+      hasFeedback
+      rules={[
+        { required: true, message: "Vui lòng nhập lại mật khẩu" },
+        ({ getFieldValue }) => ({
+          validator(_, value) {
+            if (!value || getFieldValue("password") === value) {
+              return Promise.resolve();
+            }
+            return Promise.reject("Mật khẩu không khớp");
+          },
+        }),
+      ]}
+    >
+      <Input.Password />
+    </Form.Item>
+
+    {/* Vai trò */}
     <Form.Item label="Vai trò" name="role" rules={[{ required: true }]}>
       <Select>
         <Option value="Admin">Quản trị viên</Option>
@@ -385,6 +655,7 @@ function EmployeeManagement() {
       </Select>
     </Form.Item>
 
+    {/* Phòng ban */}
     <Form.Item label="Phòng ban" name="department" rules={[{ required: true }]}>
       <Select placeholder="Chọn phòng ban">
         {departments.map((dep) => (
@@ -395,24 +666,79 @@ function EmployeeManagement() {
       </Select>
     </Form.Item>
 
-    <Form.Item label="Chuyên môn" name="specialization">
+    {/* Chuyên môn */}
+    <Form.Item
+      label="Chuyên môn"
+      name="specialization"
+      rules={[
+        { max: 100, message: "Chuyên môn không được vượt quá 100 ký tự" },
+        {
+          validator: (_, value) => {
+            if (value && value.trim().length === 0) {
+              return Promise.reject("Chuyên môn không được toàn khoảng trắng");
+            }
+            return Promise.resolve();
+          },
+        },
+      ]}
+    >
       <Input placeholder="Nhập chuyên môn (nếu có)" />
     </Form.Item>
 
-    {/* ✅ Thêm Số điện thoại */}
-    <Form.Item label="Số điện thoại" name="phone">
+    {/* Số điện thoại */}
+    <Form.Item
+      label="Số điện thoại"
+      name="phone"
+      rules={[
+        {
+          pattern: /^0\d{9}$/,
+          message: "Số điện thoại phải có 10 chữ số và bắt đầu bằng 0",
+        },
+        {
+          validator: async (_, value) => {
+            if (!value || !employees.length) return Promise.resolve();
+            const isDuplicate = employees.some(emp => emp.phone === value);
+            if (isDuplicate) {
+              return Promise.reject("Số điện thoại đã tồn tại");
+            }
+            return Promise.resolve();
+          },
+        },
+      ]}
+    >
       <Input placeholder="Nhập số điện thoại (nếu có)" />
     </Form.Item>
 
-<Form.Item label="Trạng thái" name="status" initialValue="active">
-  <Select>
-    <Option value="active">Đang hoạt động</Option>
-    <Option value="inactive">Ngưng hoạt động</Option>
-  </Select>
-</Form.Item>
+    {/* Trạng thái */}
+    <Form.Item label="Trạng thái" name="status" initialValue="active">
+      <Select>
+        <Option value="active">Đang hoạt động</Option>
+        <Option value="inactive">Ngưng hoạt động</Option>
+      </Select>
+    </Form.Item>
 
+    {/* Ảnh đại diện */}
+    <Form.Item
+      label="Ảnh đại diện"
+      name="avatarFile"
+      valuePropName="fileList"
+      getValueFromEvent={(e) => Array.isArray(e) ? e : e?.fileList}
+      rules={[{ required: true, message: "Vui lòng chọn ảnh đại diện" }]}
+    >
+      <Upload
+        name="avatar" // ✅ phải khớp với multer.single("avatar")
+        listType="picture"
+        accept="image/*"
+        maxCount={1}
+        beforeUpload={() => false}
+        showUploadList
+      >
+        <Button>Chọn ảnh</Button>
+      </Upload>
+    </Form.Item>
   </Form>
 </Modal>
+
 
 <Drawer
   title={`Lịch sử log - ${logEmployee?.name} (${logEmployee?.employeeCode})`}

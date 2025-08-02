@@ -115,20 +115,56 @@ const UserManagement = () => {
   };
 
   const handleSubmit = async () => {
-    try {
-      if (currentUser) {
-        const payload = { ...form };
-        if (!payload.password) delete payload.password;
-        await axios.put(`http://localhost:9999/api/users/${currentUser._id}`, payload);
-      } else {
-        await axios.post("http://localhost:9999/api/users", form);
-      }
-      setShowModal(false);
-      fetchUsers(searchQuery, statusFilter, currentPage);
-    } catch (error) {
-      alert("Hoạt động không thành công: " + (error.response?.data?.message || error.message));
+  const trimmedEmail = form.email.trim();
+  const trimmedPhone = form.phone.trim();
+
+  const isDuplicateEmail = users.some((u) => {
+    return (
+      u.email?.trim() === trimmedEmail &&
+      (!currentUser || String(u._id) !== String(currentUser._id))
+    );
+  });
+
+  const isDuplicatePhone = users.some((u) => {
+    return (
+      u.phone?.trim() === trimmedPhone &&
+      (!currentUser || String(u._id) !== String(currentUser._id))
+    );
+  });
+
+
+  if (isDuplicateEmail) {
+    alert("Email đã tồn tại");
+    return;
+  }
+
+  if (isDuplicatePhone) {
+    alert("Số điện thoại đã tồn tại");
+    return;
+  }
+
+  try {
+    const payload = {
+      ...form,
+      email: trimmedEmail,
+      phone: trimmedPhone,
+    };
+
+    if (!payload.password) delete payload.password; // giữ mật khẩu cũ nếu không nhập
+
+    if (currentUser) {
+      await axios.put(`http://localhost:9999/api/users/${currentUser._id}`, payload);
+    } else {
+      await axios.post("http://localhost:9999/api/users", payload);
     }
-  };
+
+    setShowModal(false);
+    fetchUsers(searchQuery, statusFilter, currentPage);
+  } catch (error) {
+    alert("Hoạt động không thành công: " + (error.response?.data?.message || error.message));
+  }
+};
+
 
   const handleDeleteClick = (userId) => {
     setDeleteUserId(userId);

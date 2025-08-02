@@ -37,7 +37,7 @@ function ReceptionistScheduleManager() {
   const [selectedScheduleLog, setSelectedScheduleLog] = useState(null);
   const [employeeList, setEmployeeList] = useState([]);
   const [selectedEmployeeForLogs, setSelectedEmployeeForLogs] = useState(null);
-
+  const [filterAttendanceStatus, setFilterAttendanceStatus] = useState(null);
   const token = localStorage.getItem("token"); 
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
@@ -76,9 +76,12 @@ function ReceptionistScheduleManager() {
         dayjs(schedule.date).format('YYYY-MM-DD') === filterDate.format('YYYY-MM-DD')
       );
     }
+    if (filterAttendanceStatus) {
+      result = result.filter(schedule => schedule.attendanceStatus === filterAttendanceStatus);
+    }
 
     setFilteredSchedules(result);
-  }, [schedules, searchText, filterDepartment, filterDate, filterRole]);
+ }, [schedules, searchText, filterDepartment, filterDate, filterRole, filterAttendanceStatus]);
 
   const fetchAllEmployees = async () => {
     try {
@@ -90,16 +93,45 @@ function ReceptionistScheduleManager() {
   };
 
   const fetchSchedules = async (employeeId) => {
-    try {
-      const url = employeeId 
-        ? `/api/receptionist/schedule-management/schedule?employeeId=${employeeId}`
-        : '/api/receptionist/schedule-management/schedule';
-      const res = await axios.get(url);
-      setSchedules(res.data);
-    } catch (err) {
-      message.error('Không thể lấy lịch');
-    }
-  };
+  try {
+    const url = employeeId 
+      ? `/api/receptionist/schedule-management/schedule?employeeId=${employeeId}`
+      : '/api/receptionist/schedule-management/schedule';
+
+    const scheduleRes = await axios.get(url);
+    const schedulesWithAttendance = await Promise.all(
+      scheduleRes.data.map(async (schedule) => {
+        try {
+          const attendanceRes = await axios.get(`/api/receptionist/schedule-management/schedule/${schedule._id}/attendances`);
+          schedule.attendanceStatus = attendanceRes.data?.[0]?.status || 'Chưa điểm danh';
+        } catch {
+          schedule.attendanceStatus = 'Chưa điểm danh';
+        }
+        return schedule;
+      })
+    );
+
+    const sortedSchedules = schedulesWithAttendance.sort((a, b) => {
+  const dateA = dayjs(a.date).valueOf();
+  const dateB = dayjs(b.date).valueOf();
+
+  // Nếu cùng ngày thì so sánh theo giờ bắt đầu khung giờ đầu tiên
+  if (dateA === dateB) {
+    const aStart = a.timeSlots?.[0]?.startTime ? dayjs(a.timeSlots[0].startTime).valueOf() : 0;
+    const bStart = b.timeSlots?.[0]?.startTime ? dayjs(b.timeSlots[0].startTime).valueOf() : 0;
+    return aStart - bStart;
+  }
+
+  return dateA - dateB;
+});
+
+setSchedules(sortedSchedules);
+
+  } catch (err) {
+    message.error('Không thể lấy lịch');
+  }
+};
+
 
   const fetchScheduleLogs = async (schedule) => {
     try {
@@ -172,6 +204,21 @@ function ReceptionistScheduleManager() {
     form.setFieldValue('employeeId', undefined);
     fetchEmployeesByDepartment(value);
   };
+  
+  const markAsOnLeave = async (scheduleId) => {
+    try {
+      await axios.post(`/api/receptionist/attendance/on-leave`, { scheduleId });
+
+      message.success("Đã cập nhật trạng thái nghỉ phép");
+      if (selectedEmployeeForLogs) {
+        fetchSchedules(selectedEmployeeForLogs._id);
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Không thể cập nhật trạng thái nghỉ phép");
+    }
+  };
+
 
   const handleAutoGenerateSchedule = async (values) => {
     const { department, employeeId, workingShifts, dateRange } = values;
@@ -286,6 +333,7 @@ function ReceptionistScheduleManager() {
     setFilterDepartment(null);
     setFilterDate(null);
     setFilterRole(null);
+    setFilterAttendanceStatus(null);
   };
 
   const disabledDate = (current) => {
@@ -360,7 +408,27 @@ function ReceptionistScheduleManager() {
       )
     },
     {
-      title: 'Tình trạng',
+  title: 'Tình trạng điểm danh',
+  dataIndex: 'attendanceStatus',
+  render: (status) => {
+    const statusMap = {
+      Present: { color: "green", label: "Hoàn thành" },
+      "Late-Arrival": { color: "gold", label: "Đến muộn" },
+      "Left-Early": { color: "blue", label: "Về sớm" },
+      "Left-Late": { color: "orange", label: "Check-out muộn" },
+      "Checked-In": { color: "processing", label: "Đang làm" },
+      Absent: { color: "red", label: "Vắng mặt" },
+      "On-Leave": { color: "cyan", label: "Nghỉ phép" },
+      Invalid: { color: "default", label: "Không hợp lệ" },
+    };
+
+    const display = statusMap[status] || { color: "default", label: "Chưa điểm danh" };
+
+    return <Tag color={display.color}>{display.label}</Tag>;
+  }
+},
+    {
+      title: 'Tình trạng lịch làm việc',
       dataIndex: 'status',
       render: (status) => (
         <Tag color={status === 'active' ? 'green' : 'red'}>
@@ -380,7 +448,9 @@ function ReceptionistScheduleManager() {
             onChange={() => toggleOverallStatus(record)}
           />
           <Button type="link" onClick={() => fetchScheduleLogs(record)}>Xem log</Button>
-          {/* <Button type="link" danger onClick={() => handleDelete(record._id)}>Xóa</Button> */}
+          <Button type="link" danger onClick={() => markAsOnLeave(record._id)}>
+            Nghỉ phép
+          </Button>
         </Space>
       )
     }
@@ -451,58 +521,91 @@ function ReceptionistScheduleManager() {
   ];
 
   const onFinish = async (values) => {
-    const payload = {
-      employeeId: values.employeeId,
-      department: values.department,
-      date: values.date.format('YYYY-MM-DD'),
-      timeSlots: values.timeSlots.map(slot => ({
-        startTime: slot.timeRange[0].toISOString(),
-        endTime: slot.timeRange[1].toISOString(),
-        status: slot.status
-      }))
-    };
+  const { employeeId, department, date, timeSlots } = values;
 
-    const dateStr = values.date.format('YYYY-MM-DD');
-    const conflict = schedules.some((s) => {
-      const sameEmp = s.employeeId === values.employeeId || s.employeeId?._id === values.employeeId;
-      const sameDate = dayjs(s.date).format('YYYY-MM-DD') === dateStr;
-      if (!sameEmp || !sameDate) return false;
-      return s.timeSlots.some((existingSlot) =>
-        values.timeSlots.some((newSlot) =>
-          isTimeOverlap(
-            newSlot.timeRange[0],
-            newSlot.timeRange[1],
-            existingSlot.startTime,
-            existingSlot.endTime
-          )
-        )
-      );
-    });
+  const baseDate = dayjs(date).startOf('day');
 
-    if (conflict) {
-      message.error('Khung giờ bị trùng với lịch đã có của bác sĩ trong ngày này.');
-      return;
-    }
+  const formattedTimeSlots = values.timeSlots.map(({ timeRange, status }) => {
+  const [startRaw, endRaw] = timeRange;
+  const baseDate = dayjs(values.date).startOf("day");
 
-    try {
-      if (editingId) {
-        await axios.put(`/api/receptionist/schedule-management/schedule/${editingId}`, payload);
-        message.success('Lịch trình đã cập nhật');
-      } else {
-        await axios.post('/api/receptionist/schedule-management/schedule', payload);
-        message.success('Lịch đã được tạo');
-      }
-      form.resetFields();
-      setEditingId(null);
-      setIsModalVisible(false);
-      if (selectedEmployeeForLogs) {
-        fetchSchedules(selectedEmployeeForLogs._id);
-      }
-    } catch (err) {
-      console.error(err);
-      message.error('Lỗi khi lưu lịch');
-    }
+  const startTime = baseDate
+    .hour(startRaw.hour())
+    .minute(startRaw.minute())
+    .second(0)
+    .millisecond(0);
+
+  const endTime = baseDate
+    .hour(endRaw.hour())
+    .minute(endRaw.minute())
+    .second(0)
+    .millisecond(0);
+
+  return {
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    status: status || "Available",
   };
+});
+
+
+
+
+
+const payload = {
+  employeeId: values.employeeId,
+  department: values.department,
+  date: values.date.format('YYYY-MM-DD'),
+  timeSlots: formattedTimeSlots
+};
+
+  const dateStr = baseDate.format('YYYY-MM-DD');
+
+  const conflict = schedules.some((s) => {
+    const sameEmp = s.employeeId === employeeId || s.employeeId?._id === employeeId;
+    const sameDate = dayjs(s.date).format('YYYY-MM-DD') === dateStr;
+    if (!sameEmp || !sameDate) return false;
+
+    return s.timeSlots.some((existingSlot) =>
+      timeSlots.some(({ timeRange }) =>
+        isTimeOverlap(
+          timeRange[0],
+          timeRange[1],
+          existingSlot.startTime,
+          existingSlot.endTime
+        )
+      )
+    );
+  });
+
+  if (conflict) {
+    message.error('Khung giờ bị trùng với lịch đã có của bác sĩ trong ngày này.');
+    return;
+  }
+
+  try {
+    if (editingId) {
+      await axios.put(`/api/receptionist/schedule-management/schedule/${editingId}`, payload);
+      message.success('Lịch trình đã cập nhật');
+    } else {
+      await axios.post('/api/receptionist/schedule-management/schedule', payload);
+      message.success('Lịch đã được tạo');
+    }
+
+    form.resetFields();
+    setEditingId(null);
+    setIsModalVisible(false);
+
+    if (selectedEmployeeForLogs) {
+      fetchSchedules(selectedEmployeeForLogs._id);
+    }
+  } catch (err) {
+    console.error("❌ Lỗi khi lưu lịch:", err);
+    message.error('Lỗi khi lưu lịch');
+  }
+};
+
+
 
   return (
     <div style={{ padding: 24 }}>
@@ -598,6 +701,23 @@ function ReceptionistScheduleManager() {
     style={{ width: 200 }}
     value={filterDate}
   />
+  <Select
+  placeholder="Lọc theo tình trạng điểm danh"
+  style={{ width: 250 }}
+  allowClear
+  value={filterAttendanceStatus}
+  onChange={setFilterAttendanceStatus}
+>
+  <Option value="Present">Hoàn thành</Option>
+  <Option value="Late-Arrival">Đến muộn</Option>
+  <Option value="Left-Early">Về sớm</Option>
+  <Option value="Left-Late">Check-out muộn</Option>
+  <Option value="Checked-In">Đang làm</Option>
+  <Option value="Absent">Vắng mặt</Option>
+  <Option value="On-Leave">Nghỉ phép</Option>
+  <Option value="Invalid">Không hợp lệ</Option>
+</Select>
+
   <Button onClick={clearFilters}>Xóa Filter</Button>
 
   <Button
@@ -990,7 +1110,7 @@ function ReceptionistScheduleManager() {
       <p><strong>Trạng thái:</strong> {selectedEmployee.status}</p>
       <p><strong>Khoa:</strong> {(() => {
         const dep = departments.find(d => d._id === selectedEmployee.department || d._id === selectedEmployee.department?._id);
-        return dep?.departmentCode || 'Không rõ';
+        return dep?.name || 'Không rõ';
       })()}</p>
       <p><strong>Chuyên môn:</strong> {selectedEmployee.specialization}</p>
       <p><strong>Số điện thoại:</strong> {selectedEmployee.phone}</p>
