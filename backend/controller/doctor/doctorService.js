@@ -2,8 +2,10 @@ const mongoose = require('mongoose'); // Thêm dòng này
 const Employee = require("../../models/Employee");
 const User = require("../../models/User");
 const Profile = require("../../models/Profile");
-// Lấy tất cả bác sĩ
+const Schedule = require("../../models/Schedule");
+const moment = require('moment');
 
+// Lấy tất cả bác sĩ
 const getAllDoctors = async (req, res) => {
     try {
         const doctors = await Employee.find({ role: 'Doctor' })
@@ -264,14 +266,81 @@ module.exports.delEmployees = async (req, res) => {
     }
 };
 
-module.exports.getAllDoctorsForApm = async (req, res) => {
-    try {
-        const doctors = await Employee.find({ role: 'Doctor', status: 'active' })
-            .select('name department expYear avatar degree'); // CHỈ lấy các trường cần thiết
+module.exports.getDoctorsByDepartment = async (req, res) => {
+    const { departmentId } = req.query;
 
-        res.status(200).json(doctors);
-    } catch (err) {
-        console.error("Error fetching doctors:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
+    try {
+        const doctors = await Employee.find({ role: 'Doctor', ...(departmentId && {department: departmentId}) }).select('name _id specialization');
+        res.json({ doctors });
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Lỗi server' });
     }
+};
+
+module.exports.getAvailableSlotsInWeek = async (req, res) => {
+    const doctorId = req.params.doctorId;
+    const { startDate } = req.query;
+
+    if (!startDate) {
+        return res.status(400).json({ error: 'Cần startDate (YYYY-MM-DD)' });
+    }
+
+    try {
+        // Normalize startDate thành UTC và startOf('day')
+        const start = moment.utc(startDate, 'YYYY-MM-DD').startOf('day');
+        if (!start.isValid()) {
+            return res.status(400).json({ error: 'startDate không hợp lệ' });
+        }
+
+        const end = moment.utc(start).add(6, 'days').endOf('day');
+
+        // Log để debug
+        console.log('Query range:', start.toISOString(), 'to', end.toISOString());
+
+        // Query Schedule trong khoảng thời gian
+        const schedules = await Schedule.find({
+            employeeId: doctorId,
+            date: { $gte: start.toDate(), $lte: end.toDate() }
+        });
+
+        // Log schedules tìm thấy
+        console.log('Found schedules:', schedules.length);
+
+        let availableSlots = [];
+        schedules.forEach(schedule => {
+            const slots = schedule.timeSlots.filter(slot => slot.status === 'Available');
+            slots.forEach(slot => {
+                availableSlots.push({
+                    date: schedule.date,
+                    startTime: slot.startTime,
+                    endTime: slot.endTime,
+                    status: slot.status
+                });
+            });
+        });
+
+        // Sắp xếp theo ngày và giờ
+        availableSlots.sort((a, b) => {
+            if (a.date.getTime() !== b.date.getTime()) return a.date.getTime() - b.date.getTime();
+            return a.startTime.getTime() - b.startTime.getTime();
+        });
+
+        res.json({ slots: availableSlots });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: error.message || 'Lỗi server' });
+    }
+
+    module.exports.getAllDoctorsForApm = async (req, res) => {
+        try {
+            const {services} = req.query;
+            const doctors = await Employee.find({ role: 'Doctor', status: 'active', ...(services ? { services: { $all: Array.isArray(services) ? services.map(id => new mongoose.Types.ObjectId(id.trim())) : [new mongoose.Types.ObjectId(services.trim())] } } : {}) })
+                .select('name department expYear avatar degree'); // CHỈ lấy các trường cần thiết
+    
+            res.status(200).json(doctors);
+        } catch (err) {
+            console.error("Error fetching doctors:", err);
+            res.status(500).json({ message: "Server error", error: err.message });
+        }
+    };
 };

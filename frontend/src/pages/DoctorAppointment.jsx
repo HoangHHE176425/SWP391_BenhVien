@@ -20,7 +20,7 @@ const DoctorAppointments = () => {
 
   const fetchAppointments = async (doctorId) => {
     try {
-      const res = await axios.get(`/api/appointments`, {
+      const res = await axios.get(`/api/apm`, {
         params: { doctorId },
       });
       setAppointments(res.data);

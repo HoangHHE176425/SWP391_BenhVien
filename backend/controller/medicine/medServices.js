@@ -78,7 +78,21 @@ exports.createInvoice = async (req, res) => {
 
 exports.getAllMedicines = async (req, res) => {
   try {
-    const medicines = await Medicine.find()
+    const {text, type, group} = req.query;
+    
+    const filter = {};
+    
+    if (text) {
+      filter.$or = [
+        { name: { $regex: text, $options: 'i' } },
+        { description: { $regex: text, $options: 'i' } }
+      ];
+    }
+    
+    if (type) filter.type = type;
+    if (group) filter.group = group;
+    
+    const medicines = await Medicine.find(filter)
         .sort({ updatedAt: -1 });
 
     res.status(200).json(medicines);

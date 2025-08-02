@@ -1,55 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col } from "react-bootstrap";
+import { Row, Col, Modal, Button, Table } from "react-bootstrap";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/material_green.css";
 import "../assets/css/AppointmentPage.css";
 import axios from "axios";
 import { useAuth } from "../context/authContext";
+import moment from 'moment'; // Để xử lý ngày tuần
 
 const AppointmentPage = () => {
   const { token } = useAuth();
-  const [profiles, setProfiles] = useState([]);
-  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [step, setStep] = useState("profile");
+  const [identityNumber, setIdentityNumber] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profileGender, setProfileGender] = useState("");
   const [profileDateOfBirth, setProfileDateOfBirth] = useState("");
-  const [profileIdentityNumber, setProfileIdentityNumber] = useState("");
+  const [profilePhoneNumber, setProfilePhoneNumber] = useState("");
+  const [profileId, setProfileId] = useState(null);
   const [departmentData, setDepartmentData] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
-  const [step, setStep] = useState("profile");
+  const [startWeekDate, setStartWeekDate] = useState(moment().startOf('week').format('YYYY-MM-DD'));
+  const [weekSlots, setWeekSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [symptoms, setSymptoms] = useState("");
+  const [bhytCode, setBhytCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const [hasBhyt, setHasBhyt] = useState("Không");
   const steps = [
-    { id: "profile", title: "Chọn hồ sơ", desc: "" },
+    { id: "profile", title: "Hồ sơ", desc: "" },
     { id: "department", title: "Chọn khoa", desc: "" },
     { id: "doctor", title: "Chọn bác sĩ", desc: "" },
     { id: "datetime", title: "Chọn ngày giờ", desc: "" },
+    { id: "details", title: "Thông tin bổ sung", desc: "" },
     { id: "confirm", title: "Xác nhận", desc: "" },
   ];
-
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const res = await axios.get("http://localhost:9999/api/doctor/doctor", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setDoctors(res.data);
-      } catch (err) {
-        console.error("Error fetching doctors:", err);
-      }
-    };
-    fetchDoctors();
-  }, []);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -73,39 +63,74 @@ const AppointmentPage = () => {
 
         setDepartmentData(departments);
       } catch (err) {
-        console.error("Error fetching departments:", err);
+        console.error("[ERROR] Fetch departments:", err); // Log lỗi tải departments
       }
     };
 
     fetchDepartments();
-  }, []);
+  }, [token]);
 
-  // NEW: Hàm validate name (không chứa số)
-    const validateName = (name) => {
-        const regex = /^[a-zA-Z\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ\s]+$/; // Chỉ cho phép chữ cái, dấu tiếng Việt, và khoảng trắng
-        return regex.test(name);
-    };
+  const handleCheckCccd = async () => {
+    setLoading(true);
+    setError(null);
 
-  // NEW: Hàm validate identityNumber
-  const validateIdentityNumber = (identityNumber) => {
-    const regex = /^\d{12}$/; // Chỉ 12 ký tự số, không khoảng trắng/chữ/ký tự đặc biệt
-    return regex.test(identityNumber);
+    if (!identityNumber) {
+      setError("Vui lòng nhập CCCD.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        "http://localhost:9999/api/profile/cccd",
+        {
+          params: {
+            identityNumber
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.profile) {
+        setProfileId(res.data.profile._id);
+        setStep("department");
+      } else {
+        // Nếu chưa tồn tại, hiện modal tạo mới
+        setShowCreateModal(true);
+      }
+    } catch (err) {
+      console.error("[ERROR] Check CCCD:", err); // Log lỗi kiểm tra CCCD
+      setError("Kiểm tra CCCD thất bại.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateProfile = async () => {
     setLoading(true);
     setError(null);
 
-    // NEW: Validate name (không chứa số)
-    if (!validateName(profileName)) {
+    // Validate name (không chứa số)
+    const regexName = /^[a-zA-Z\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ\s]+$/;
+    if (!regexName.test(profileName)) {
       setError("Tên không được chứa số, chỉ chấp nhận chữ cái và khoảng trắng.");
       setLoading(false);
       return;
     }
 
-    // NEW: Validate identityNumber
-    if (!validateIdentityNumber(profileIdentityNumber)) {
+    // Validate identityNumber (12 ký tự số)
+    const regexId = /^\d{12}$/;
+    if (!regexId.test(identityNumber)) {
       setError("CMND/CCCD phải là 12 ký tự số, không khoảng trắng, chữ hoặc ký tự đặc biệt.");
+      setLoading(false);
+      return;
+    }
+
+    const regexPhone = /^(0[1-9][0-9]{8,9})$/; // Số điện thoại Việt Nam: 10-11 số, bắt đầu 0
+    if (!regexPhone.test(profilePhoneNumber)) {
+      setError("Số điện thoại không hợp lệ (phải là 10-11 số, bắt đầu 0).");
       setLoading(false);
       return;
     }
@@ -114,10 +139,11 @@ const AppointmentPage = () => {
       const res = await axios.post(
         "http://localhost:9999/api/profile/create",
         {
+          identityNumber,
           name: profileName,
-          gender: profileGender,
-          identityNumber: profileIdentityNumber,
           dateOfBirth: profileDateOfBirth,
+          gender: profileGender,
+          phone: profilePhoneNumber,
         },
         {
           headers: {
@@ -125,156 +151,152 @@ const AppointmentPage = () => {
           },
         }
       );
-      console.log("Profile created:", res.data);
-      const newProfile = res.data.profile;
-      setSelectedProfile(newProfile._id);
-      setProfiles([...profiles, newProfile]);
 
+      setProfileId(res.data.profile._id);
+      setShowCreateModal(false);
       setSuccess(true);
       setStep("department");
     } catch (err) {
-      console.error("Error creating profile:", err);
+      console.error("[ERROR] Create profile:", err); // Log lỗi tạo profile
       setError("Tạo hồ sơ thất bại.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateAppointment = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token");
-    const userId = user._id;
+  useEffect(() => {
+    if (selectedDepartment) {
+      const fetchDoctors = async () => {
+        try {
+          console.log("[LOG] Fetching doctors for department:", selectedDepartment); // Debug
+          const res = await axios.get(`http://localhost:9999/api/doctor/doctor?departmentId=${selectedDepartment}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          console.log("[LOG] Doctors response:", res.data); // Debug response
+          setDoctors(res.data.doctors || []); // Đặt trực tiếp doctors từ response
+        } catch (err) {
+          console.error("[ERROR] Fetch doctors:", err); // Log lỗi tải doctors
+          setDoctors([]); // Reset nếu lỗi
+        }
+      };
+      fetchDoctors();
+    } else {
+      setDoctors([]); // Reset khi không có department
+    }
+  }, [selectedDepartment, token]);
 
+  useEffect(() => {
+    if (selectedDoctor && startWeekDate) {
+      const fetchWeekSlots = async () => {
+        try {
+          console.log("[LOG] Fetching week slots for doctor:", selectedDoctor, "startDate:", startWeekDate); // Debug gọi API
+          const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log("[LOG] Week slots response:", res.data); // Log response data
+          setWeekSlots(res.data.slots);
+        } catch (err) {
+          console.error("[ERROR] Fetch week slots:", err); // Log lỗi tải slots
+        }
+      };
+      fetchWeekSlots();
+    }
+  }, [selectedDoctor, startWeekDate, token]);
+
+  useEffect(() => {
+    if (selectedDoctor && startWeekDate) {
+      const mockSlots = [];
+
+      for (let i = 0; i < 7; i++) {
+        const date = moment(startWeekDate).add(i, 'days').startOf('day').toDate();
+        mockSlots.push(
+          {
+            date: date,
+            startTime: moment(date).set({ hour: 8, minute: 0 }).toISOString(),
+            endTime: moment(date).set({ hour: 8, minute: 30 }).toISOString(),
+            status: "Available"
+          },
+          {
+            date: date,
+            startTime: moment(date).set({ hour: 9, minute: 0 }).toISOString(),
+            endTime: moment(date).set({ hour: 9, minute: 30 }).toISOString(),
+            status: "Available"
+          }
+        );
+      }
+
+      setWeekSlots(mockSlots);
+    }
+  }, [selectedDoctor, startWeekDate]);
+
+  const handleCreateAppointment = async () => {
     setLoading(true);
     setError(null);
 
+    if (!profileId || !selectedDoctor || !selectedDepartment || !selectedSlot || !symptoms) {
+      setError("Vui lòng chọn đầy đủ thông tin.");
+      setLoading(false);
+      return;
+    }
+
+    // Kiểm tra mã BHYT nếu chọn "Có"
+    if (hasBhyt === "Có" && bhytCode) {
+      const bhytCodeRegex = /^[A-Z]{2}\d{13}$/;
+      if (!bhytCodeRegex.test(bhytCode)) {
+        setError("Mã BHYT phải có định dạng 2 chữ cái in hoa + 13 số.");
+        setLoading(false);
+        return;
+      }
+    }
+
+
+    const standardizedStart = moment.utc(selectedSlot.startTime).toISOString(); // UTC chuẩn
+    const standardizedEnd = moment.utc(selectedSlot.endTime).toISOString();
+
     try {
-      if (!token) {
-        setError("Vui lòng đăng nhập để tiếp tục.");
-        return;
-      }
-
-      const appointmentDate = buildAppointmentDate(selectedDate, selectedTime);
-      const defaultDate = new Date().toISOString();
-      const usedDate = appointmentDate || defaultDate;
-
-      if (!selectedProfile || !selectedDoctor || !selectedDepartment || !appointmentDate) {
-        setError("Vui lòng chọn đầy đủ thông tin (hồ sơ, bác sĩ, khoa, ngày giờ).");
-        return;
-      }
-
-      console.log("Token:", token);
-      console.log("Data sent:", {
-        userId,
-        profileId: selectedProfile,
+      const payload = {
+        profileId,
         doctorId: selectedDoctor,
         department: selectedDepartment,
-        appointmentDate: usedDate,
-        type: "Offline",
-      });
+        appointmentDate: selectedSlot.startTime,
+        timeSlot: {
+          startTime: standardizedStart,
+          endTime: standardizedEnd,
+          status: 'Booked'
+        },
+        symptoms,
+        type: "Online",
+        status: "pending_confirmation",
+        room: ""
+      };
+
+      console.log("[LOG] Creating appointment with payload:", payload); // Log payload trước khi gửi
+
+      // Chỉ thêm bhytCode nếu người dùng chọn "Có"
+      if (hasBhyt === "Có" && bhytCode) {
+        payload.bhytCode = bhytCode;
+      }
 
       const res = await axios.post(
-        "http://localhost:9999/api/user/create-link-appointment",
-        {
-          userId,
-          profileId: selectedProfile,
-          doctorId: selectedDoctor,
-          department: selectedDepartment,
-          appointmentDate: usedDate,
-          type: "Offline",
-        },
-        {
+        "http://localhost:9999/api/user/create", payload
+        , {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      console.log("API Response:", res.data);
-      const checkoutUrl = res.data.checkoutUrl;
-      const returnUrl = res.data.returnUrl;
-      if (!checkoutUrl) throw new Error("Không nhận được link thanh toán");
-
-      console.log("Checkout URL:", checkoutUrl);
-      console.log("Return URL:", returnUrl);
-
-      // Chuyển hướng trực tiếp đến checkoutUrl thay vì nhúng
-      window.location.href = checkoutUrl;
-      setStep("confirm"); // Cập nhật step để hiển thị thông báo
+      console.log("[LOG] Create appointment success:", res.data); // Log response thành công
+      setSuccess(true);
+      setStep("confirm");
     } catch (err) {
-      console.error("Error:", err.response?.data);
-      if (err.response?.status === 409 || err.response?.data?.message?.includes("already has an appointment")) {
-        setError("Lịch này đã được đặt. Vui lòng chọn thời gian khác.");
-      } else {
-        setError("Đặt lịch thất bại. Thử lại sau.");
-      }
-      setSelectedTime(null);
+      console.error("[ERROR] Create appointment:", err.response?.data || err); // Log chi tiết lỗi API
+      setError("Đặt lịch thất bại.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    const fetchAvailableTimeSlots = async () => {
-      if (!selectedDoctor || !selectedDate || !token) return;
-
-      try {
-        const year = selectedDate.getFullYear();
-        const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
-        const day = selectedDate.getDate().toString().padStart(2, "0");
-        const formattedDate = `${year}-${month}-${day}`;
-
-        const res = await axios.get(
-          `http://localhost:9999/api/appointmentScheduleManagement/schedules/${selectedDoctor}`,
-          {
-            params: {
-              date: formattedDate,
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const availableSlots = res.data.flatMap((schedule) =>
-          schedule.timeSlots
-            .filter((slot) => slot.status === "Available")
-            .map((slot) => ({
-              startTime: new Date(slot.startTime),
-              endTime: new Date(slot.endTime),
-            }))
-        );
-        setAvailableTimeSlots(availableSlots);
-      } catch (err) {
-        console.error("Error fetching time slots:", err);
-        setAvailableTimeSlots([]);
-      }
-    };
-    fetchAvailableTimeSlots();
-  }, [selectedDoctor, selectedDate, token]);
-
-  const formatTimeSlot = (startTime) => {
-    const date = new Date(startTime);
-    if (isNaN(date.getTime())) return "Invalid time";
-    const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const period = hours < 12 ? "Sáng" : "Chiều";
-    const formattedHours = (hours % 12 || 12).toString().padStart(2, "0");
-    return `${formattedHours}:${minutes} ${period}`;
-  };
-
-  const buildAppointmentDate = (selectedDate, selectedTime) => {
-    if (!selectedDate || !selectedTime) return null;
-
-    const date = new Date(selectedDate);
-    const time = new Date(selectedTime);
-
-    date.setHours(time.getHours());
-    date.setMinutes(time.getMinutes());
-    date.setSeconds(0);
-    date.setMilliseconds(0);
-
-    if (isNaN(date.getTime())) return null;
-
-    return date.toISOString().split(".")[0]; // Loại bỏ phần mili giây
   };
 
   const renderStepContent = () => {
@@ -282,77 +304,92 @@ const AppointmentPage = () => {
       case "profile":
         return (
           <div className="p-4 bg-white rounded shadow-sm">
-            <h3 className="text-primary fw-bold mb-4">Tạo Hồ Sơ Mới</h3>
-
+            <h3 className="display-6 fw-bold text-primary mb-4">Hồ Sơ</h3>
             {error && <div className="alert alert-danger">{error}</div>}
-            {success && (
-              <div className="alert alert-success">Tạo hồ sơ thành công!</div>
-            )}
 
             <div className="mb-3">
-              <label className="form-label">Họ và tên</label>
+              <label className="form-label">Nhập CCCD</label>
               <input
                 type="text"
                 className="form-control"
-                value={profileName}
-                onChange={(e) => setProfileName(e.target.value)}
-                placeholder="Nhập Họ và Tên"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Giới tính</label>
-              <select
-                className="form-select"
-                value={profileGender}
-                onChange={(e) => setProfileGender(e.target.value)}
-              >
-                <option value="">Chọn giới tính</option>
-                <option value="Male">Nam</option>
-                <option value="Female">Nữ</option>
-                <option value="Other">Khác</option>
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">CMND/CCCD</label>
-              <input
-                type="text"
-                className="form-control"
-                value={profileIdentityNumber}
-                onChange={(e) => setProfileIdentityNumber(e.target.value)}
+                value={identityNumber}
+                onChange={(e) => setIdentityNumber(e.target.value)}
                 maxLength={12}
-                placeholder="Nhập số CMND hoặc CCCD"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Ngày sinh</label>
-              <input
-                type="date"
-                name="dateOfBirth"
-                className="form-control"
-                value={profileDateOfBirth}
-                onChange={(e) => setProfileDateOfBirth(e.target.value)}
-                max={new Date().toISOString().split("T")[0]}
+                placeholder="Nhập số CCCD"
               />
             </div>
 
             <div className="text-end mt-4">
               <button
                 className="btn btn-primary"
-                onClick={handleCreateProfile}
-                disabled={
-                  loading ||
-                  !profileName ||
-                  !profileGender ||
-                  !profileIdentityNumber ||
-                  !profileDateOfBirth
-                }
+                onClick={handleCheckCccd}
+                disabled={loading || !identityNumber}
               >
-                {loading ? "Đang tạo..." : "Tạo hồ sơ"}
+                {loading ? "Đang kiểm tra..." : "Kiểm tra CCCD"}
               </button>
             </div>
+
+            {/* Modal tạo Profile mới */}
+            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
+              <Modal.Header closeButton>
+                <Modal.Title>Tạo Hồ Sơ Mới</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <div className="mb-3">
+                  <label className="form-label">Họ và tên</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Giới tính</label>
+                  <select
+                    className="form-select"
+                    value={profileGender}
+                    onChange={(e) => setProfileGender(e.target.value)}
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value="Male">Nam</option>
+                    <option value="Female">Nữ</option>
+                    <option value="Other">Khác</option>
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Ngày sinh</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={profileDateOfBirth}
+                    onChange={(e) => setProfileDateOfBirth(e.target.value)}
+                    max={moment().format('YYYY-MM-DD')} // Giới hạn tối đa là hôm nay
+                    min={moment().subtract(120, 'years').format('YYYY-MM-DD')} // Giới hạn tối thiểu 120 năm trước
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Số điện thoại</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={profilePhoneNumber}
+                    onChange={(e) => setProfilePhoneNumber(e.target.value)}
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
+                {error && <div className="alert alert-danger">{error}</div>}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+                  Đóng
+                </Button>
+                <Button variant="primary" onClick={handleCreateProfile} disabled={loading}>
+                  {loading ? "Đang tạo..." : "Tạo hồ sơ"}
+                </Button>
+              </Modal.Footer>
+            </Modal>
           </div>
         );
 
@@ -364,31 +401,21 @@ const AppointmentPage = () => {
               {departmentData.map((dep) => (
                 <Col key={dep.id} md={6} className="mb-4">
                   <label
-                    className={`border p-4 rounded text-center cursor-pointer hover:bg-light ${selectedDepartment === dep.id ? "border-primary" : ""
-                      }`}
+                    className={`border p-4 rounded text-center cursor-pointer hover:bg-light ${selectedDepartment === dep.id ? "border-primary" : ""}`}
                     onClick={() => setSelectedDepartment(dep.id)}
                   >
                     <input type="radio" name="department" className="d-none" />
                     <h5 className="fw-semibold">{dep.name}</h5>
-                    {dep.description && (
-                      <p className="text-muted small mb-0">{dep.description}</p>
-                    )}
+                    {dep.description && <p className="text-muted small mb-0">{dep.description}</p>}
                   </label>
                 </Col>
               ))}
             </Row>
             <div className="d-flex justify-content-between mt-4">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setStep("profile")}
-              >
+              <button className="btn btn-outline-secondary" onClick={() => setStep("profile")}>
                 Quay Lại
               </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => setStep("doctor")}
-                disabled={!selectedDepartment}
-              >
+              <button className="btn btn-primary" onClick={() => setStep("doctor")} disabled={!selectedDepartment}>
                 Tiếp Theo
               </button>
             </div>
@@ -396,40 +423,25 @@ const AppointmentPage = () => {
         );
 
       case "doctor":
-        const filteredDoctors = doctors.filter(
-          (d) => d.department?.includes(selectedDepartment) ?? false
-        );
         return (
           <div className="p-4 bg-white rounded shadow-sm">
             <h3 className="text-primary fw-bold mb-4">Chọn Bác Sĩ</h3>
             <Row>
-              {filteredDoctors.length === 0 ? (
+              {doctors.length === 0 ? (
                 <Col className="text-center">
                   Không có bác sĩ trong chuyên khoa này
                 </Col>
               ) : (
-                filteredDoctors.map((doctor) => (
-                  <Col
-                    key={doctor._id}
-                    xs={12}
-                    sm={6}
-                    md={4}
-                    lg={4}
-                    className="mb-4"
-                  >
+                doctors.map((doctor) => (
+                  <Col key={doctor._id} xs={12} sm={6} md={4} lg={4} className="mb-4">
                     <label
-                      className={`doctor-card ${selectedDoctor === doctor._id ? "selected" : ""
-                        }`}
+                      className={`doctor-card ${selectedDoctor === doctor._id ? "selected" : ""}`}
                       onClick={() => setSelectedDoctor(doctor._id)}
                     >
                       <input type="radio" name="doctor" className="d-none" />
                       <div className="doctor-image-container">
                         {doctor.avatar ? (
-                          <img
-                            src={doctor.avatar}
-                            alt={doctor.name}
-                            className="doctor-image"
-                          />
+                          <img src={doctor.avatar} alt={doctor.name} className="doctor-image" />
                         ) : (
                           <div className="doctor-image bg-light d-flex align-items-center justify-content-center">
                             {doctor.name.charAt(0)}
@@ -437,27 +449,18 @@ const AppointmentPage = () => {
                         )}
                       </div>
                       <h5 className="doctor-name">{doctor.name}</h5>
-                      <p className="doctor-degree">{doctor.degree}</p>
-                      <p className="doctor-experience">
-                        {doctor.expYear} năm kinh nghiệm
-                      </p>
+                      <p className="doctor-degree">{doctor.specialization || "Chưa có chuyên môn"}</p> {/* Sử dụng specialization */}
+                      <p className="doctor-experience">{doctor.expYear || "Chưa cập nhật"} năm kinh nghiệm</p>
                     </label>
                   </Col>
                 ))
               )}
             </Row>
             <div className="d-flex justify-content-between mt-4">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setStep("department")}
-              >
+              <button className="btn btn-outline-secondary" onClick={() => setStep("department")}>
                 Quay Lại
               </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => setStep("datetime")}
-                disabled={!selectedDoctor}
-              >
+              <button className="btn btn-primary" onClick={() => setStep("datetime")} disabled={!selectedDoctor}>
                 Tiếp Theo
               </button>
             </div>
@@ -465,71 +468,165 @@ const AppointmentPage = () => {
         );
 
       case "datetime":
+        const now = moment();
+        const defaultStartDate = startWeekDate || moment().isoWeekday(1).format('YYYY-MM-DD');
+        const twoHoursLater = moment().add(2, 'hours');
+
         return (
           <div className="p-4 bg-white rounded shadow-sm">
             <h3 className="text-primary fw-bold mb-4">Chọn Ngày và Giờ</h3>
-            <Row>
-              <Col md={6} className="mb-4">
-                <Flatpickr
-                  options={{ inline: true, minDate: "today" }}
-                  onChange={(date) => setSelectedDate(date[0])}
-                  className="w-100"
-                />
-              </Col>
-              <Col md={6}>
-                {!Array.isArray(availableTimeSlots) ? (
-                  <p className="text-muted">Đang tải hoặc lỗi dữ liệu slot.</p>
-                ) : availableTimeSlots.length === 0 ? (
-                  <p className="text-muted">
-                    Không có slot available cho ngày này.
-                  </p>
-                ) : (
-                  <div className="d-flex flex-wrap gap-2">
-                    {availableTimeSlots.map((slot, index) => {
-                      const formatted = formatTimeSlot(slot.startTime);
+            <div className="mb-3">
+              <label className="form-label">Chọn ngày bắt đầu (từ thứ 2)</label>
+              <input
+                type="date"
+                className="form-control"
+                value={defaultStartDate}
+                onChange={(e) => {
+                  const selectedDate = moment(e.target.value);
+                  if (selectedDate.isoWeekday() !== 1) {
+                    setError("Vui lòng chọn ngày thứ 2 để hiển thị tuần.");
+                  } else {
+                    setError(null); // Xóa lỗi khi chọn đúng thứ 2
+                    setStartWeekDate(selectedDate.format('YYYY-MM-DD'));
+                    // fetchWeekSlots(); // Reload slot khi thay đổi ngày hợp lệ
+                  }
+                }}
+                min={moment().isoWeekday(1).format('YYYY-MM-DD')}
+              />
+            </div>
+            {weekSlots.length === 0 ? (
+              <p className="text-muted">Không có slot available cho ngày đã chọn.</p>
+            ) : (
+              <Table striped bordered hover className="custom-slot-table">
+                <thead>
+                  <tr>
+                    {Array.from({ length: 7 }).map((_, dayIdx) => {
+                      const dayDate = moment(defaultStartDate).add(dayIdx, 'days');
+                      const dayFormatted = dayDate.isoWeekday() >= 1 && dayDate.isoWeekday() <= 7
+                        ? dayDate.format('dddd (DD/MM/YYYY)')
+                        : null;
                       return (
-                        <button
-                          key={index}
-                          className={`btn btn-outline-primary btn-sm ${new Date(selectedTime).toISOString() ===
-                            new Date(slot.startTime).toISOString()
-                            ? "btn-primary text-white"
-                            : ""
-                            }`}
-                          onClick={() => setSelectedTime(new Date(slot.startTime))}
-                        >
-                          {formatted}
-                        </button>
+                        <th key={dayIdx} className="text-center bg-primary text-white">
+                          {dayFormatted || "Không hiển thị"}
+                        </th>
                       );
                     })}
-                  </div>
-                )}
-              </Col>
-            </Row>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {Array.from({ length: 7 }).map((_, dayIdx) => {
+                      const dayDate = moment(defaultStartDate).add(dayIdx, 'days').format('YYYY-MM-DD');
+                      const daySlots = weekSlots
+                        .filter(slot => moment(slot.date).format('YYYY-MM-DD') === dayDate)
+                        .filter(slot => slot.status === "Available") // Chỉ hiển thị slot Available
+                        .filter(slot => moment(slot.date).isSameOrAfter(now, 'day'))
+                        .filter(slot => moment(slot.startTime).isAfter(twoHoursLater));
+                      return (
+                        <td key={dayIdx} className="align-middle">
+                          {daySlots.length === 0 ? (
+                            <p className="text-muted text-center">Không có slot khả dụng</p>
+                          ) : (
+                            daySlots.map((slot, slotIdx) => (
+                              <div key={slotIdx} className="form-check mb-2">
+                                <input
+                                  type="radio"
+                                  className="form-check-input"
+                                  checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
+                                  onChange={() => setSelectedSlot(slot)}
+                                  disabled={moment(slot.date).isBefore(now, 'day') || slot.status !== "Available"}
+                                />
+                                <label className="form-check-label">
+                                  {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
+                                </label>
+                              </div>
+                            ))
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </Table>
+            )}
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             <div className="d-flex justify-content-between mt-4">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setStep("doctor")}
-              >
+              <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
                 Quay Lại
               </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleCreateAppointment}
-                disabled={loading || !selectedTime}
-              >
-                {loading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Đang đặt lịch...
-                  </>
-                ) : (
-                  "Đặt Lịch"
-                )}
+              <button className="btn btn-primary" onClick={() => setStep("details")} disabled={!selectedSlot}>
+                Tiếp Theo
+              </button>
+            </div>
+          </div>
+        );
+      case "details":
+        return (
+          <div className="p-4 bg-white rounded shadow-sm">
+            <h3 className="text-primary fw-bold mb-4">Thông Tin Bổ Sung</h3>
+            <div className="mb-3">
+              <label className="form-label">Triệu chứng</label>
+              <textarea
+                className="form-control"
+                value={symptoms}
+                onChange={(e) => setSymptoms(e.target.value)}
+                placeholder="Mô tả triệu chứng"
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Bạn có sử dụng BHYT không?</label>
+              <div className="form-check">
+                <input
+                  type="radio"
+                  className="form-check-input"
+                  id="hasBhytYes"
+                  name="hasBhyt"
+                  value="Có"
+                  checked={hasBhyt === "Có"}
+                  onChange={(e) => {
+                    setHasBhyt(e.target.value);
+                    if (e.target.value === "Không") setBhytCode(""); // Xóa mã BHYT nếu chọn "Không"
+                  }}
+                />
+                <label className="form-check-label" htmlFor="hasBhytYes">
+                  Có
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  type="radio"
+                  className="form-check-input"
+                  id="hasBhytNo"
+                  name="hasBhyt"
+                  value="Không"
+                  checked={hasBhyt === "Không"}
+                  onChange={(e) => setHasBhyt(e.target.value)}
+                />
+                <label className="form-check-label" htmlFor="hasBhytNo">
+                  Không
+                </label>
+              </div>
+              {hasBhyt === "Có" && (
+                <div className="mb-3">
+                  <label className="form-label">Mã BHYT</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={bhytCode}
+                    onChange={(e) => setBhytCode(e.target.value)}
+                    placeholder="Nhập mã BHYT"
+                  />
+                </div>
+              )}
+            </div>
+            {error && <div className="alert alert-danger mt-3">{error}</div>}
+            <div className="d-flex justify-content-between mt-4">
+              <button className="btn btn-outline-secondary" onClick={() => setStep("datetime")}>
+                Quay Lại
+              </button>
+              <button className="btn btn-primary" onClick={handleCreateAppointment} disabled={loading || !symptoms}>
+                {loading ? "Đang đặt lịch..." : "Xác Nhận Đặt Lịch"}
               </button>
             </div>
           </div>
@@ -537,20 +634,14 @@ const AppointmentPage = () => {
       case "confirm":
         return (
           <div className="p-4 bg-white rounded shadow-sm text-center">
-            <h3 className="text-primary fw-bold mb-3">Thanh Toán Lịch Hẹn</h3>
+            <h3 className="text-primary fw-bold mb-3">Đặt Lịch Thành Công</h3>
             {error && <div className="alert alert-danger">{error}</div>}
-            <p>Đang chuyển hướng đến trang thanh toán...</p>
+            <p>Lịch hẹn của bạn đã được tạo và đang chờ xác nhận từ lễ tân. Vui lòng kiểm tra email hoặc thông báo để cập nhật tình trạng.</p>
             <div className="mt-4 d-flex justify-content-center gap-3">
-              <button
-                className="btn btn-primary"
-                onClick={() => setStep("profile")}
-              >
+              <button className="btn btn-primary" onClick={() => setStep("profile")}>
                 Đặt Thêm Lịch
               </button>
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => navigate("/appointmentmanage")}
-              >
+              <button className="btn btn-outline-secondary" onClick={() => navigate("/myappointments")}>
                 Quản lý Lịch
               </button>
             </div>
@@ -639,8 +730,7 @@ const AppointmentPage = () => {
                   {steps.map((s, index) => (
                     <li
                       key={s.id}
-                      className={`d-flex align-items-center mb-3 ${step === s.id ? "fw-bold" : ""
-                        }`}
+                      className={`d-flex align-items-center mb-3 ${step === s.id ? "fw-bold" : ""}`}
                     >
                       <span
                         className={`d-inline-block rounded-circle text-center me-2 ${steps.findIndex((st) => st.id === step) >= index
@@ -653,9 +743,7 @@ const AppointmentPage = () => {
                           lineHeight: "24px",
                         }}
                       >
-                        {steps.findIndex((st) => st.id === step) >= index
-                          ? "✓"
-                          : "•"}
+                        {steps.findIndex((st) => st.id === step) >= index ? "✓" : "•"}
                       </span>
                       <div>
                         <div className="small fw-semibold">{s.title}</div>

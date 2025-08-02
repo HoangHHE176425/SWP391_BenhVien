@@ -44,6 +44,7 @@ app.use("/api/attendance", require("./routers/Receptionist/attendance.route"));
 app.use("/api/attendance/accountant", require("./routers/accountant/accountantAttendance.route"));
 app.use("/api/pharmacist/accountant", require("./routers/pharmacist/pharmacistAttendance.route"));
 app.use("/api/hrmanager/accountant", require("./routers/hrmanager/hrmanagerAttendance.route"));
+app.use("/api/record", require("./routers/record/record.route"));
 app.use("/api/applications", require("./routers/Doctor/sendApplication.routes"));
 app.use("/api/applications", require("./routers/hrmanager/SendApplicationManager.route"));
 // Routers import
@@ -82,7 +83,9 @@ app.use("/api/profile", userProfileRouter);
 app.use('/api/receptionist', scheduleRouter);
 app.use("/api/services", require("./routers/Service/service.route"));
 app.use("/api", require("./routers/medicine/medicine.route"));
-app.use("/api", require("./routers/appointment/appointment.routes"));
+app.use("/api/apm", require("./routers/appointment/appointment.routes"));
+
+// app.use("/api", require("./routers/appointment/appointment.routes"));
 app.use("/api/attendance/doctor", require("./routers/Doctor/attendance.routes"));
 const PORT = process.env.PORT || 9999;
 
