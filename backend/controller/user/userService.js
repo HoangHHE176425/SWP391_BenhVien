@@ -307,19 +307,82 @@ const cancelAppointment = async (req, res) => {
   const userId = req.user.id;
 
   try {
+    // Tìm lịch hẹn
     const appointment = await Appointment.findOne({ _id: id, userId });
-    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-
-    if (appointment.status === 'Canceled') {
-      return res.status(400).json({ message: 'Appointment is already canceled' });
+    if (!appointment) {
+      return res.status(404).json({ message: 'Lịch hẹn không tồn tại hoặc bạn không có quyền hủy.' });
     }
 
-    appointment.status = 'Canceled';
+    // Kiểm tra trạng thái hiện tại có cho phép hủy không
+    if (['canceled', 'pending_cancel'].includes(appointment.status)) {
+      return res.status(400).json({ message: 'Lịch hẹn đã được hủy hoặc đang chờ duyệt.' });
+    }
+
+    // Lấy thời gian hiện tại và thời gian lịch hẹn
+    const currentTime = new Date();
+    const appointmentTime = new Date(appointment.appointmentDate);
+    const timeDiff = appointmentTime - currentTime; // milliseconds
+
+    // Nếu lịch hẹn đã qua, không cho hủy
+    if (timeDiff < 0) {
+      return res.status(400).json({ message: 'Không thể hủy lịch hẹn đã qua.' });
+    }
+
+    // Chuẩn hóa ngày để tìm lịch bác sĩ
+    const y = appointmentTime.getFullYear();
+    const m = appointmentTime.getMonth();
+    const d = appointmentTime.getDate();
+    const startOfDay = new Date(y, m, d, 0, 0, 0, 0);
+    const endOfDay = new Date(y, m, d, 23, 59, 59, 999);
+
+    // Tìm lịch bác sĩ
+    const doctorSchedule = await Schedule.findOne({
+      employeeId: new mongoose.Types.ObjectId(appointment.doctorId),
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    let updateSlot = false; // Flag để quyết định có cập nhật slot không
+
+    if (timeDiff > 24 * 60 * 60 * 1000) { // Trước 24h: Hủy ngay
+      appointment.status = 'canceled';
+      updateSlot = true; // Cập nhật slot về Available
+      console.log('[LOG] Hủy ngay lập tức vì trước 24h.');
+    } else { // Trong 24h: Chờ duyệt
+      appointment.status = 'pending_cancel';
+      console.log('[LOG] Chuyển sang pending_cancel vì trong 24h.');
+    }
+
+    // Nếu cần cập nhật slot (chỉ khi hủy ngay)
+    if (updateSlot && doctorSchedule) {
+      const selectedSlot = doctorSchedule.timeSlots.find(slot => {
+        const slotStart = new Date(slot.startTime).setMilliseconds(0);
+        const slotEnd = new Date(slot.endTime).setMilliseconds(0);
+        const reqStart = new Date(appointment.timeSlot.startTime).setMilliseconds(0);
+        const reqEnd = new Date(appointment.timeSlot.endTime).setMilliseconds(0);
+        return slotStart === reqStart && slotEnd === reqEnd;
+      });
+
+      if (selectedSlot && selectedSlot.status === 'Booked') {
+        selectedSlot.status = 'Available';
+        await doctorSchedule.save();
+        console.log('[LOG] Đã cập nhật timeSlot về Available.');
+      } else {
+        console.warn('[WARN] Không tìm thấy timeSlot phù hợp để cập nhật.');
+      }
+    } else if (updateSlot && !doctorSchedule) {
+      console.warn('[WARN] Không tìm thấy lịch bác sĩ để cập nhật timeSlot.');
+    }
+
+    // Lưu thay đổi lịch hẹn
     await appointment.save();
 
-    res.status(200).json({ message: 'Appointment canceled successfully', appointment });
+    res.status(200).json({
+      message: appointment.status === 'canceled' ? 'Hủy lịch hẹn thành công.' : 'Yêu cầu hủy đã gửi, chờ lễ tân duyệt.',
+      appointment
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to cancel appointment', error: err.message });
+    console.error('Lỗi khi hủy lịch hẹn:', err);
+    res.status(500).json({ message: 'Hủy lịch hẹn thất bại.', error: err.message });
   }
 };
 
