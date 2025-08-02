@@ -280,10 +280,15 @@ module.exports.editEmployees = async (req, res) => {
     const changes = {};
 
     // Nếu có password mới
-    if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
+    if (updates.password && typeof updates.password === "string" && updates.password.trim()) {
+      const hashed = await bcrypt.hash(updates.password, 10);
+      employee.password = hashed;
       changes["password"] = { from: "••••", to: "••••" };
+    } else {
+      // ✅ Nếu không gửi mật khẩu mới → giữ nguyên mật khẩu cũ
+      employee.password = employee.password;
     }
+
 
     const updatableFields = [
       "name",
