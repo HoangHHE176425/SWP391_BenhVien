@@ -119,10 +119,16 @@ function EmployeeManagement() {
     const formData = new FormData();
 
     Object.keys(values).forEach((key) => {
-      if (key !== "avatarFile") {
-        formData.append(key, values[key]);
-      }
-    });
+    const val = values[key];
+    if (
+      key !== "avatarFile" &&
+      val !== undefined &&
+      (key !== "password" || val.trim() !== "")
+    ) {
+      formData.append(key, val);
+    }
+  });
+
 
     if (values.avatarFile?.[0]) {
       formData.append("avatar", values.avatarFile[0].originFileObj);
@@ -223,7 +229,6 @@ function EmployeeManagement() {
           <Option value="Pharmacist">Dược sĩ</Option>
           <Option value="Accountant">Kế toán</Option>
         </Select>
-
         <Select
           placeholder="Trạng thái"
           onChange={(value) => setStatusFilter(value)}

@@ -521,58 +521,92 @@ setSchedules(sortedSchedules);
   ];
 
   const onFinish = async (values) => {
-    const payload = {
-      employeeId: values.employeeId,
-      department: values.department,
-      date: values.date.format('YYYY-MM-DD'),
-      timeSlots: values.timeSlots.map(slot => ({
-        startTime: slot.timeRange[0].toISOString(),
-        endTime: slot.timeRange[1].toISOString(),
-        status: slot.status
-      }))
-    };
+  const { employeeId, department, date, timeSlots } = values;
 
-    const dateStr = values.date.format('YYYY-MM-DD');
-    const conflict = schedules.some((s) => {
-      const sameEmp = s.employeeId === values.employeeId || s.employeeId?._id === values.employeeId;
-      const sameDate = dayjs(s.date).format('YYYY-MM-DD') === dateStr;
-      if (!sameEmp || !sameDate) return false;
-      return s.timeSlots.some((existingSlot) =>
-        values.timeSlots.some((newSlot) =>
-          isTimeOverlap(
-            newSlot.timeRange[0],
-            newSlot.timeRange[1],
-            existingSlot.startTime,
-            existingSlot.endTime
-          )
-        )
-      );
-    });
+  const baseDate = dayjs(date).startOf('day');
 
-    if (conflict) {
-      message.error('Khung giờ bị trùng với lịch đã có của bác sĩ trong ngày này.');
-      return;
-    }
+  const formattedTimeSlots = values.timeSlots.map(({ timeRange, status }) => {
+  const [startRaw, endRaw] = timeRange;
+  const baseDate = dayjs(values.date).startOf("day");
 
-    try {
-      if (editingId) {
-        await axios.put(`/api/receptionist/schedule-management/schedule/${editingId}`, payload);
-        message.success('Lịch trình đã cập nhật');
-      } else {
-        await axios.post('/api/receptionist/schedule-management/schedule', payload);
-        message.success('Lịch đã được tạo');
-      }
-      form.resetFields();
-      setEditingId(null);
-      setIsModalVisible(false);
-      if (selectedEmployeeForLogs) {
-        fetchSchedules(selectedEmployeeForLogs._id);
-      }
-    } catch (err) {
-      console.error(err);
-      message.error('Lỗi khi lưu lịch');
-    }
+  const startTime = baseDate
+    .hour(startRaw.hour())
+    .minute(startRaw.minute())
+    .second(0)
+    .millisecond(0);
+
+  const endTime = baseDate
+    .hour(endRaw.hour())
+    .minute(endRaw.minute())
+    .second(0)
+    .millisecond(0);
+
+  return {
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    status: status || "Available",
   };
+});
+
+
+
+
+
+const payload = {
+  employeeId: values.employeeId,
+  department: values.department,
+  date: values.date.format('YYYY-MM-DD'),
+  timeSlots: formattedTimeSlots
+};
+
+  const dateStr = baseDate.format('YYYY-MM-DD');
+
+  const conflict = schedules.some((s) => {
+    const sameEmp = s.employeeId === employeeId || s.employeeId?._id === employeeId;
+    const sameDate = dayjs(s.date).format('YYYY-MM-DD') === dateStr;
+    if (!sameEmp || !sameDate) return false;
+
+    return s.timeSlots.some((existingSlot) =>
+      timeSlots.some(({ timeRange }) =>
+        isTimeOverlap(
+          timeRange[0],
+          timeRange[1],
+          existingSlot.startTime,
+          existingSlot.endTime
+        )
+      )
+    );
+  });
+
+  if (conflict) {
+    message.error('Khung giờ bị trùng với lịch đã có của bác sĩ trong ngày này.');
+    return;
+  }
+
+  try {
+    if (editingId) {
+      await axios.put(`/api/receptionist/schedule-management/schedule/${editingId}`, payload);
+      message.success('Lịch trình đã cập nhật');
+    } else {
+      await axios.post('/api/receptionist/schedule-management/schedule', payload);
+      message.success('Lịch đã được tạo');
+    }
+
+    form.resetFields();
+    setEditingId(null);
+    setIsModalVisible(false);
+
+    if (selectedEmployeeForLogs) {
+      fetchSchedules(selectedEmployeeForLogs._id);
+    }
+  } catch (err) {
+    console.error("❌ Lỗi khi lưu lịch:", err);
+    message.error('Lỗi khi lưu lịch');
+  }
+};
+
+
+
   return (
     <div style={{ padding: 24 }}>
       <Title level={3}>Quản lý lịch làm việc</Title>
