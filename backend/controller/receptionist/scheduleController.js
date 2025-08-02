@@ -10,6 +10,26 @@ exports.createSchedule = async (req, res) => {
   try {
     const { employeeId, department, date, timeSlots } = req.body;
     const createdBy = req.user?.userId;
+    // ✅ Điều chỉnh timeSlots theo ngày để tránh lệch giờ UTC
+    const baseDate = new Date(date);
+    baseDate.setUTCHours(0, 0, 0, 0);
+
+    const adjustedTimeSlots = timeSlots.map(slot => {
+      const start = new Date(slot.startTime);
+      const end = new Date(slot.endTime);
+
+      const adjustedStart = new Date(baseDate);
+      adjustedStart.setUTCHours(start.getUTCHours(), start.getUTCMinutes(), 0, 0);
+
+      const adjustedEnd = new Date(baseDate);
+      adjustedEnd.setUTCHours(end.getUTCHours(), end.getUTCMinutes(), 0, 0);
+
+      return {
+        startTime: adjustedStart.toISOString(),
+        endTime: adjustedEnd.toISOString(),
+        status: slot.status || "Available",
+      };
+    });
 
     if (!employeeId || !department || !date || !Array.isArray(timeSlots) || timeSlots.length === 0) {
       return res.status(400).json({ message: "All fields are required" });
@@ -51,7 +71,7 @@ exports.createSchedule = async (req, res) => {
       employeeId,
       department,
       date,
-      timeSlots,
+      timeSlots: adjustedTimeSlots,
       createdBy,
     });
 
