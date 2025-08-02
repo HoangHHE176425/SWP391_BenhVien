@@ -1,5 +1,5 @@
 import React from "react";
-import AccountantSidebar from "../components/accountant/AccountantSidebar"; // sửa lại tên import cho đúng
+import AccountantSidebar from "../components/accountant/AccountantSidebar";
 import { Outlet } from "react-router-dom";
 
 const AccountantLayout = () => {

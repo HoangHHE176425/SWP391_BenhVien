@@ -88,6 +88,14 @@ import MedicineManagement from "./pages/pharmacist/MedicineManagement.jsx";
 import TransactionHistory from "./pages/pharmacist/TransactionHistory.jsx";
 import HrmanagerAttendance from "./pages/hrmanager/HrmanagerAttendance.jsx";
 
+// Accountant Pages
+import AccountantMedicineManagement from "./pages/accountant/AccountantMedicineManagement";
+import AccountantProfile from "./pages/accountant/AccountantProfile";
+import AccountantReports from "./pages/accountant/AccountantReports";
+import AccountantStatistics from "./pages/accountant/AccountantStatistics";
+import AccountantTransactions from "./pages/accountant/AccountantTransactions";
+import MedicineCheckManagement from "./pages/accountant/MedicineCheckManagement";
+
 // Components
 import Header from "./components/HeaderComponent";
 import MenuComponent from "./components/MenuComponent";
@@ -110,6 +118,8 @@ import {
 
 // CSS
 import "antd/dist/reset.css";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 const DRAWER_WIDTH = 240;
 
@@ -371,6 +381,11 @@ const AppRoutes = () => {
             <Route index element={<InvoiceManagement />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<AccountantAttendance />} />
+            <Route path="medicine-management" element={<AccountantMedicineManagement />} />
+            <Route path="medicine-check" element={<MedicineCheckManagement />} />
+            <Route path="statistics" element={<AccountantStatistics />} />
+            <Route path="reports" element={<AccountantReports />} />
+            <Route path="transactions" element={<AccountantTransactions />} />
           </Route>
 
           {/* Receptionist Routes (Added for completeness) */}
@@ -460,6 +475,17 @@ const AppRoutes = () => {
       </div>
 
       {isPatient && <FooterComponent />}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };

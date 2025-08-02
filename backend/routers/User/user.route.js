@@ -127,5 +127,6 @@ userRouter.get('/department', userService.getAllDepartment);
 userRouter.get('/department/:departmentId', userService.getDepartmentById);
 userRouter.get('/medicines', userService.getAllMedicines);
 userRouter.get('/medicines/:medicineId', userService.getMedicineById);
+userRouter.get('/patients', userService.getAllPatients);
 
 module.exports = userRouter;

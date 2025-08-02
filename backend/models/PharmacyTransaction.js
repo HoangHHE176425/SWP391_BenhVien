@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const pharmacyTransactionSchema = new mongoose.Schema({
   prescription: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' },
-  pharmacist: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Dược sĩ CÁI NÀY CỦA M, ADD NÓ R LẬP 1 CÁI CRD
+  pharmacist: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }, // Dược sĩ CÁI NÀY CỦA M, ADD NÓ R LẬP 1 CÁI CRD
 
   patient: { type: String, required: true },
 
