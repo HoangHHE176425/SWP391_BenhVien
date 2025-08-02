@@ -31,17 +31,17 @@ const LoginPage = () => {
         localStorage.setItem("token", data.token);
 
         
-        if (data.incompleteProfile && data.missingFields?.length > 0) {
-          Modal.warning({
-            title: "Thiếu thông tin hồ sơ",
-            content: `Bạn cần cập nhật các trường sau: ${data.missingFields.join(
-              ", "
-            )}`,
-            // onOk: () => {
-            //   navigate("/doctor/profile");
-            // },
-          });
-        }
+        // if (data.incompleteProfile && data.missingFields?.length > 0) {
+        //   Modal.warning({
+        //     title: "Thiếu thông tin hồ sơ",
+        //     content: `Bạn cần cập nhật các trường sau: ${data.missingFields.join(
+        //       ", "
+        //     )}`,
+        //     // onOk: () => {
+        //     //   navigate("/doctor/profile");
+        //     // },
+        //   });
+        // }
 
         // Cập nhật context
         login(data.user, data.token);

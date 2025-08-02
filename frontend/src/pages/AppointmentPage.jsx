@@ -31,6 +31,7 @@ const AppointmentPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const [hasBhyt, setHasBhyt] = useState("Không");
   const steps = [
     { id: "profile", title: "Hồ sơ", desc: "" },
     { id: "department", title: "Chọn khoa", desc: "" },
@@ -240,11 +241,22 @@ const AppointmentPage = () => {
       return;
     }
 
+    // Kiểm tra mã BHYT nếu chọn "Có"
+    if (hasBhyt === "Có" && bhytCode) {
+      const bhytCodeRegex = /^[A-Z]{2}\d{13}$/;
+      if (!bhytCodeRegex.test(bhytCode)) {
+        setError("Mã BHYT phải có định dạng 2 chữ cái in hoa + 13 số.");
+        setLoading(false);
+        return;
+      }
+    }
+
+
     const standardizedStart = moment.utc(selectedSlot.startTime).toISOString(); // UTC chuẩn
     const standardizedEnd = moment.utc(selectedSlot.endTime).toISOString();
 
     try {
-      console.log("[LOG] Creating appointment with payload:", {
+      const payload = {
         profileId,
         doctorId: selectedDoctor,
         department: selectedDepartment,
@@ -255,31 +267,21 @@ const AppointmentPage = () => {
           status: 'Booked'
         },
         symptoms,
-        bhytCode,
         type: "Online",
         status: "pending_confirmation",
         room: ""
-      }); // Log payload trước khi gửi
+      };
+
+      console.log("[LOG] Creating appointment with payload:", payload); // Log payload trước khi gửi
+
+      // Chỉ thêm bhytCode nếu người dùng chọn "Có"
+      if (hasBhyt === "Có" && bhytCode) {
+        payload.bhytCode = bhytCode;
+      }
 
       const res = await axios.post(
-        "http://localhost:9999/api/user/create",
-        {
-          profileId,
-          doctorId: selectedDoctor,
-          department: selectedDepartment,
-          appointmentDate: selectedSlot.startTime, // Sử dụng startTime để có thời gian đầy đủ
-          timeSlot: {
-            startTime: selectedSlot.startTime,
-            endTime: selectedSlot.endTime,
-            status: 'Booked' // Thêm status cho timeSlot
-          },
-          symptoms,
-          bhytCode,
-          type: "Online",
-          status: "pending_confirmation", // Đặt status mặc định là pending_confirmation cho lịch online
-          room: "" // Không cần cho online
-        },
-        {
+        "http://localhost:9999/api/user/create", payload
+        , {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -486,7 +488,7 @@ const AppointmentPage = () => {
                   } else {
                     setError(null); // Xóa lỗi khi chọn đúng thứ 2
                     setStartWeekDate(selectedDate.format('YYYY-MM-DD'));
-                    fetchWeekSlots(); // Reload slot khi thay đổi ngày hợp lệ
+                    // fetchWeekSlots(); // Reload slot khi thay đổi ngày hợp lệ
                   }
                 }}
                 min={moment().isoWeekday(1).format('YYYY-MM-DD')}
@@ -573,14 +575,50 @@ const AppointmentPage = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Mã BHYT (optional)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={bhytCode}
-                onChange={(e) => setBhytCode(e.target.value)}
-                placeholder="Nhập mã BHYT"
-              />
+              <label className="form-label">Bạn có sử dụng BHYT không?</label>
+              <div className="form-check">
+                <input
+                  type="radio"
+                  className="form-check-input"
+                  id="hasBhytYes"
+                  name="hasBhyt"
+                  value="Có"
+                  checked={hasBhyt === "Có"}
+                  onChange={(e) => {
+                    setHasBhyt(e.target.value);
+                    if (e.target.value === "Không") setBhytCode(""); // Xóa mã BHYT nếu chọn "Không"
+                  }}
+                />
+                <label className="form-check-label" htmlFor="hasBhytYes">
+                  Có
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  type="radio"
+                  className="form-check-input"
+                  id="hasBhytNo"
+                  name="hasBhyt"
+                  value="Không"
+                  checked={hasBhyt === "Không"}
+                  onChange={(e) => setHasBhyt(e.target.value)}
+                />
+                <label className="form-check-label" htmlFor="hasBhytNo">
+                  Không
+                </label>
+              </div>
+              {hasBhyt === "Có" && (
+                <div className="mb-3">
+                  <label className="form-label">Mã BHYT</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={bhytCode}
+                    onChange={(e) => setBhytCode(e.target.value)}
+                    placeholder="Nhập mã BHYT"
+                  />
+                </div>
+              )}
             </div>
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             <div className="d-flex justify-content-between mt-4">

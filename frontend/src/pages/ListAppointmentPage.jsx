@@ -46,7 +46,7 @@ const ListAppointmentPage = () => {
   const handleCancel = async (id) => {
     if (!window.confirm("Bạn có chắc muốn hủy lịch hẹn này?")) return;
     try {
-      await axios.post(
+      const response = await axios.post(
         `/api/user/cancel/${id}`,
         {},
         {
@@ -55,13 +55,14 @@ const ListAppointmentPage = () => {
           },
         }
       );
+      // Cập nhật trạng thái dựa trên response từ backend
       setAppointments((prev) =>
-        prev.map((a) => (a._id === id ? { ...a, status: "canceled" } : a))
+        prev.map((a) => (a._id === id ? { ...a, status: response.data.appointment.status } : a))
       );
-      alert("Hủy lịch hẹn thành công!");
+      alert(response.data.message); // Hiển thị message từ backend
     } catch (err) {
-      console.error("Hủy lịch hẹn thất bại:", err);
-      alert("Hủy lịch hẹn thất bại. Vui lòng thử lại.");
+      console.error("Hủy lịch hẹn thất bại:", err.response?.data || err);
+      alert(err.response?.data?.message || "Hủy lịch hẹn thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -141,47 +142,47 @@ const ListAppointmentPage = () => {
                         (app.status === "pending_confirmation"
                           ? "bg-info"
                           : app.status === "confirmed"
-                          ? "bg-primary"
-                          : app.status === "rejected"
-                          ? "bg-danger"
-                          : app.status === "queued"
-                          ? "bg-warning"
-                          : app.status === "checked_in"
-                          ? "bg-secondary"
-                          : app.status === "in_progress"
-                          ? "bg-primary"
-                          : app.status === "completed"
-                          ? "bg-success"
-                          : app.status === "canceled"
-                          ? "bg-secondary"
-                          : app.status === "pending_cancel"
-                          ? "bg-warning"
-                          : "bg-info")
+                            ? "bg-primary"
+                            : app.status === "rejected"
+                              ? "bg-danger"
+                              : app.status === "queued"
+                                ? "bg-warning"
+                                : app.status === "checked_in"
+                                  ? "bg-secondary"
+                                  : app.status === "in_progress"
+                                    ? "bg-primary"
+                                    : app.status === "completed"
+                                      ? "bg-success"
+                                      : app.status === "canceled"
+                                        ? "bg-secondary"
+                                        : app.status === "pending_cancel"
+                                          ? "bg-warning"  // Badge vàng cho chờ duyệt hủy
+                                          : "bg-info")
                       }
                     >
                       {app.status === "pending_confirmation"
                         ? "Chờ xác nhận"
                         : app.status === "confirmed"
-                        ? "Đã xác nhận"
-                        : app.status === "rejected"
-                        ? "Bị từ chối"
-                        : app.status === "queued"
-                        ? "Đang xếp hàng"
-                        : app.status === "checked_in"
-                        ? "Đã check-in"
-                        : app.status === "in_progress"
-                        ? "Đang khám"
-                        : app.status === "completed"
-                        ? "Đã khám"
-                        : app.status === "canceled"
-                        ? "Đã hủy"
-                        : app.status === "pending_cancel"
-                        ? "Chờ hủy"
-                        : app.status}
+                          ? "Đã xác nhận"
+                          : app.status === "rejected"
+                            ? "Bị từ chối"
+                            : app.status === "queued"
+                              ? "Đang xếp hàng"
+                              : app.status === "checked_in"
+                                ? "Đã check-in"
+                                : app.status === "in_progress"
+                                  ? "Đang khám"
+                                  : app.status === "completed"
+                                    ? "Đã khám"
+                                    : app.status === "canceled"
+                                      ? "Đã hủy"
+                                      : app.status === "pending_cancel"
+                                        ? "Chờ hủy"  // Hiển thị "Chờ hủy" cho trạng thái mới
+                                        : app.status}
                     </span>
                   </td>
                   <td>
-                    {app.status === "confirmed" || app.status === "pending_confirmation" ? (
+                    {['confirmed', 'pending_confirmation'].includes(app.status) ? (  // Chỉ hiển thị nút nếu trạng thái cho phép hủy
                       <Button
                         variant="danger"
                         size="sm"
@@ -189,7 +190,7 @@ const ListAppointmentPage = () => {
                       >
                         Hủy
                       </Button>
-                    ) : app.status === "completed" ? (
+                    ) : app.status === "completed" || app.status === "done" ? (
                       <Button
                         variant="info"
                         size="sm"
