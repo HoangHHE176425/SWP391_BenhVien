@@ -43,7 +43,7 @@ const CategoryManagement = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!token || !user || user.role !== "Receptionist") {
+    if (!token || !user || user.role !== "Admin") {
       navigate("/");
       return;
     }
@@ -187,7 +187,7 @@ const CategoryManagement = () => {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
     if (newValue === 0) {
-      navigate("/receptionist/blogs");
+      navigate("/admin/blogs");
     }
   };
 

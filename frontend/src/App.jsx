@@ -12,7 +12,7 @@ import AccountantLayout from "./layouts/AccountantLayout";
 import PharmacistLayout from "./layouts/PharmacistLayout";
 import HrmanagerLayout from "./layouts/HrmanagerLayout";
 import DoctorLayout from "./components/doctor/DoctorLayout";
-import ReceptionistLayout from "./components/receptionist/ReceptionistLayout";
+import ReceptionistLayout from "./components/receptionist/receptionistLayout";
 import AdminLayout from "./components/admin/AdminLayout";
 // import receptionistLayout from "./components/receptionist/receptionistLayout";
 
@@ -33,7 +33,7 @@ import AppointmentManagePage from "./pages/AppointmentManagePage";
 import MedicalLabPage from "./pages/BlogTestPage.jsx";
 import TestPageDetails from "./pages/TestPageDetails.jsx";
 import WorkSchedulePage from "./pages/WorkSchedulePage";
-import ReceptionistScheduleManager from "./pages/receptionist/ReceptionistScheduleManager";
+import ReceptionistScheduleManager from "./pages/hrmanager/ReceptionistScheduleManager.jsx";
 import Changepass from "./pages/ChangePassword";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -42,10 +42,10 @@ import Dashboard from "./pages/admin/Dashboard";
 import AccountManagement from "./pages/admin/AccountManagement";
 import EmployeeManagement from "./pages/admin/EmployessManagement";
 import InvoiceUser from "./pages/InvoiceManagement";
-import BlogManagement from "./pages/receptionist/BlogManagement";
-import CategoryManagement from "./pages/receptionist/CategoryBlogManagement";
-import ServiceManagement from "./pages/receptionist/ServiceManagement";
-import DepartmentManagement from "./pages/receptionist/DepartmentManagement";
+import BlogManagement from "./pages/admin/BlogManagement.jsx";
+import CategoryManagement from "./pages/admin/CategoryBlogManagement.jsx";
+import ServiceManagement from "./pages/admin/ServiceManagement.jsx";
+import DepartmentManagement from "./pages/admin/DepartmentManagement.jsx";
 import SpecialtyManagement from "./pages/receptionist/SpecialtyManagement";
 import InvoiceManagement from "./pages/receptionist/InvoiceManagement";
 import PaymentView from "./pages/receptionist/PaymentView";
@@ -303,6 +303,12 @@ const AppRoutes = () => {
             <Route path="departments" element={<DepartmentManagement />} />
             <Route path="employees" element={<EmployeeManagement />} />
             <Route path="attendance" element={<AttendanceManagement />} />
+            <Route path="departments" element={<DepartmentManagement />} />
+            <Route path="services" element={<ServiceManagement />} />
+            <Route path="services/create" element={<CreateServicePage />} />
+            <Route path="services/edit/:id" element={<EditServicePage />} />
+            <Route path="blogs" element={<BlogManagement />} />
+            <Route path="category-management" element={<CategoryManagement />} />
           </Route>
 
           {/* Receptionist Routes */}
@@ -314,14 +320,14 @@ const AppRoutes = () => {
               </PrivateRouteByRole>
             }
           >
-            <Route index element={<BlogManagement />} />
-            <Route path="blogs" element={<BlogManagement />} />
-            <Route path="category-management" element={<CategoryManagement />} />
+            <Route index element={<AppointmentScheduleManagement />} />
+
+
             <Route path="invoices/create" element={<CreateInvoice2 />} />
-            <Route path="services" element={<ServiceManagement />} />
-            <Route path="services/create" element={<CreateServicePage />} />
-            <Route path="services/edit/:id" element={<EditServicePage />} />
-            <Route path="departments" element={<DepartmentManagement />} />
+
+
+
+
             <Route path="specialties" element={<SpecialtyManagement />} />
             <Route path="invoices" element={<InvoiceList />} />
             <Route path="payments" element={<PaymentView />} />
@@ -365,9 +371,10 @@ const AppRoutes = () => {
               </PrivateRouteByRole>
             }
           >
-            <Route index element={<InvoiceManagement />} />
+            <Route index element={<SendApplicationManager />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<HrmanagerAttendance />} />
+            <Route path="schedule" element={<ReceptionistScheduleManager />} />
             <Route path="sendApplicationManager" element={<SendApplicationManager />} />
           </Route>
 
@@ -380,7 +387,7 @@ const AppRoutes = () => {
               </PrivateRouteByRole>
             }
           >
-            <Route index element={<InvoiceManagement />} />
+            <Route index element={<ProfileReceptionist />} />
             <Route path="profile" element={<ProfileReceptionist />} />
             <Route path="attendance" element={<AccountantAttendance />} />
           </Route>

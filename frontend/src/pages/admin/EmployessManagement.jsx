@@ -23,6 +23,11 @@ import { Switch } from "antd";
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 function EmployeeManagement() {
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -42,30 +47,39 @@ function EmployeeManagement() {
 
 
   const fetchEmployeeLogs = async (employee) => {
-  try {
-    const res = await axios.get(`/api/admin/employee-log/${employee._id}`);
-    setEmployeeLogs(res.data);
-    setLogEmployee(employee);
-    setLogDrawerVisible(true);
-  } catch (err) {
-    message.error("Không thể tải lịch sử log");
-  }
-};
-  const fetchEmployees = async () => {
     try {
-      const res = await axios.get("/api/admin/employees");
-      setEmployees(res.data);
+      const res = await axios.get(`/api/admin/employee-log/${employee._id}`, {
+        headers: getAuthHeader(),
+      });
+      setEmployeeLogs(res.data);
+      setLogEmployee(employee);
+      setLogDrawerVisible(true);
     } catch (err) {
-      message.error("Failed to fetch employees");
+      message.error("Không thể tải lịch sử log");
     }
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get("/api/admin/employees", {
+        headers: getAuthHeader(),
+      });
+      setEmployees(res.data);
+    } catch (err) {
+      message.error("Không thể tải danh sách nhân viên");
+    }
+  };
+
+
+
   const fetchDepartments = async () => {
     try {
-      const res = await axios.get("/api/admin/getDepart");
+      const res = await axios.get("/api/admin/getDepart", {
+        headers: getAuthHeader(),
+      });
       setDepartments(res.data);
     } catch (err) {
-      message.error("Failed to fetch departments");
+      message.error("Không thể tải danh sách phòng ban");
     }
   };
 
@@ -76,13 +90,16 @@ function EmployeeManagement() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/admin/delEmp/${id}`);
-      message.success("Employee deleted");
+      await axios.delete(`/api/admin/delEmp/${id}`, {
+        headers: getAuthHeader(),
+      });
+      message.success("Đã xoá nhân viên");
       setEmployees((prev) => prev.filter((emp) => emp._id !== id));
     } catch (err) {
-      message.error("Delete failed");
+      message.error("Xoá thất bại");
     }
   };
+
   const getDepartmentNameById = (id) => {
     const found = departments.find(dep => dep._id === id);
     return found ? found.name || found.departmentCode : id; // fallback là ID nếu không tìm thấy
@@ -103,88 +120,92 @@ function EmployeeManagement() {
   const toggleStatus = async (record) => {
     try {
       const updatedStatus = record.status === "active" ? "inactive" : "active";
-      await axios.put(`/api/admin/updEmp/${record._id}`, {
-        status: updatedStatus,
-      });
+      await axios.put(
+        `/api/admin/updEmp/${record._id}`,
+        { status: updatedStatus },
+        { headers: getAuthHeader() }
+      );
       message.success("Trạng thái đã được cập nhật");
-      fetchEmployees(); // cập nhật lại bảng
+      fetchEmployees();
     } catch (err) {
       message.error("Không thể đổi trạng thái");
     }
   };
 
+
   const handleEditSubmit = async () => {
-  try {
-    const values = await form.validateFields();
-    const formData = new FormData();
+    try {
+      const values = await form.validateFields();
+      const formData = new FormData();
 
-    Object.keys(values).forEach((key) => {
-    const val = values[key];
-    if (
-      key !== "avatarFile" &&
-      val !== undefined &&
-      (key !== "password" || val.trim() !== "")
-    ) {
-      formData.append(key, val);
+      Object.keys(values).forEach((key) => {
+        const val = values[key];
+        if (
+          key !== "avatarFile" &&
+          val !== undefined &&
+          (key !== "password" || val.trim() !== "")
+        ) {
+          formData.append(key, val);
+        }
+      });
+
+      if (values.avatarFile?.[0]) {
+        formData.append("avatar", values.avatarFile[0].originFileObj);
+      }
+
+      await axios.put(`/api/admin/updEmp/${editingEmployee._id}`, formData, {
+        headers: {
+          ...getAuthHeader(),
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      notification.success({ message: "Cập nhật thành công" });
+      setEditingEmployee(null);
+      fetchEmployees();
+    } catch (err) {
+      notification.error({ message: "Cập nhật thất bại" });
     }
-  });
+  };
 
-
-    if (values.avatarFile?.[0]) {
-      formData.append("avatar", values.avatarFile[0].originFileObj);
-    }
-
-    await axios.put(`/api/admin/updEmp/${editingEmployee._id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    notification.success({ message: "Cập nhật thành công" });
-    setEditingEmployee(null);
-    fetchEmployees();
-  } catch (err) {
-    notification.error({ message: "Cập nhật thất bại" });
-  }
-};
 
 
   const handleCreate = async () => {
-  try {
-    const values = await createForm.validateFields();
+    try {
+      const values = await createForm.validateFields();
 
-    console.log("📝 Form values:", values);
-    console.log("📦 Ảnh gửi đi:", values.avatarFile?.[0]?.originFileObj);
-
-    const formData = new FormData();
-
-    for (const [key, val] of Object.entries(values)) {
-      if (key !== "avatarFile") {
-        formData.append(key, val);
+      const formData = new FormData();
+      for (const [key, val] of Object.entries(values)) {
+        if (key !== "avatarFile") {
+          formData.append(key, val);
+        }
       }
+
+      const avatarFile = values.avatarFile?.[0]?.originFileObj;
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      await axios.post("/api/admin/createEmp", formData, {
+        headers: {
+          ...getAuthHeader(),
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      notification.success({ message: "Tạo nhân viên thành công" });
+      setCreateModalVisible(false);
+      createForm.resetFields();
+      fetchEmployees();
+    } catch (err) {
+      console.error("❌ Lỗi tạo nhân viên:", err);
+      notification.error({
+        message: "Tạo thất bại",
+        description: err.message,
+      });
     }
+  };
 
-    // 👇 THÊM ẢNH
-    const avatarFile = values.avatarFile?.[0]?.originFileObj;
-    if (avatarFile) {
-      formData.append("avatar", avatarFile);
-    }
-
-    await axios.post("/api/admin/createEmp", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    notification.success({ message: "Tạo nhân viên thành công" });
-    setCreateModalVisible(false);
-    createForm.resetFields();
-    fetchEmployees();
-  } catch (err) {
-    console.error("❌ Lỗi tạo nhân viên:", err);
-    notification.error({ message: "Tạo thất bại", description: err.message });
-  }
-};
 
 
 

@@ -12,7 +12,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
 // Manual validation for department data
 const validateDepartment = (data) => {
   const errors = [];
@@ -154,7 +153,7 @@ exports.createDepartment = async (req, res) => {
       departmentId: newDepartment._id,
       action: "create",
       description: `Tạo mới phòng ban: ${name}`,
-      performedBy: req.user?.userId,
+      performedBy: req.user?.id,
     });
     res.status(201).json({ message: "Tạo khoa thành công", department: newDepartment });
   } catch (error) {
@@ -231,7 +230,7 @@ exports.updateDepartment = async (req, res) => {
         departmentId: updated._id,
         action: "update",
         description: `Thay đổi: ${changes.join("; ")}`,
-        performedBy: req.user?.userId,
+        performedBy: req.user?.id,
       });
     }
 

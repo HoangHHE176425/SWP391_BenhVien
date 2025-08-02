@@ -10,9 +10,9 @@ const {
   updateDepartment,
   deleteDepartment,
   getDepartmentLogs
-} = require("../../controller/receptionist/departmentManagement");
+} = require("../../controller/admin/departmentManagement");
 
-const { authReceptionistMiddleware } = require("../../middleware/auth.middleware");
+const { authAdminMiddleware } = require("../../middleware/auth.middleware");
 
 // Multer cấu hình để upload file tạm, sau đó controller xử lý đẩy lên Cloudinary
 const uploadMulter = multer({
@@ -31,9 +31,9 @@ const uploadMulter = multer({
 
 router.get("/", getAllDepartments);         
 router.get("/:id", getDepartmentById);           
-router.post("/", authReceptionistMiddleware, uploadMulter.single("image"), createDepartment); 
-router.put("/:id", authReceptionistMiddleware, uploadMulter.single("image"), updateDepartment); 
-router.delete("/:id", authReceptionistMiddleware, deleteDepartment);
-router.get("/:id/logs", authReceptionistMiddleware, getDepartmentLogs);
+router.post("/", authAdminMiddleware, uploadMulter.single("image"), createDepartment); 
+router.put("/:id", authAdminMiddleware, uploadMulter.single("image"), updateDepartment); 
+router.delete("/:id", authAdminMiddleware, deleteDepartment);
+router.get("/:id/logs", authAdminMiddleware, getDepartmentLogs);
 
 module.exports = router;

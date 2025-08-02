@@ -18,9 +18,9 @@ const DoctorSidebar = () => {
     { to: "/doctor/medicine", label: "Xem Thuốc", icon: <MedicineBoxOutlined /> },
     { to: "/doctor/appointments", label: "Xem Lịch Hẹn", icon: <CalendarOutlined /> },
     { to: "/doctor/work-schedule", label: "Xem Lịch Làm Việc", icon: <ScheduleOutlined /> },
-    { to: "/doctor/profile", label: "Xem Hồ Sơ Cá Nhân", icon: <ScheduleOutlined /> },
     { to: "/doctor/attendance", label: "Điểm Danh", icon: <ScheduleOutlined /> },
     { to: "/doctor/sendApplication", label: "Gửi Đơn", icon: <BellOutlined /> },
+    { to: "/doctor/profile", label: "Xem Hồ Sơ Cá Nhân", icon: <ScheduleOutlined /> },
   ];
 
   const handleLogout = () => {

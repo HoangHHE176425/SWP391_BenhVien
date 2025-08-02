@@ -1,44 +1,84 @@
 import React, { useEffect, useState } from "react";
-import { Line, Bar, Pie } from "@ant-design/plots";
-import { Card, Col, List, Row, Typography } from "antd";
+import { Line, Bar } from "@ant-design/plots";
+import { Card, Col, Row, Typography, Spin, DatePicker } from "antd";
 import axios from "axios";
-import { DatePicker, message } from "antd";
 import dayjs from "dayjs";
+import styled from "styled-components";
+
+const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
+
+// Styled Components for custom styling
+const DashboardContainer = styled.div`
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+`;
+
+const StyledCard = styled(Card)`
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const SummaryCard = styled(StyledCard)`
+  text-align: center;
+  .ant-card-head {
+    background: #1890ff;
+    color: white;
+    border-radius: 12px 12px 0 0;
+  }
+`;
+
+const ChartCard = styled(StyledCard)`
+  .ant-card-body {
+    padding: 16px;
+  }
+`;
 
 const Dashboard = () => {
   const [userData, setUserData] = useState([]);
   const [appointmentData, setAppointmentData] = useState([]);
-  const [revenueData, setRevenueData] = useState([]);
-  const [appointmentTypes, setAppointmentTypes] = useState([]);
-  const [revenueMethods, setRevenueMethods] = useState([]);
   const [summaries, setSummaries] = useState({});
   const [employeeStats, setEmployeeStats] = useState({
     totalEmployees: 0,
     roles: [],
   });
-  const { RangePicker } = DatePicker;
+  const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState([
     dayjs().subtract(29, "day"),
     dayjs(),
   ]);
+
   const fetchStats = async (startDate, endDate) => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
+    }
+
     const query = `?start=${startDate}&end=${endDate}`;
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
     const [
       userRes,
       appointmentRes,
-      revenueRes,
-      typeRes,
-      methodRes,
       summaryRes,
       employeeRes,
     ] = await Promise.all([
-      axios.get(`/api/admin/user-registrations${query}`),
-      axios.get(`/api/admin/appointments${query}`),
-      axios.get(`/api/admin/revenue${query}`),
-      axios.get(`/api/admin/appointment-types${query}`),
-      axios.get(`/api/admin/revenue-methods${query}`),
-      axios.get(`/api/admin/summaries${query}`),
-      axios.get(`/api/admin/employee-stats${query}`),
+      axios.get(`/api/admin/user-registrations${query}`, config),
+      axios.get(`/api/admin/appointments${query}`, config),
+      axios.get(`/api/admin/summaries${query}`, config),
+      axios.get(`/api/admin/employee-stats${query}`, config),
     ]);
 
     setUserData(
@@ -50,185 +90,154 @@ const Dashboard = () => {
         count: item.count,
       }))
     );
-    setRevenueData(
-      revenueRes.data.map((item) => ({
-        date: item._id,
-        revenue: item.totalRevenue,
-      }))
-    );
-    setAppointmentTypes(
-      typeRes.data.map((item) => ({ type: item._id, count: item.count }))
-    );
-    setRevenueMethods(
-      methodRes.data.map((item) => ({ method: item._id, total: item.total }))
-    );
     setSummaries(summaryRes.data);
-
     setEmployeeStats(employeeRes.data);
-  };
+  } catch (error) {
+    console.error("❌ Fetching dashboard stats failed:", error);
+    message.error("Không thể tải dữ liệu thống kê! " + (error.response?.data?.message || error.message));
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     const [start, end] = dateRange;
     fetchStats(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"));
   }, [dateRange]);
 
-  // Configs
-
+  // Chart Configurations
   const userConfig = {
     data: userData,
     xField: "date",
     yField: "count",
-    height: 250,
+    height: 300,
     smooth: true,
-    point: { size: 4, shape: "circle" },
+    point: { size: 5, shape: "circle" },
+    color: "#1890ff",
+    lineStyle: { lineWidth: 3 },
+    tooltip: {
+      showMarkers: true,
+      formatter: (datum) => ({
+        name: "Người dùng mới",
+        value: `${datum.count} người`,
+      }),
+    },
   };
 
   const appointmentConfig = {
     data: appointmentData,
     xField: "date",
     yField: "count",
-    height: 250,
+    height: 300,
     smooth: true,
-    point: { size: 4, shape: "circle" },
+    point: { size: 5, shape: "circle" },
+    color: "#52c41a",
+    lineStyle: { lineWidth: 3 },
+    tooltip: {
+      showMarkers: true,
+      formatter: (datum) => ({
+        name: "Lịch hẹn",
+        value: `${datum.count} lịch`,
+      }),
+    },
   };
 
-  const revenueConfig = {
-    data: revenueData,
-    xField: "date",
-    yField: "revenue",
-    height: 250,
-    smooth: true,
-    point: { size: 4, shape: "circle" },
-  };
-
-  // ✅ Cleaner vertical Bar config for appointment types
-  const barConfig = {
-    data: appointmentTypes,
-    xField: "type",
-    yField: "count",
-    height: 250,
-    columnWidthRatio: 0.6,
-    colorField: "type",
-    label: false, // disable numbers inside bars
-  };
-
-  // ✅ New Bar: Appointments per day
   const appointmentBarConfig = {
     data: appointmentData,
     xField: "date",
     yField: "count",
-    height: 250,
+    height: 300,
     columnWidthRatio: 0.5,
-    color: "#3498db",
-    label: false,
+    color: "#faad14",
+    label: {
+      position: "top",
+      style: { fill: "#333", fontSize: 12 },
+    },
+    tooltip: {
+      formatter: (datum) => ({
+        name: "Lịch hẹn",
+        value: `${datum.count} lịch`,
+      }),
+    },
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Typography.Title level={2}>Bảng Điều Khiển Quản Trị</Typography.Title>
+    <DashboardContainer>
+      <Title level={2} style={{ marginBottom: 24, color: "#1f1f1f" }}>
+        Thống Kê Hệ Thống
+      </Title>
 
-      {/*
-  <div style={{ marginBottom: "20px" }}>
-    <RangePicker
-      value={dateRange}
-      onChange={(dates) => {
-        if (!dates) return;
-        setDateRange(dates);
-      }}
-      style={{ marginBottom: "20px" }}
-    />
-  </div> */}
+      <div style={{ marginBottom: 24 }}>
+        <RangePicker
+          value={dateRange}
+          onChange={(dates) => {
+            if (!dates) return;
+            setDateRange(dates);
+          }}
+          style={{ width: 300, borderRadius: 8 }}
+          size="large"
+        />
+      </div>
 
-      <Row gutter={[16, 16]}>
-        <Col span={6}>
-          <Card title="Tổng Số Người Dùng">{summaries.totalUsers}</Card>
-        </Col>
-        <Col span={6}>
-          <Card title="Tổng Lịch Hẹn">{summaries.totalAppointments}</Card>
-        </Col>
-        <Col span={6}>
-          <Card title="Tổng Doanh Thu">
-            {(summaries.totalRevenue || 0).toLocaleString()} VND
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card title="Thống Kê Nhân Viên">
-            <p>Tổng Nhân Viên: {employeeStats.totalEmployees}</p>
-            <ul>
-              {employeeStats.roles.map((role) => (
-                <li key={role._id}>
-                  {role._id}: {role.count}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </Col>
-      </Row>
+      {loading ? (
+        <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+      ) : (
+        <>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={8}>
+              <SummaryCard title="Tổng Số Người Dùng">
+                <Text strong style={{ fontSize: 24 }}>
+                  {summaries.totalUsers || 0}
+                </Text>
+              </SummaryCard>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <SummaryCard title="Tổng Lịch Hẹn">
+                <Text strong style={{ fontSize: 24 }}>
+                  {summaries.totalAppointments || 0}
+                </Text>
+              </SummaryCard>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <SummaryCard title="Thống Kê Nhân Viên">
+                <Text strong style={{ fontSize: 18 }}>
+                  Tổng Nhân Viên: {employeeStats.totalEmployees}
+                </Text>
+                <ul style={{ marginTop: 8, textAlign: "left" }}>
+                  {employeeStats.roles.map((role) => (
+                    <li key={role._id}>
+                      {role._id}: {role.count}
+                    </li>
+                  ))}
+                </ul>
+              </SummaryCard>
+            </Col>
+          </Row>
 
-      <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
-        <Col span={12}>
-          <Card title="Tăng Trưởng Người Dùng (30 Ngày)">
-            <Line {...userConfig} />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="Số Lịch Hẹn Theo Thời Gian (30 Ngày)">
-            <Line {...appointmentConfig} />
-          </Card>
-        </Col>
-      </Row>
+          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+            <Col xs={24} lg={12}>
+              <ChartCard title="Tăng Trưởng Người Dùng (30 Ngày)">
+                <Line {...userConfig} />
+              </ChartCard>
+            </Col>
+            <Col xs={24} lg={12}>
+              <ChartCard title="Số Lịch Hẹn Theo Thời Gian (30 Ngày)">
+                <Line {...appointmentConfig} />
+              </ChartCard>
+            </Col>
+          </Row>
 
-      <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
-        <Col span={12}>
-          <Card title="Xu Hướng Doanh Thu (30 Ngày)">
-            <Line {...revenueConfig} />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="Loại Lịch Hẹn (30 Ngày)">
-            <Bar {...barConfig} />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
-        <Col span={12}>
-          <Card title="Số Lịch Hẹn Mỗi Ngày">
-            <Bar {...appointmentBarConfig} />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="Doanh Thu Theo Phương Thức Thanh Toán">
-            <Pie
-              data={revenueMethods}
-              angleField="total"
-              colorField="method"
-              radius={0.9}
-              legend={{ position: "bottom" }}
-              label={false} // Ẩn nhãn lát pie
-            />
-            <List
-              size="small"
-              bordered={false}
-              dataSource={revenueMethods}
-              renderItem={(item) => {
-                const total = revenueMethods.reduce(
-                  (acc, cur) => acc + cur.total,
-                  0
-                );
-                const percent = ((item.total / total) * 100).toFixed(1);
-                return (
-                  <List.Item>
-                    <span style={{ fontWeight: 500 }}>{item.method}</span>:{" "}
-                    {percent}%
-                  </List.Item>
-                );
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+            <Col xs={24}>
+              <ChartCard title="Số Lịch Hẹn Mỗi Ngày">
+                <Bar {...appointmentBarConfig} />
+              </ChartCard>
+            </Col>
+          </Row>
+        </>
+      )}
+    </DashboardContainer>
   );
 };
 

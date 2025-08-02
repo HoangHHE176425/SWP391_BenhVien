@@ -124,7 +124,6 @@ function ReceptionistScheduleManager() {
 
   return dateA - dateB;
 });
-
 setSchedules(sortedSchedules);
 
   } catch (err) {

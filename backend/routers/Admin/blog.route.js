@@ -16,7 +16,7 @@ const {
   getBlogBySlug,
   getTopViewedBlogs,
   incrementBlogViews
-} = require("../../controller/receptionist/blogController");
+} = require("../../controller/admin/blogController");
 
 const {
   authReceptionistMiddleware

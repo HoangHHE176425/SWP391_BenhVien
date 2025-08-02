@@ -95,7 +95,7 @@ const ServiceListPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold text-gray-800">Danh sách Dịch vụ</h2>
-        <Link to="/receptionist/services/create">
+        <Link to="/admin/services/create">
           <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg shadow-md transition duration-200">
             + Thêm dịch vụ
           </button>
@@ -191,7 +191,7 @@ const ServiceListPage = () => {
                     <td className="px-6 py-4 flex items-center gap-3">
                       {/* Nút Sửa */}
                       <button
-                        onClick={() => navigate(`/receptionist/services/edit/${service._id}`)}
+                        onClick={() => navigate(`/admin/services/edit/${service._id}`)}
                         title="Chỉnh sửa dịch vụ"
                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-300 rounded-full text-sm font-medium transition"
                       >
