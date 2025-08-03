@@ -75,7 +75,10 @@ const {
 const {
   getAllInvoices4User,
   CompletedInvoices,
+  getAllRecords,
+  CreateInvoicesFromRecord,
 } = require("../../controller/receptionist/InvoiceController");
+
 const {
   createAppointment,
   getAppointmentsByUser,
@@ -99,12 +102,14 @@ userRouter.put(
 userRouter.get("/invoices", verifyToken1, getAllInvoices4User);
 userRouter.post("/create-link", createPaymentLinkEmbedded);
 userRouter.post("/create-link-appointment", createPaymentLinkEmbeddedForBookAppointment);
+userRouter.post('/invoices-from-records', authMiddleware, CreateInvoicesFromRecord);
 
 userRouter.put("/pay/success", CompletedInvoices);
 
 userRouter.get("/profile/my-records", verifyToken1, userService.getMyProfiles);
 userRouter.post("/qa", userService.sendQA);
 userRouter.get("/qahistory", userService.getAllQAUser);
+userRouter.get('/records', authMiddleware, userService.getAllRecords);
 
 // them router FAQ
 userRouter.get('/faqs',getAllFAQ);
