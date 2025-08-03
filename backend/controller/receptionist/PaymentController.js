@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Invoice = require('../../models/Invoice');
 const Payment = require('../../models/Payment');
 const crypto = require('crypto');
+const Record = require("../../models/Records");
 
 const payos = new PayOS(
     process.env.PAYOS_CLIENT_ID,
@@ -11,17 +12,25 @@ const payos = new PayOS(
 );
 
 // Tạo link thanh toán PayOS
+// Tạo link thanh toán PayOS
 exports.createPaymentLink = async (req, res) => {
     try {
         const { invoiceId, method } = req.body;
 
-        if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
+        console.log("📥 [createPaymentLink] Nhận yêu cầu với:");
+        console.log("🔹 req.body:", req.body);
+        console.log("🔹 invoiceId:", invoiceId);
+        console.log("🔹 method:", method);
+
+        // Kiểm tra ID hợp lệ
+        const isValidId = mongoose.Types.ObjectId.isValid(invoiceId);
+        console.log("✅ invoiceId hợp lệ:", isValidId);
+        if (!isValidId) {
             return res.status(400).json({
                 success: false,
                 message: 'ID hóa đơn không hợp lệ'
             });
         }
-
 
         if (!['Credit Card', 'Mobile App'].includes(method)) {
             return res.status(400).json({
@@ -30,59 +39,93 @@ exports.createPaymentLink = async (req, res) => {
             });
         }
 
+        // Lấy invoice
         const invoice = await Invoice.findById(invoiceId)
-            .populate('userId', 'name email')
-            .populate('profileId', 'name').populate("services");
+            .populate('profileId', 'name')
+            .populate('services')
+            .populate({
+                path: 'recordIds',
+                populate: { path: 'prescription.medicine' }
+            });
 
         if (!invoice) {
+            console.log("❌ Không tìm thấy hóa đơn với ID:", invoiceId);
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy hóa đơn'
             });
         }
 
-        if (invoice.status !== 'Pending') {
-            return res.status(400).json({
-                success: false,
-                message: 'Hóa đơn không ở trạng thái chờ thanh toán'
-            });
+        console.log("🧾 Thông tin hóa đơn:");
+        console.log("🔹 invoiceNumber:", invoice.invoiceNumber);
+        console.log("🔹 totalAmount:", invoice.totalAmount);
+        console.log("🔹 services.length:", invoice.services?.length);
+        console.log("🔹 recordIds:", invoice.recordIds?.map(r => r._id.toString()));
+        console.log("🔹 profile name:", invoice.profileId?.name);
+        console.log("🔹 prescription:", invoice.recordIds?.[0]?.prescription);
+
+        let finalAmount = invoice.totalAmount;
+        const hasInsurance = invoice.recordIds?.[0]?.bhytCode === true;
+
+        if (hasInsurance) {
+            finalAmount = Math.round(finalAmount * 0.5);
+            console.log("💊 Bảo hiểm y tế áp dụng: -50%");
         }
 
-        // Kiểm tra xem đã có Payment đang chờ hay chưa
+        // Kiểm tra payment tồn tại chưa
         let payment = await Payment.findOne({ invoiceId, status: 'Pending' });
-
         if (!payment) {
+            console.log("🆕 Tạo payment mới với số tiền:", finalAmount);
             payment = await Payment.create({
                 invoiceId,
-                userId: invoice.userId,
+                recordId: invoice.recordIds?.[0],
                 profileId: invoice.profileId,
-                amount: invoice.totalAmount,
+                amount: finalAmount,
                 method,
                 status: 'Pending',
                 paymentDate: new Date()
             });
         }
 
-        // Tạo orderCode tránh trùng: INV-1235_ab123
-
-        // An toàn, không trùng, và không vượt quá MAX_SAFE_INTEGER
         const orderCode = Math.floor(Date.now() / 1000);
 
-
         const paymentData = {
-            orderCode: orderCode,
-            amount: invoice.totalAmount,
-            description: `Pay ${invoice.invoiceNumber} for ${invoice.profileId?.name ?? "patient"}`,
-            items: (invoice.services || []).map(service => ({
-                name: service.name || 'Dịch vụ y tế',
-                quantity: 1,
-                price: invoice.totalAmount // có thể là service.price nếu cần chi tiết hơn
-            })),
+            orderCode,
+            amount: finalAmount,
+            description: `${invoice.invoiceNumber} ${invoice.profileId?.name?.slice(0, 25) || "BN"}`,
+            items: [
+  ...(invoice.services || []).map(service => ({
+    name: service.name?.slice(0, 25) || 'Dịch vụ y tế',
+    quantity: 1,
+    price: service.price || 0
+  })),
+  ...(invoice.recordIds?.flatMap(record =>
+    (record.prescription || []).map(pres => ({
+      name: `Thuốc: ${pres.medicine?.name?.slice(0, 20) || 'Không rõ'}`,
+      quantity: pres.quantity || 1,
+      price: pres.medicine?.unitPrice || 0
+    }))
+  ) || []),
+  ...(hasInsurance
+    ? [{
+        name: 'Giảm 50% BHYT',
+        quantity: 1,
+        price: -Math.round(invoice.totalAmount * 0.5)
+      }]
+    : [])
+],
+
             returnUrl: `http://localhost:5173/payment/success?paymentId=${payment._id}`,
-            cancelUrl: `http://localhost:5173/payment/fail?reason=cancelled`
+            cancelUrl: `http://localhost:5173/payment/fail?reason=cancelled`,
+            expiredAt: Math.floor(Date.now() / 1000) + 60 * 15
         };
 
+        console.log("📦 Dữ liệu gửi tới PayOS:");
+        console.log(JSON.stringify(paymentData, null, 2));
+
         const paymentLink = await payos.createPaymentLink(paymentData);
+
+        console.log("✅ Link thanh toán tạo thành công:", paymentLink.checkoutUrl);
 
         res.status(200).json({
             success: true,
@@ -93,14 +136,16 @@ exports.createPaymentLink = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Error creating payment link:', error?.response?.data || error.message);
+        console.error('🔥 Lỗi khi tạo link thanh toán PayOS:');
+        console.error(error?.response?.data || error.message || error);
         res.status(500).json({
             success: false,
-            message: 'Lỗi server',
+            message: 'Lỗi server khi tạo link thanh toán',
             error: error?.response?.data?.message || error.message
         });
     }
 };
+
 
 
 
@@ -234,7 +279,7 @@ exports.paidServices = async (req, res) => {
                 invoiceId,
                 userId: invoice.userId,
                 profileId: invoice.profileId,
-                amount: invoice.totalAmount,
+                amount: finalAmount,
                 method: "Cash",
                 status: 'Completed',
                 paymentDate: new Date()
@@ -470,18 +515,33 @@ exports.createPaymentLinkEmbedded = async (req, res) => {
     try {
         const { invoiceId } = req.body;
 
-        const invoice = await Invoice.findById(invoiceId).populate("services");
-        const total = invoice.totalAmount;
+        const invoice = await Invoice.findById(invoiceId)
+            .populate("services")
+            .populate({
+                path: "recordIds",
+                select: "bhytCode"
+            });
 
-        // Đảm bảo orderCode là số duy nhất
+        if (!invoice) {
+            return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
+        }
+
+        let finalAmount = invoice.totalAmount;
+        const hasInsurance = invoice.recordIds?.[0]?.bhytCode === true;
+
+        if (hasInsurance) {
+            finalAmount = Math.round(finalAmount * 0.5);
+            console.log("💊 Áp dụng bảo hiểm: giảm 50%");
+        }
+
         const orderCode = Number(invoice.invoiceNumber) || Date.now();
 
         const result = await payos.createPaymentLink({
             orderCode,
-            amount: total,
+            amount: finalAmount,
             description: `Thanh toán Vietcare`,
-            cancelUrl: "http://localhost:5173/invoice", // bắt buộc
-            returnUrl: "http://localhost:5173/invoice", // quay lại front-end
+            cancelUrl: "http://localhost:5173/invoice",
+            returnUrl: "http://localhost:5173/invoice",
         });
 
         res.json({ checkoutUrl: result.checkoutUrl });
@@ -490,6 +550,7 @@ exports.createPaymentLinkEmbedded = async (req, res) => {
         res.status(500).json({ message: "Lỗi tạo link thanh toán", error: error.message });
     }
 };
+
 exports.createPaymentLinkEmbeddedForBookAppointment = async (req, res) => {
     try {
         console.log("Request body:", req.body);
