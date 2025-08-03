@@ -16,17 +16,26 @@ const MedicinePage = () => {
     }, []);
 
     const fetchMedicines = async () => {
-        try {
-            const res = await axios.get('/api/medicines');
-            setMedicines(res.data);
-            setFilteredMedicines(res.data);
-        } catch (err) {
-            message.error('Không thể tải danh sách thuốc');
-            console.error(err);
-        } finally {
-            setLoading(false);
+    try {
+        const res = await axios.get('/api/medicines');
+
+        console.log("📦 Raw response:", res.data);
+
+        if (Array.isArray(res.data.medicines)) {
+            setMedicines(res.data.medicines);
+            setFilteredMedicines(res.data.medicines);
+        } else {
+            message.error("Không tìm thấy danh sách thuốc hợp lệ.");
         }
-    };
+    } catch (err) {
+        message.error('Không thể tải danh sách thuốc');
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+};
+
+
 
     const handleSearch = (value) => {
         setSearchText(value);
