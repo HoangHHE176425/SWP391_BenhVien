@@ -76,7 +76,7 @@ const BlogManagement = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!token || !user || user.role !== "Receptionist") {
+    if (!token || !user || user.role !== "Admin") {
       navigate("/");
       return;
     }
@@ -422,7 +422,7 @@ const BlogManagement = () => {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
     if (newValue === 1) {
-      navigate("/receptionist/category-management");
+      navigate("/admin/category-management");
     }
   };
 

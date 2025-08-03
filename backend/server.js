@@ -27,16 +27,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/user", require("./routers/User/user.route"));
-app.use("/api/admin", require("./routers/Admin/admin.route"));
+// app.use("/api/admin", require("./routers/Admin/admin.route"));
 app.use("/api/auth", require("./routers/auth/auth.route"));
 app.use("/api/doctor", require("./routers/Doctor/doctor.route"));
-app.use("/api/receptionist", require("./routers/Receptionist/blog.route"));
+app.use("/api/receptionist", require("./routers/Admin/blog.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/news.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/medicalrecord.route"));
 app.use("/api/pharmacist", require("./routers/pharmacist/medicine.route"));
 app.use("/api/work-schedule", require("./routers/Doctor/workschedule.route"));
 app.use("/api/receptionist", require("./routers/Receptionist/receptionist.route"));
-app.use("/api/receptionist/blog", require("./routers/Receptionist/blog.route"));
+app.use("/api/receptionist/blog", require("./routers/Admin/blog.route"));
 app.use("/api/receptionist/news", require("./routers/Receptionist/news.route"));
 app.use("/api/receptionist/medical-record", require("./routers/Receptionist/medicalrecord.route"));
 app.use("/api/attendance", require("./routers/Doctor/attendance.routes"));
@@ -52,23 +52,28 @@ app.use("/api/accountant/medicine-check", require("./routers/accountant/medicine
 const userRouter = require("./routers/User/user.route");
 const userMedicalProfile = require("./routers/User/userMedicalProfile.route");
 const workschedule = require("./routers/Doctor/workschedule.route");
-const adminRouter = require("./routers/Admin/admin.route");
+// const adminRouter = require("./routers/Admin/admin.route");
 const authRouter = require("./routers/auth/auth.route");
 const doctorRouter = require("./routers/Doctor/doctor.route");
 const receptionistRouter = require("./routers/Receptionist/receptionist.route");
 const userProfileRouter = require("./routers/User/profile.route");
+const adminUserManagerRouter = require("./routers/Admin/adminUserManager.route");
+const adminEmployeeManagerRouter = require("./routers/Admin/adminEmployeeManager.route");
+const adminStatsRouter = require("./routers/Admin/adminDashboard.route");
 // 15-7
 const foodrouter = require("./routers/User/api.food");
-const scheduleRouter = require('./routers/Receptionist/schedule.route');
+const scheduleRouter = require('./routers/hrmanager/schedule.route');
 // Mount routers
 app.use("/api/user", userRouter);
 app.use("/api/user-profile", userMedicalProfile);
 app.use("/api/work-schedule", workschedule);
-app.use("/api/admin", adminRouter);
+// app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/doctor", doctorRouter);
 app.use("/api/receptionist", receptionistRouter);
-
+app.use("/api/admin", adminUserManagerRouter);
+app.use("/api/admin", adminEmployeeManagerRouter);
+app.use("/api/admin", adminStatsRouter);
 // 15-7
 app.use("/api/food", foodrouter);
 app.use(
@@ -78,7 +83,7 @@ app.use(
 app.use("/api/users", require("./routers/Receptionist/userManagement.route"));
 app.use(
   "/api/departments",
-  require("./routers/Receptionist/departmentManagement.route")
+  require("./routers/Admin/departmentManagement.route")
 );
 app.use("/api/profile", userProfileRouter);
 app.use('/api/receptionist', scheduleRouter);

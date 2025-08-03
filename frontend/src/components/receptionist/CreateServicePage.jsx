@@ -52,7 +52,7 @@ const CreateServicePage = () => {
         await axios.post(`${API}/create/services`, { name, description, price: parsedPrice }, {
         headers: { Authorization: `Bearer ${token}` },
         });
-        navigate('/receptionist/services');
+        navigate('/admin/services');
     } catch (err) {
         if (err.response?.data?.message) {
         setError(err.response.data.message);

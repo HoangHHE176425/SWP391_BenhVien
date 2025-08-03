@@ -20,7 +20,7 @@ const EditServicePage = () => {
             } catch (err) {
                 alert('Không tìm thấy dịch vụ');
                 console.error(err);
-                navigate('/receptionist/services');
+                navigate('/admin/services');
             }
         };
 
@@ -36,7 +36,7 @@ const EditServicePage = () => {
         e.preventDefault();
         try {
             await axios.put(`${API}/update/services/${id}`, form);
-            navigate('/receptionist/services');
+            navigate('/admin/services');
         } catch (err) {
             if (err.response?.data?.message) {
                 setError(err.response.data.message);

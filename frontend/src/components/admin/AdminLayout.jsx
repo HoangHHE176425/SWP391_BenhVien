@@ -7,6 +7,8 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  AppstoreOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 
@@ -24,7 +26,10 @@ const AdminLayout = () => {
     { key: "2", path: "/admin/accounts", icon: <UserOutlined />, label: "Quản Lý Người Dùng" },
     { key: "3", path: "/admin/employees", icon: <TeamOutlined />, label: "Quản Lý Nhân Viên" },
     { key: "4", path: "/admin/attendance", icon: <TeamOutlined />, label: "Quản Lý Điểm Danh" },
-    { key: "5", path: null, icon: <LogoutOutlined />, label: "Đăng Xuất", onClick: () => handleLogout() },
+    { key: "5", path: "/admin/departments", icon: <AppstoreOutlined />, label: "Quản Lý Khoa" },
+    { key: "6", path: "/admin/services", icon: <AppstoreOutlined />, label: "Quản Lý Dịch Vụ" },
+    { key: "7", path: "/admin/blogs", icon: <FileTextOutlined />, label: "Quản Lý Bài Viết" },
+    { key: "8", path: null, icon: <LogoutOutlined />, label: "Đăng Xuất", onClick: () => handleLogout() },
   ];
 
   // Handle logout
@@ -57,7 +62,7 @@ const AdminLayout = () => {
             fontWeight: "bold",
           }}
         >
-          {collapsed ? "KC" : "KiwiCare"}
+          {collapsed ? "KC" : "Admin"}
         </div>
         <Menu theme="dark" mode="inline" selectedKeys={[selectedKey]}>
           {menuItems.map((item) => (

@@ -43,7 +43,7 @@ const DepartmentManagement = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!token || !user || user.role !== "Receptionist") {
+    if (!token || !user || user.role !== "Admin") {
       message.warning("Bạn không có quyền truy cập");
       navigate("/");
     }
@@ -460,10 +460,18 @@ const DepartmentManagement = () => {
         {logs.map((log) => (
           <li key={log._id} className="list-group-item">
             <strong>{log.action.toUpperCase()}</strong> - {log.description} <br />
-            <small className="text-muted">
-              Thực hiện bởi: {log.performedBy?.name}
-              {log.performedBy?.employeeCode ? ` (${log.performedBy.employeeCode})` : ""} | {new Date(log.createdAt).toLocaleString()}
-            </small>
+<small className="text-muted">
+  {log.performedBy ? (
+    <>
+      Thực hiện bởi: {log.performedBy.name}
+      {log.performedBy.employeeCode && ` (${log.performedBy.employeeCode})`} |{" "}
+    </>
+  ) : (
+    "Thực hiện bởi: Không xác định | "
+  )}
+  {new Date(log.createdAt).toLocaleString()}
+</small>
+
           </li>
         ))}
       </ul>

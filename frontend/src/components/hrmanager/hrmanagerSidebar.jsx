@@ -6,6 +6,7 @@ import {
   CalendarOutlined,
   LogoutOutlined,
   FileTextOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 
 const HrManagerSidebar = () => {
@@ -13,15 +14,21 @@ const HrManagerSidebar = () => {
 
   const links = [
     {
-      to: "/hrmanager/profile",
-      label: "Hồ Sơ Quản Lý",
-      icon: <UserOutlined />,
-    },
-    {
       to: "/hrmanager/sendApplicationManager",
       label: "Quản lý Đơn",
       icon: <FileTextOutlined />, 
     },
+    {
+      to: "/hrmanager/schedule",
+      label: "Quản Lý Lịch Làm Việc",
+      icon: <QuestionCircleOutlined />, 
+    },
+    {
+      to: "/hrmanager/profile",
+      label: "Hồ Sơ Quản Lý",
+      icon: <UserOutlined />,
+    },
+
   ];
 
   const handleLogout = () => {
