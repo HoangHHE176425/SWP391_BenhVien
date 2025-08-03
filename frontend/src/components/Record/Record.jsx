@@ -135,6 +135,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     if (!selectedAppointment) return;
     fetchListRecord();
     fetchDocterActs(undefined);
+    fetchService();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAppointment]);
 
@@ -159,10 +160,13 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     }
   };
 
-  const fetchDocterActs = async (department) => {
+  const fetchDocterActs = async (department, services) => {
     try {
       const params = new URLSearchParams();
       if (department)  params.append('departmentId', department);
+      if (services && Array.isArray(services) && services.length > 0) {
+        params.append('services', services.join(','));
+      }
       
       const res = await axios.get(`/api/doctor/doctor?${params.toString()}`);
       setDocterActs(res?.data?.doctors || []);
@@ -178,7 +182,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         dateOfBirth: selectedAppointment.profileId.dateOfBirth ? dayjs(selectedAppointment.profileId.dateOfBirth) : null,
         address: selectedAppointment.profileId.address || "",
         doctorId: doctor._id,
-        bhytCode: false,
+        bhytCode: selectedAppointment.bhytCode ? true : false,
         identityNumber: selectedAppointment.profileId.identityNumber || "",
         admissionDate: null,
         dischargeDate: null,
@@ -190,6 +194,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         department: "",
         docterAct: "",
         admissionLabTest: "",
+        services: []
       });
       setSelectedRecord(null);
       setSelectedMedicines([]);
@@ -263,6 +268,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
         department: record.department || "",
         docterAct: record.docterAct || "",
         admissionLabTest: record.admissionLabTest || "",
+        services: record.services || []
       });
       // Load prescription nếu có
       if (record.prescription && record.prescription.length > 0) {
@@ -286,10 +292,16 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     }
   };
 
-  const handleSelectService = (values) => {
+  const handleSelectDepartment = (values) => {
     medicalForm.setFieldValue('docterAct', '');
     
     fetchDocterActs(values);
+  };
+
+  const handleSelectService = (values) => {
+    medicalForm.setFieldValue('docterAct', '');
+    
+    fetchDocterActs(medicalForm.getFieldValue('department'), values);
   };
 
   const handlePrescriptionConfirm = (medicines) => {
@@ -462,11 +474,11 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                 <Form.Item name="fullName" label="Họ và tên (In hoa)" className="form-field">
                   <Input 
                     placeholder="Nhập họ và tên" 
-                    disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
+                    disabled={true}
                   />
                 </Form.Item>
                 <Form.Item name="gender" label="Giới tính" className="form-field">
-                  <Radio.Group disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}>
+                  <Radio.Group disabled={true}>
                     <Radio value="Male">Nam</Radio>
                     <Radio value="Female">Nữ</Radio>
                   </Radio.Group>
@@ -477,7 +489,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                   <DatePicker 
                     format="DD/MM/YYYY" 
                     style={{ width: '100%' }} 
-                    disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
+                    disabled={true}
                   />
                 </Form.Item>
               </div>
@@ -489,9 +501,18 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                   />
                 </Form.Item>
                 <Form.Item name="bhytCode" label="Có sử dụng BHYT?" className="form-field">
-                  <Radio.Group disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}>
-                    <Radio value={true}>Có</Radio>
+                  <Radio.Group disabled={true}>
+                  <div className="flex items-center gap-2">
+                  <Radio value={true}>Có</Radio>
                     <Radio value={false}>Không</Radio>
+                    {selectedAppointment.bhytCode && (
+                       <Input 
+                       placeholder="Mã BHYT" 
+                       disabled={true}
+                       value={selectedAppointment.bhytCode}
+                     />
+                    )}
+                  </div>
                   </Radio.Group>
                 </Form.Item>
               </div>
@@ -499,7 +520,7 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                 <Form.Item name="identityNumber" label="Số Căn cước/Hộ chiếu/Mã định danh cá nhân" className="form-field">
                   <Input 
                     placeholder="Số CCCD/CMND" 
-                    disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
+                    disabled={true}
                   />
                 </Form.Item>
               </div>
@@ -553,7 +574,6 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
               </div>
             </div>
 
-            {/* III. TÓM TẮT QUÁ TRÌNH ĐIỀU TRỊ */}
             <div className="form-section">
               <div className="form-section-title">III. TÓM TẮT QUÁ TRÌNH ĐIỀU TRỊ</div>
               <div className="form-row">
@@ -580,10 +600,22 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                     allowClear
                     options={departments?.map((department) => ({ label: department.name, value: department._id }))} 
                     disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
-                    onChange={handleSelectService}
+                    onChange={handleSelectDepartment}
                   />
                 </Form.Item>
               </div>
+
+              {medicalForm.getFieldValue('department') &&<div className="form-row">
+                <Form.Item name="services" label="Chỉ định dịch vụ" className="form-field full-width">
+                  <Select
+                    allowClear
+                    mode="multiple"
+                    options={services?.map((department) => ({ label: department.name, value: department._id }))} 
+                    disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
+                    onChange={handleSelectService}
+                  />
+                </Form.Item>
+              </div>}
               {medicalForm.getFieldValue('department') && (
                 <div className="form-row">
                   <Form.Item name="docterAct" label="Do bác sĩ xét nghiệm" className="form-field full-width">

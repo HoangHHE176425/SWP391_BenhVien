@@ -3,12 +3,16 @@
 
 import {
   Button,
+  Checkbox,
+  DatePicker,
   Form,
   Input,
   List,
   message,
+  Modal,
   Pagination,
   Select,
+  Space,
   Spin,
   Tag,
   Typography
@@ -476,6 +480,201 @@ const UserMedicalProfileDetail = () => {
         handleRestTree={handleRestTree}
       />
       </div>
+      <Modal
+        open={isModalOpen}
+        onCancel={handleCloseModal}
+        width={1200}
+        title={
+          modalView === "list"
+            ? "Chọn 1 hồ sơ"
+            : modalView === "edit"
+            ? `Chỉnh sửa hồ sơ: ${selectedProfile?.name}`
+            : "Tìm kiếm lịch hẹn"
+        }
+        footer={
+          modalView === "list"
+            ? [
+              <Button key="cancelList" onClick={handleCloseModal}>
+                Đóng
+              </Button>,
+            ]
+            : modalView === "edit"
+            ? [
+              <Button key="back" onClick={handleBackToList}>
+                Quay lại danh sách hồ sơ
+              </Button>,
+              <Button key="cancelEdit" onClick={handleCloseModal}>
+                Đóng
+              </Button>,
+              <Button
+                key="submit"
+                type="primary"
+                loading={isUpdating}
+                onClick={() => modalForm.submit()}
+              >
+                Cập nhật hồ sơ
+              </Button>,
+            ]
+            : [
+              <Button key="cancelAppointments" onClick={handleCloseModal}>
+                Đóng
+              </Button>,
+            ]
+        }
+      >
+        {modalView === "list" ? (
+          <ProfileSelectionList
+            profiles={foundProfiles}
+            onSelect={handleProfileSelect}
+          />
+        ) : modalView === "edit" ? (
+          <Form
+            form={modalForm}
+            layout="vertical"
+            onFinish={handleUpdateProfile}
+          >
+            <Form.Item
+              name="service"
+              label="1. Dịch vụ khám bệnh"
+              rules={[
+                {
+                  required: true,
+                  message: "Chọn ít nhất 1 dịch vụ khám.",
+                },
+              ]}
+            >
+              <Checkbox.Group>
+                <Space direction="vertical">
+                  {services.map((s) => (
+                    <Checkbox key={s._id} value={s._id}>
+                      {s.name} - ${s.price}
+                    </Checkbox>
+                  ))}
+                </Space>
+              </Checkbox.Group>
+            </Form.Item>
+            <Form.Item name="diagnose" label="2. Chẩn đoán">
+              <Input.TextArea
+                rows={4}
+                placeholder="Nhập chi tiết chẩn đoán..."
+              />
+            </Form.Item>
+            <Form.Item name="note" label="3. Ghi chú của bác sĩ">
+              <Input.TextArea
+                rows={2}
+                placeholder="Nhập ghi chú..."
+              />
+            </Form.Item>
+            <Form.Item name="issues" label="4. Các triệu chứng của bệnh nhân">
+              <Input.TextArea
+                rows={2}
+                placeholder="Mô tả các triệu chứng và vấn đề bệnh nhân gặp phải..."
+              />
+            </Form.Item>
+            <Form.Item name="medicine" label="5. Kê thuốc">
+              <Select
+                mode="multiple"
+                allowClear
+                showSearch
+                placeholder="Tìm và chọn thuốc..."
+                onSearch={handleMedicineSearch}
+                loading={isMedicineLoading}
+                filterOption={false}
+                notFoundContent={
+                  isMedicineLoading ? <Spin size="small" /> : null
+                }
+              >
+                {medicines.map((med) => (
+                  <Option key={med._id} value={med._id}>
+                    {med.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="result" label="4. Kết quả xét nghiệm">
+              <Input.TextArea
+                rows={2}
+                placeholder="Nhập kết quả xét nghiệm..."
+                disabled
+              />
+            </Form.Item>
+            <Form.Item name="dayTest" label="5. Ngày xét nghiệm">
+              <DatePicker
+                defaultValue={dayjs("01/01/2015", "DD/MM/YYYY")}
+                disabled
+              />
+            </Form.Item>
+          </Form>
+        ) : (
+          // Modal view cho appointments
+          <div className="flex gap-10">
+            <div className="khung-ds-cho w-1/3">
+              <Title level={4}>Danh sách lịch hẹn</Title>
+              <div className="appointment-list max-h-[400px] overflow-y-auto">
+                {foundProfiles.length > 0 ? (
+                  foundProfiles.map((appointment) => (
+                    <div
+                      key={appointment._id}
+                      className={`appointment-item ${modalSelectedAppointment?._id === appointment._id ? 'selected' : ''}`}
+                      onClick={() => handleModalSelectAppointment(appointment)}
+                    >
+                      <div className="appointment-header">
+                        <div className="appointment-time">
+                          {dayjs(appointment.appointmentDate).format('DD/MM/YYYY HH:mm')}
+                        </div>
+                        {dayjs(appointment.appointmentDate).isBefore(dayjs(), 'day') && (
+                          <Tag className="appointment-status bg-red-500">
+                            Hết hạn
+                          </Tag>
+                        )}
+                      </div>
+                      <div className="appointment-info">
+                        <div>
+                          <span>Bệnh nhân:</span> <strong>{appointment.profileId?.name || 'N/A'}</strong>
+                        </div>
+                        <div>
+                          <span>Loại khám:</span> <strong>{appointment.type}</strong>
+                        </div>
+                        <div>
+                          <span>Triệu chứng:</span> <strong>{appointment.symptoms || 'Không có'}</strong>
+                        </div>
+                        <div>
+                          <span>Phòng:</span> <strong>{appointment.room || 'Chưa phân công'}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                    Không có lịch hẹn nào
+                  </div>
+                )}
+              </div>
+              
+              {/* Phân trang cho modal */}
+              {foundProfiles.length > 0 && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination
+                    current={modalPagination.current}
+                    pageSize={modalPagination.pageSize}
+                    total={modalPagination.total}
+                    onChange={handleModalPageChange}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Component Record trong modal */}
+            <Record 
+              selectedAppointment={modalSelectedAppointment}
+              onSaveRecord={handleModalSaveMedicalRecord}
+              onUpdateRecord={handleModalUpdateRecord}
+              handleRestTree={handleModalResetTree}
+              isHiddenSaveButton={true}
+            />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
