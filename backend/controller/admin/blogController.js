@@ -349,9 +349,18 @@ exports.incrementBlogViews = async (req, res) => {
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
     }
-    blog.views = (blog.views || 0) + 1;
-    await blog.save();
-    res.json({ message: "View count incremented", views: blog.views });
+    
+    // Sử dụng updateOne để tránh validation error
+    const result = await Blog.updateOne(
+      { slug },
+      { $inc: { views: 1 } }
+    );
+    
+    if (result.modifiedCount > 0) {
+      res.json({ message: "View count incremented", views: (blog.views || 0) + 1 });
+    } else {
+      res.status(500).json({ message: "Failed to increment view count" });
+    }
   } catch (error) {
     console.error("Error incrementing blog views:", error);
     res.status(500).json({ message: error.message });

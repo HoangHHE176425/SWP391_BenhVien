@@ -1,39 +1,39 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import RemoveIcon from "@mui/icons-material/Remove";
 import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Pagination,
+  Paper,
+  Select,
+  Snackbar,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Button,
-  TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  DialogContentText,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  FormControlLabel,
-  Checkbox,
-  Tab,
   Tabs,
-  Box,
-  IconButton,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  Pagination,
+  TextField,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../assets/css/BlogManagement.css";
 
@@ -558,72 +558,70 @@ const BlogManagement = () => {
         Thêm Bài viết
       </Button>
       <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell className="stt">STT</TableCell>
-              <TableCell className="title">Tiêu đề</TableCell>
-              <TableCell className="content">Nội dung</TableCell>
-              <TableCell>Hình ảnh</TableCell>
-              <TableCell className="slug">Slug</TableCell>
-              <TableCell className="actions">Hành động</TableCell>
-            </TableRow>
-
-          </TableHead>
-          <TableBody>
-            {paginatedBlogs.map((blog, index) => {
-              const categoryIdValue =
-                blog.categoryId?._id || blog.categoryId;
-              const categoryName =
-                blog.categoryId?.name ||
-                categories.find((cat) => cat._id === categoryIdValue)
-                  ?.name ||
-                "N/A";
-              // Tính số thứ tự dựa trên page và index
-              const stt = (page - 1) * blogsPerPage + index + 1;
-              return (
-                <TableRow key={blog._id}>
-                  <TableCell className="stt">{stt}</TableCell> {/* Hiển thị STT */}
-                  <TableCell className="title">{blog.title}</TableCell>
-                  <TableCell className="content">
-                    {blog.content
-                      ?.map(
-                        (item) =>
-                          `${item.type}: ${item.text || item.url || "N/A"}`
-                      )
-                      .join(", ") || "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {blog.image && (
-                      <img
-                        src={blog.image}
-                        alt={blog.title}
-                        style={{ width: "50px" }}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="category">{categoryName}</TableCell>
-                  <TableCell className="slug">{blog.slug}</TableCell>
-                  <TableCell className="actions">
-                    <Button
-                      color="primary"
-                      onClick={() => handleOpenEditBlog(blog)}
-                      startIcon={<EditIcon />}
-                      disabled={loading}
-                    />
-                    <Button
-                      color="secondary"
-                      onClick={() => handleOpenDeleteBlogConfirm(blog)}
-                      startIcon={<DeleteIcon />}
-                      disabled={loading}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell className="stt">STT</TableCell> {/* Thêm cột STT */}
+        <TableCell className="title">Tiêu đề</TableCell>
+        <TableCell className="content">Nội dung</TableCell>
+        <TableCell>Hình ảnh</TableCell>
+        <TableCell className="slug">Slug</TableCell>
+        <TableCell className="actions">Hành động</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {paginatedBlogs.map((blog, index) => {
+        const categoryIdValue =
+          blog.categoryId?._id || blog.categoryId;
+        const categoryName =
+          blog.categoryId?.name ||
+          categories.find((cat) => cat._id === categoryIdValue)
+            ?.name ||
+          "N/A";
+        // Tính số thứ tự dựa trên page và index
+        const stt = (page - 1) * blogsPerPage + index + 1;
+        return (
+          <TableRow key={blog._id}>
+            <TableCell className="stt">{stt}</TableCell> {/* Hiển thị STT */}
+            <TableCell className="title">{blog.title}</TableCell>
+            <TableCell className="content">
+              {blog.content
+                ?.map(
+                  (item) =>
+                    `${item.text || item.url || "N/A"}`
+                )
+                .join(", ") || "N/A"}
+            </TableCell>
+            <TableCell>
+              {blog.image && (
+                <img
+                  src={blog.image}
+                  alt={blog.title}
+                  style={{ width: "50px" }}
+                />
+              )}
+            </TableCell>
+            <TableCell className="slug">{blog.slug}</TableCell>
+            <TableCell className="actions">
+              <Button
+                color="primary"
+                onClick={() => handleOpenEditBlog(blog)}
+                startIcon={<EditIcon />}
+                disabled={loading}
+              />
+              <Button
+                color="secondary"
+                onClick={() => handleOpenDeleteBlogConfirm(blog)}
+                startIcon={<DeleteIcon />}
+                disabled={loading}
+              />
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
+</TableContainer>
       <Pagination
         count={Math.ceil(filteredBlogs.length / blogsPerPage)}
         page={page}
