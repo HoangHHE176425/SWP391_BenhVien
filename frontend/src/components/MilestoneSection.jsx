@@ -12,17 +12,17 @@ const MilestoneSection = () => {
     {
       title: "5 Giá trị cốt lõi",
       content: [
-        "1. Chuyên nghiệp và chất lượng: Đội ngũ bác sĩ tại KiwiCare được đào tạo bài bản, đảm bảo mọi dịch vụ y tế đạt tiêu chuẩn quốc tế, mang lại sự an tâm tuyệt đối cho bệnh nhân.",
+        "1. Chuyên nghiệp và chất lượng: Đội ngũ bác sĩ tại Vietcare được đào tạo bài bản, đảm bảo mọi dịch vụ y tế đạt tiêu chuẩn quốc tế, mang lại sự an tâm tuyệt đối cho bệnh nhân.",
         "2. Ưu tiên sức khỏe bệnh nhân: Mọi quyết định và quy trình điều trị đều đặt lợi ích và sức khỏe của bệnh nhân lên hàng đầu, đảm bảo an toàn và hiệu quả.",
         "3. Tận tâm và minh bạch: Chúng tôi phục vụ với sự chân thành, minh bạch, luôn coi bệnh nhân như người thân trong gia đình.",
         "4. Đổi mới công nghệ: Không ngừng cập nhật trang thiết bị hiện đại và áp dụng các tiến bộ y khoa để nâng cao chất lượng dịch vụ.",
-        "5. Trách nhiệm cộng đồng: KiwiCare cam kết đóng góp cho xã hội thông qua các chương trình khám chữa bệnh miễn phí và hỗ trợ cộng đồng khó khăn.",
+        "5. Trách nhiệm cộng đồng: Vietcare cam kết đóng góp cho xã hội thông qua các chương trình khám chữa bệnh miễn phí và hỗ trợ cộng đồng khó khăn.",
       ],
       icon: "+",
     },
     {
       title: "Đội ngũ nhân sự",
-      content: "Tại KiwiCare, đội ngũ bác sĩ và nhân viên y tế được đào tạo tại các trường đại học y khoa hàng đầu như Đại học Y Dược TP. Hồ Chí Minh, Đại học Y Hà Nội, và các tổ chức quốc tế. Với kinh nghiệm đa dạng trong các lĩnh vực nội khoa, nhi khoa, phụ sản, và ngoại khoa, đội ngũ của chúng tôi luôn tận tâm, đề cao y đức, và cam kết mang lại trải nghiệm y tế tốt nhất cho bệnh nhân tại TP. Hồ Chí Minh và khu vực lân cận.",
+      content: "Tại Vietcare, đội ngũ bác sĩ và nhân viên y tế được đào tạo tại các trường đại học y khoa hàng đầu như Đại học Y Dược TP. Hồ Chí Minh, Đại học Y Hà Nội, và các tổ chức quốc tế. Với kinh nghiệm đa dạng trong các lĩnh vực nội khoa, nhi khoa, phụ sản, và ngoại khoa, đội ngũ của chúng tôi luôn tận tâm, đề cao y đức, và cam kết mang lại trải nghiệm y tế tốt nhất cho bệnh nhân tại TP. Hồ Chí Minh và khu vực lân cận.",
       icon: "+",
     },
     {
@@ -38,7 +38,7 @@ const MilestoneSection = () => {
         {/* Left: Content */}
         <div className="col-md-6 mb-4 mb-md-0 px-4">
           <h2 className="text-primary font-weight-bold text-uppercase mb-2" style={{ fontSize: '1.25rem', letterSpacing: '0.1em' }}>
-            KiwiCare
+            Vietcare
           </h2>
           <h1 className="text-primary font-weight-bold mb-4" style={{ fontSize: '2.5rem', lineHeight: '1.2' }}>
             7 Năm - Một chặng đường
