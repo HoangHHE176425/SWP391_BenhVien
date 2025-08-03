@@ -298,10 +298,19 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
     fetchDocterActs(values);
   };
 
-  const handleSelectService = (values) => {
-    medicalForm.setFieldValue('docterAct', '');
-    
-    fetchDocterActs(medicalForm.getFieldValue('department'), values);
+const handleSelectService = (selectedServiceIds) => {
+    const selectedServices = services.filter(service =>
+      selectedServiceIds.includes(service._id)
+    );
+
+    const needDoctor = selectedServices.some(service => service.requireDoctor);
+
+    if (needDoctor) {
+      fetchDocterActs(undefined, selectedServiceIds); // fetch theo dịch vụ
+    } else {
+      medicalForm.setFieldsValue({ doctor: undefined }); // clear chọn bác sĩ nếu không cần
+      setDoctors([]); // reset danh sách bác sĩ
+    }
   };
 
   const handlePrescriptionConfirm = (medicines) => {
@@ -605,17 +614,30 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
                 </Form.Item>
               </div>
 
-              {medicalForm.getFieldValue('department') &&<div className="form-row">
-                <Form.Item name="services" label="Chỉ định dịch vụ" className="form-field full-width">
-                  <Select
-                    allowClear
-                    mode="multiple"
-                    options={services?.map((department) => ({ label: department.name, value: department._id }))} 
-                    disabled={selectedRecord && getFormPermissions(selectedRecord.status).isDisabled}
-                    onChange={handleSelectService}
-                  />
-                </Form.Item>
-              </div>}
+              <div className="form-row">
+              <Form.Item
+                name="services"
+                label="Chỉ định dịch vụ"
+                rules={[{ required: true, message: "Vui lòng chọn dịch vụ" }]}
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="Chọn dịch vụ"
+                  onChange={handleSelectService}
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                  showSearch
+                  allowClear
+                >
+                  {services.map((service) => (
+                    <Select.Option key={service._id} value={service._id}>
+                      {service.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </div>
               {medicalForm.getFieldValue('department') && (
                 <div className="form-row">
                   <Form.Item name="docterAct" label="Do bác sĩ xét nghiệm" className="form-field full-width">
