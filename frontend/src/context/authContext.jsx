@@ -4,27 +4,48 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      const stored = localStorage.getItem("user");
+      return stored && stored !== "undefined" ? JSON.parse(stored) : null;
+    } catch (e) {
+      console.error("Error parsing user from localStorage:", e);
+      localStorage.removeItem("user");
+      return null;
+    }
   });
 
+
   const [token, setToken] = useState(() => {
-    return localStorage.getItem("token") || null;
+    try {
+      const storedToken = localStorage.getItem("token");
+      return storedToken || null;
+    } catch (err) {
+      console.error("Error reading token from localStorage:", err);
+      return null;
+    }
   });
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
+    try {
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
+      }
+    } catch (err) {
+      console.error("Error writing user to localStorage:", err);
     }
   }, [user]);
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
+    try {
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        localStorage.removeItem("token");
+      }
+    } catch (err) {
+      console.error("Error writing token to localStorage:", err);
     }
   }, [token]);
 
