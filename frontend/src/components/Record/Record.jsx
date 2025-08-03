@@ -553,7 +553,6 @@ const Record = ({ selectedAppointment, onSaveRecord, onUpdateRecord, handleRestT
               </div>
             </div>
 
-            {/* III. TÓM TẮT QUÁ TRÌNH ĐIỀU TRỊ */}
             <div className="form-section">
               <div className="form-section-title">III. TÓM TẮT QUÁ TRÌNH ĐIỀU TRỊ</div>
               <div className="form-row">
