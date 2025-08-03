@@ -8,7 +8,7 @@ const {
   deleteNotification,
   getAllUserEmails,
 } = require("../../controller/receptionist/notificationService");
-const { getAllQA, replyQA, createCheckup, createSchedule, getSchedules, updateSchedule, deleteSchedule, getFeedbacksForReceptionist, approveCancellation } = require('../../controller/receptionist/receptionistService');
+const { getAllQA, replyQA, createCheckup, createSchedule, getSchedules, updateSchedule, deleteSchedule, getFeedbacksForReceptionist, approveCancellation} = require('../../controller/receptionist/receptionistService');
 const { getAllServices, createService, deleteService, getServiceById, updateService, toggleServiceStatus, getServiceLogs, } = require('../../controller/admin/servicesControlelr');
 const receptionistController = require('../../controller/receptionist/receptionistService');
 receptionistRouter.post('/qa/:id/mark-as-faq',receptionistController.markAsFAQ); // them api moi

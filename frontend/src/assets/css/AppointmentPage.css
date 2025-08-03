@@ -1,4 +1,4 @@
-/* Checkmark animation (giữ nguyên) */
+/* Checkmark animation */
 .checkmark-animated {
   width: 52px;
   height: 52px;
@@ -25,13 +25,66 @@
   }
 }
 
+/* Department Card */
+.department-card {
+  background-color: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.department-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+  background-color: #f8f9fa;
+}
+
+.department-card.selected {
+  border: 3px solid #007bff;
+  background-color: #e7f0ff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.department-card .fas.fa-check-circle {
+  color: #28a745; /* Màu xanh lá cho checkmark */
+  transition: opacity 0.3s ease;
+  opacity: 1;
+}
+
+.department-card i {
+  color: #007bff;
+  margin-bottom: 15px;
+}
+
+.department-card h5 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  text-align: center;
+}
+
+.department-card p {
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-align: center;
+}
+
 /* Styling for doctor selection */
 .doctor-card {
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   padding: 20px;
   min-height: 280px;
-  /* Tăng chiều cao để phù hợp với 3 cột */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -92,8 +145,51 @@
   text-align: center;
 }
 
+/* Slot List */
+.slot-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.slot-item {
+  padding: 15px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.slot-item:hover {
+  background-color: #f8f9fa;
+}
+
+.slot-item.active {
+  background-color: #e7f0ff;
+  border-color: #007bff;
+}
+
+.slot-item .form-check-input {
+  cursor: pointer;
+}
+
+.slot-item span {
+  font-size: 1rem;
+  color: #333;
+}
+
 /* Responsive adjustments */
 @media (max-width: 991px) {
+  .department-card {
+    min-height: 160px;
+    padding: 15px;
+  }
+
+  .department-card h5 {
+    font-size: 1.1rem;
+  }
+
+  .department-card p {
+    font-size: 0.85rem;
+  }
+
   .doctor-card {
     min-height: 260px;
     padding: 15px;
@@ -115,17 +211,26 @@
 }
 
 @media (max-width: 767px) {
+  .department-card {
+    min-height: 140px;
+  }
+
   .doctor-card {
     min-height: 240px;
   }
 }
 
 @media (max-width: 575px) {
+  .department-card {
+    min-height: 120px;
+  }
+
   .doctor-card {
     min-height: 220px;
   }
 }
 
+/* Custom Slot Table (giữ nguyên) */
 .custom-slot-table {
   border-collapse: separate;
   border-spacing: 0;
@@ -136,7 +241,6 @@
   padding: 12px;
   text-align: center;
   background-color: #007bff !important;
-  /* Màu xanh đậm */
   color: white !important;
   font-weight: 600;
   border: none;

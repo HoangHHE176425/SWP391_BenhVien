@@ -599,12 +599,22 @@ const createFeedback = async (req, res) => {
     if (!appointment) {
       return res.status(404).json({ error: 'Không tìm thấy lịch hẹn' });
     }
-    if (appointment.userId.toString() !== userId) {
-      return res.status(403).json({ error: 'Bạn không phải chủ lịch hẹn này' });
-    }
+
+    // // Thêm kiểm tra an toàn cho userId (để tránh null.toString())
+    // if (!appointment.userId) {
+    //   return res.status(403).json({ error: 'Lịch hẹn không có thông tin người dùng (userId null)' });
+    // }
+    // if (appointment.userId.toString() !== userId) {
+    //   return res.status(403).json({ error: 'Bạn không phải chủ lịch hẹn này' });
+    // }
 
     // Lấy doctorId từ appointment
     const doctorId = appointment.doctorId;
+
+    // Thêm kiểm tra tương tự cho doctorId nếu cần (nếu null có thể gây vấn đề sau)
+    if (!doctorId) {
+      return res.status(400).json({ error: 'Lịch hẹn không có thông tin bác sĩ (doctorId null)' });
+    }
 
     const feedback = new Feedback({
       userId,
@@ -616,9 +626,12 @@ const createFeedback = async (req, res) => {
     await feedback.save();
     res.status(201).json({ message: 'Feedback sent successfully', feedback });
   } catch (err) {
+    console.error('Lỗi khi tạo feedback:', err); // Thêm log để debug thêm
     res.status(500).json({ error: 'Failed to send feedback', details: err.message });
   }
 };
+
+module.exports = { createFeedback };
 
 // POST: Guest gửi feedback (không cần login)
 const createGuestFeedback = async (req, res) => {

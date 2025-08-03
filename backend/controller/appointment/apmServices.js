@@ -5,6 +5,7 @@ const Appointment = require("../../models/Appointment");
 const bcrypt = require("bcrypt");
 const Queue = require("../../models/Queue");
 const { default: mongoose } = require("mongoose");
+const Schedule = require("../../models/Schedule");
 
 // Admin - user manage
 module.exports.getUserAccs = async (req, res) => {
@@ -139,11 +140,11 @@ module.exports.delEmployees = async (req, res) => {
 module.exports.getAllAppointments = async (req, res) => {
   try {
     console.log(req.query);
-    const { doctorId, status, increaseSort, dateFrom, 
+    const { doctorId, status, increaseSort, dateFrom,
       dateTo, identityNumber, page = 1, limit = 10 } = req.query;
 
     const filter = doctorId ? { doctorId } : {};
-    
+
     if (status) {
       if (Array.isArray(status)) {
         filter.status = { $in: status };
@@ -195,8 +196,8 @@ module.exports.getAllAppointmentsAggregate = async (req, res) => {
       matchStage.status = Array.isArray(status)
         ? { $in: status }
         : status.includes(',')
-        ? { $in: status.split(',').map(s => s.trim()) }
-        : status;
+          ? { $in: status.split(',').map(s => s.trim()) }
+          : status;
     }
 
     if (dateFrom && dateTo) {
@@ -301,29 +302,98 @@ module.exports.getProfilesByUserId = async (req, res) => {
   res.status(200).json({ message: 'getProfilesByUserId not implemented' });
 };
 
-// SỬA: Thay đổi trạng thái lịch hẹn 
 module.exports.updateStatus = async (req, res) => {
   const { status } = req.body;
   const appointmentId = req.params.id;
 
+  // Kiểm tra status có hợp lệ hay không
   if (!status || !Appointment.schema.path('status').enumValues.includes(status)) {
     return res.status(400).json({ error: 'Status không hợp lệ' });
   }
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const appointment = await Appointment.findById(appointmentId);
+    // Tìm lịch hẹn theo ID
+    const appointment = await Appointment.findById(appointmentId).session(session);
     if (!appointment) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ error: 'Lịch hẹn không tồn tại' });
     }
 
-    if (appointment.status !== 'pending_confirmation') {
-      return res.status(400).json({ error: 'Chỉ có thể update từ trạng thái pending_confirmation' });
+    // Kiểm tra trạng thái hiện tại để áp dụng quy tắc
+    if (appointment.status === 'pending_confirmation') {
+      // Cho phép cập nhật từ pending_confirmation (như cũ)
+      if (['confirmed', 'rejected'].includes(status)) {
+        appointment.status = status;
+      } else {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ error: 'Chỉ có thể update thành confirmed hoặc rejected từ pending_confirmation' });
+      }
+    } else if (appointment.status === 'pending_cancel') {
+      // Cho phép duyệt hủy từ pending_cancel
+      if (status === 'canceled') {
+        // Đồng ý hủy: Cập nhật thành canceled và giải phóng timeSlot
+        appointment.status = status;
+        // Cập nhật timeSlot trong Appointment
+        appointment.timeSlot.status = 'Available';
+
+        // Tìm và cập nhật timeSlot trong Schedule
+        const schedule = await Schedule.findOne({
+          employeeId: appointment.doctorId,
+          date: {
+            $gte: new Date(appointment.appointmentDate.setHours(0, 0, 0, 0)),
+            $lt: new Date(appointment.appointmentDate.setHours(23, 59, 59, 999))
+          }
+        }).session(session);
+
+        if (!schedule) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(404).json({ error: 'Schedule không tồn tại' });
+        }
+
+        const timeSlot = schedule.timeSlots.find(slot =>
+          slot.startTime.getTime() === appointment.timeSlot.startTime.getTime() &&
+          slot.endTime.getTime() === appointment.timeSlot.endTime.getTime()
+        );
+
+        if (!timeSlot) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(404).json({ error: 'TimeSlot không tồn tại trong Schedule' });
+        }
+
+        timeSlot.status = 'Available';
+        await schedule.save({ session });
+      } else if (status === 'confirmed') {
+        // Từ chối hủy: Giữ nguyên confirmed, không giải phóng timeSlot
+        appointment.status = status;
+      } else {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ error: 'Chỉ có thể update thành canceled (đồng ý hủy) hoặc confirmed (từ chối hủy) từ pending_cancel' });
+      }
+    } else {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ error: 'Chỉ có thể update từ trạng thái pending_confirmation hoặc pending_cancel' });
     }
 
-    appointment.status = status;
-    await appointment.save();
+    // Lưu lịch hẹn
+    await appointment.save({ session });
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
     res.json({ message: 'Cập nhật status thành công', appointment });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({ error: error.message || 'Lỗi server' });
   }
 };
@@ -436,7 +506,7 @@ module.exports.getAppointments = async (req, res) => {
       .populate('userId', 'name')
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
-      .sort({ appointmentDate: -1, createdAt: -1 });
+      .sort({ appointmentDate: 1, createdAt: -1 });
 
     const total = await Appointment.countDocuments(query);
 

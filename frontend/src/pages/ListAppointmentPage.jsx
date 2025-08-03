@@ -10,6 +10,8 @@ const ListAppointmentPage = () => {
   const [totalAppointments, setTotalAppointments] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [appointmentsPerPage] = useState(10);
+  // Thêm state để quản lý sort theo ngày
+  const [sortDirection, setSortDirection] = useState("desc");
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
@@ -27,7 +29,13 @@ const ListAppointmentPage = () => {
 
       // Xử lý response từ API
       const { appointments, total } = res.data;
-      setAppointments(appointments || []);
+      // Sort theo ngày
+      const sortedAppointments = [...(appointments || [])].sort((a, b) => {
+        const dateA = new Date(a.appointmentDate);
+        const dateB = new Date(b.appointmentDate);
+        return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+      });
+      setAppointments(sortedAppointments);
       setTotalAppointments(total || 0);
     } catch (err) {
       console.error("Lỗi lấy dữ liệu lịch hẹn:", err);
@@ -41,7 +49,7 @@ const ListAppointmentPage = () => {
   useEffect(() => {
     setLoading(true);
     fetchAppointments();
-  }, [currentPage]);
+  }, [currentPage, sortDirection]); // Thêm sortDirection vào dependency
 
   const handleCancel = async (id) => {
     if (!window.confirm("Bạn có chắc muốn hủy lịch hẹn này?")) return;
@@ -79,7 +87,9 @@ const ListAppointmentPage = () => {
     }
 
     try {
-      await axios.post(
+      console.log("Token:", token);
+      console.log("Gửi feedback với dữ liệu:", { content: feedbackData.content, rating: feedbackData.rating, appointmentId: selectedAppointmentId });
+      const response = await axios.post(
         "/api/user/createFeedback",
         {
           content: feedbackData.content,
@@ -90,20 +100,33 @@ const ListAppointmentPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log("Response from server:", response.data);
       setShowFeedbackModal(false);
-      setFeedbackData({ content: "", rating: 5 }); // Reset sau khi gửi
+      setFeedbackData({ content: "", rating: 5 });
       alert("Gửi phản hồi thành công!");
     } catch (err) {
-      console.error("Gửi feedback thất bại:", err);
-      alert("Gửi phản hồi thất bại. Vui lòng thử lại.");
+      console.error("Lỗi gửi feedback:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "Gửi phản hồi thất bại. Vui lòng thử lại.");
     }
   };
 
+  
   const totalPages = Math.ceil(totalAppointments / appointmentsPerPage);
 
   return (
     <div className="container py-4">
       <h2 className="text-primary fw-bold">Lịch hẹn của bạn</h2>
+
+      {/* Thêm nút sort theo ngày */}
+      <div className="mb-3">
+        <Button
+          variant={sortDirection === "asc" ? "primary" : "outline-primary"}
+          onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+          className="me-2"
+        >
+          Sắp xếp lịch hẹn theo {sortDirection === "asc" ? "ngày gần nhất" : "ngày xa nhất"}
+        </Button>
+      </div>
 
       {loading ? (
         <Spinner animation="border" variant="primary" />
@@ -141,17 +164,17 @@ const ListAppointmentPage = () => {
                         "badge " +
                         (app.status === "pending_confirmation"
                           ? "bg-info"
-                          : app.status === "confirmed"
+                          : app.status === "confirmed" || app.status === "Booked"
                             ? "bg-primary"
                             : app.status === "rejected"
                               ? "bg-danger"
-                              : app.status === "queued"
+                              : app.status === "queued" || app.status === "waiting_for_doctor"
                                 ? "bg-warning"
                                 : app.status === "checked_in"
                                   ? "bg-secondary"
                                   : app.status === "in_progress"
                                     ? "bg-primary"
-                                    : app.status === "completed"
+                                    : app.status === "completed" || app.status === "done"
                                       ? "bg-success"
                                       : app.status === "canceled"
                                         ? "bg-secondary"
@@ -162,17 +185,17 @@ const ListAppointmentPage = () => {
                     >
                       {app.status === "pending_confirmation"
                         ? "Chờ xác nhận"
-                        : app.status === "confirmed"
+                        : app.status === "confirmed" || app.status === "Booked"
                           ? "Đã xác nhận"
                           : app.status === "rejected"
                             ? "Bị từ chối"
-                            : app.status === "queued"
+                            : app.status === "queued" || app.status === "waiting_for_doctor"
                               ? "Đang xếp hàng"
                               : app.status === "checked_in"
                                 ? "Đã check-in"
                                 : app.status === "in_progress"
                                   ? "Đang khám"
-                                  : app.status === "completed"
+                                  : app.status === "completed" || app.status === "done"
                                     ? "Đã khám"
                                     : app.status === "canceled"
                                       ? "Đã hủy"

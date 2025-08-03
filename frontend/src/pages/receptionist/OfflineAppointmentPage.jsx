@@ -21,13 +21,12 @@ const OfflineAppointmentPage = () => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [symptoms, setSymptoms] = useState("");
   const [bhytCode, setBhytCode] = useState("");
-  const [hasBhyt, setHasBhyt] = useState("no"); // Thêm state mới: "yes" hoặc "no" cho BHYT
+  const [hasBhyt, setHasBhyt] = useState("no");
   const [appointmentType, setAppointmentType] = useState("Offline");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // Các bước đã được tối ưu, bỏ bước datetime
   const steps = [
     { id: "profile", title: "Hồ sơ", desc: "" },
     { id: "department", title: "Chọn khoa", desc: "" },
@@ -36,7 +35,6 @@ const OfflineAppointmentPage = () => {
     { id: "confirm", title: "Xác nhận", desc: "" },
   ];
 
-  // Lấy danh sách khoa
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -57,7 +55,6 @@ const OfflineAppointmentPage = () => {
     fetchDepartments();
   }, []);
 
-  // Lấy danh sách bác sĩ
   useEffect(() => {
     if (selectedDepartment) {
       const fetchDoctors = async () => {
@@ -76,7 +73,6 @@ const OfflineAppointmentPage = () => {
     }
   }, [selectedDepartment]);
 
-  // Kiểm tra CCCD
   const handleCheckCccd = async () => {
     setLoading(true);
     setError(null);
@@ -106,7 +102,6 @@ const OfflineAppointmentPage = () => {
     }
   };
 
-  // Tạo hồ sơ mới
   const handleCreateProfile = async () => {
     setLoading(true);
     setError(null);
@@ -156,7 +151,6 @@ const OfflineAppointmentPage = () => {
     }
   };
 
-  // Tạo lịch hẹn offline (timeSlot tự động dựa trên thời gian hiện tại)
   const handleCreateAppointment = async () => {
     setLoading(true);
     setError(null);
@@ -167,7 +161,12 @@ const OfflineAppointmentPage = () => {
       return;
     }
 
-    // Validation cho BHYT: Nếu chọn "Có" nhưng không nhập mã
+    if (!symptoms || !symptoms.trim()) {
+      setError("Vui lòng nhập triệu chứng.");
+      setLoading(false);
+      return;
+    }
+
     if (hasBhyt === "yes" && (!bhytCode || !bhytCode.trim())) {
       setError("Vui lòng nhập mã BHYT nếu bạn có.");
       setLoading(false);
@@ -177,9 +176,8 @@ const OfflineAppointmentPage = () => {
     try {
       const now = moment();
       const startTime = now.startOf('minute').toISOString();
-      const endTime = now.clone().add(30, 'minutes').toISOString(); // Sử dụng clone() để tránh mutate now
+      const endTime = now.clone().add(30, 'minutes').toISOString();
 
-      // Chuẩn hóa bhytCode dựa trên lựa chọn
       const normalizedBhytCode = hasBhyt === "yes" ? (bhytCode.trim() || null) : null;
 
       await axios.post("http://localhost:9999/api/user/create-offline", {
@@ -192,7 +190,7 @@ const OfflineAppointmentPage = () => {
           endTime,
           status: "Booked"
         },
-        symptoms: symptoms || "Không có triệu chứng",
+        symptoms: symptoms.trim(),
         bhytCode: normalizedBhytCode,
         type: appointmentType,
         status: "confirmed",
@@ -216,7 +214,7 @@ const OfflineAppointmentPage = () => {
             <h3 className="display-6 fw-bold text-primary mb-4">Hồ Sơ</h3>
             {error && <div className="alert alert-danger">{error}</div>}
             <div className="mb-3">
-              <label className="form-label">Nhập CCCD</label>
+              <label className="form-label">Nhập CCCD <span className="text-danger">*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -224,6 +222,7 @@ const OfflineAppointmentPage = () => {
                 onChange={(e) => setIdentityNumber(e.target.value)}
                 maxLength={12}
                 placeholder="Nhập số CCCD"
+                required
               />
             </div>
             <div className="text-end mt-4">
@@ -241,20 +240,23 @@ const OfflineAppointmentPage = () => {
               </Modal.Header>
               <Modal.Body>
                 <div className="mb-3">
-                  <label className="form-label">Họ và tên</label>
+                  <label className="form-label">Họ và tên <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="form-control"
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
+                    placeholder="Nhập họ và tên"
+                    required
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Giới tính</label>
+                  <label className="form-label">Giới tính <span className="text-danger">*</span></label>
                   <select
                     className="form-select"
                     value={profileGender}
                     onChange={(e) => setProfileGender(e.target.value)}
+                    required
                   >
                     <option value="">Chọn giới tính</option>
                     <option value="Male">Nam</option>
@@ -263,7 +265,7 @@ const OfflineAppointmentPage = () => {
                   </select>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Ngày sinh</label>
+                  <label className="form-label">Ngày sinh <span className="text-danger">*</span></label>
                   <input
                     type="date"
                     className="form-control"
@@ -275,13 +277,14 @@ const OfflineAppointmentPage = () => {
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Số điện thoại</label>
+                  <label className="form-label">Số điện thoại <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="form-control"
                     value={profilePhoneNumber}
                     onChange={(e) => setProfilePhoneNumber(e.target.value)}
                     placeholder="Nhập số điện thoại"
+                    required
                   />
                 </div>
                 {error && <div className="alert alert-danger">{error}</div>}
@@ -306,12 +309,12 @@ const OfflineAppointmentPage = () => {
               {departmentData.map((dep) => (
                 <Col key={dep.id} md={6} className="mb-4">
                   <label
-                    className={`border p-4 rounded text-center cursor-pointer hover:bg-light ${selectedDepartment === dep.id ? "border-primary" : ""}`}
+                    className={`department-card ${selectedDepartment === dep.id ? "selected" : ""}`}
                     onClick={() => setSelectedDepartment(dep.id)}
                   >
                     <input type="radio" name="department" className="d-none" />
-                    <h5 className="fw-semibold">{dep.name}</h5>
-                    {dep.description && <p className="text-muted small mb-0">{dep.description}</p>}
+                    <h5>{dep.name}</h5>
+                    {dep.description && <p>{dep.description}</p>}
                   </label>
                 </Col>
               ))}
@@ -352,7 +355,7 @@ const OfflineAppointmentPage = () => {
                         )}
                       </div>
                       <h5 className="doctor-name">{doctor.name}</h5>
-                      <p className="doctor-degree">{doctor.specialization || "Chưa có chuyên môn"}</p>
+                      <p className="doctor-specialty">{doctor.specialization || "Chưa có chuyên môn"}</p>
                       <p className="doctor-experience">{doctor.expYear || "Chưa cập nhật"} năm kinh nghiệm</p>
                     </label>
                   </Col>
@@ -375,23 +378,13 @@ const OfflineAppointmentPage = () => {
           <div className="p-4 bg-white rounded shadow-sm">
             <h3 className="text-primary fw-bold mb-4">Thông Tin Bổ Sung</h3>
             <div className="mb-3">
-              <label className="form-label">Loại lịch hẹn</label>
-              <select
-                className="form-select"
-                value={appointmentType}
-                onChange={(e) => setAppointmentType(e.target.value)}
-              >
-                <option value="Offline">Trực tiếp</option>
-                <option value="Online">Trực tuyến</option>
-              </select>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Triệu chứng</label>
+              <label className="form-label">Triệu chứng <span className="text-danger">*</span></label>
               <textarea
                 className="form-control"
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="Mô tả triệu chứng (nếu có)"
+                placeholder="Vui lòng mô tả triệu chứng (bắt buộc)"
+                required
               />
             </div>
             <div className="mb-3">
@@ -407,7 +400,7 @@ const OfflineAppointmentPage = () => {
                     checked={hasBhyt === "yes"}
                     onChange={(e) => {
                       setHasBhyt(e.target.value);
-                      if (e.target.value === "no") setBhytCode(""); // Xóa mã nếu chọn Không
+                      if (e.target.value === "no") setBhytCode("");
                     }}
                   />
                   <label className="form-check-label" htmlFor="hasBhytYes">
@@ -424,7 +417,7 @@ const OfflineAppointmentPage = () => {
                     checked={hasBhyt === "no"}
                     onChange={(e) => {
                       setHasBhyt(e.target.value);
-                      setBhytCode(""); // Xóa mã nếu chọn Không
+                      setBhytCode("");
                     }}
                   />
                   <label className="form-check-label" htmlFor="hasBhytNo">
@@ -435,14 +428,14 @@ const OfflineAppointmentPage = () => {
             </div>
             {hasBhyt === "yes" && (
               <div className="mb-3">
-                <label className="form-label">Mã BHYT</label>
+                <label className="form-label">Mã BHYT <span className="text-danger">*</span></label>
                 <input
                   type="text"
                   className="form-control"
                   value={bhytCode}
                   onChange={(e) => setBhytCode(e.target.value)}
                   placeholder="Nhập mã BHYT"
-                  required // Bắt buộc nếu chọn Có
+                  required
                 />
               </div>
             )}
@@ -451,7 +444,11 @@ const OfflineAppointmentPage = () => {
               <button className="btn btn-outline-secondary" onClick={() => setStep("doctor")}>
                 Quay Lại
               </button>
-              <button className="btn btn-primary" onClick={handleCreateAppointment} disabled={loading}>
+              <button
+                className="btn btn-primary"
+                onClick={handleCreateAppointment}
+                disabled={loading || !symptoms.trim()}
+              >
                 {loading ? "Đang đặt lịch..." : "Xác Nhận Đặt Lịch"}
               </button>
             </div>
@@ -462,6 +459,12 @@ const OfflineAppointmentPage = () => {
         return (
           <div className="p-4 bg-white rounded shadow-sm text-center">
             <h3 className="text-primary fw-bold mb-3">Đặt Lịch Thành Công</h3>
+            <div className="d-flex justify-content-center mb-4">
+              <svg className="checkmark-animated" viewBox="0 0 52 52">
+                <circle className="checkmark__circle" cx="26" cy="26" r="25" fill="none" strokeDasharray="166" strokeDashoffset="166"/>
+                <path className="checkmark__check" fill="none" strokeDasharray="48" strokeDashoffset="48" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
             {error && <div className="alert alert-danger">{error}</div>}
             <p>Lịch hẹn của bạn đã được tạo và xác nhận. Vui lòng kiểm tra danh sách lịch hẹn để quản lý.</p>
             <div className="mt-4 d-flex justify-content-center gap-3">

@@ -1,6 +1,7 @@
 const Profile = require("../../models/Profile");
 const User = require("../../models/User");
 const Patient = require("../../models/Patient");
+const Records = require("../../models/Records");
 
 //tạo hồ sơ
 exports.CreateProfile = async (req, res) => {
@@ -41,59 +42,119 @@ exports.getByCccd = async (req, res) => {
     try {
         const profile = await Profile.findOne({ identityNumber }).populate('patientId');
         if (profile) {
-            return res.json({profile });
+            return res.json({ profile });
         }
-        return res.json({ profile: null});
+        return res.json({ profile: null });
     } catch (error) {
         res.status(500).json({ error: error.message || 'Lỗi server' });
     }
 
 };
 
-// Cập nhật hồ sơ bệnh nhân
+
+// Cập nhật profile
 exports.updateProfile = async (req, res) => {
     const { id } = req.params;
-    const { name, dateOfBirth, identityNumber, gender } = req.body;
-    const userId = req.user.id;
+    const { name, dateOfBirth, gender, identityNumber, phone } = req.body;
 
     try {
         const birthDate = new Date(dateOfBirth);
         const now = new Date();
 
         if (birthDate > now) {
-            return res.status(400).json({ message: 'Date of birth cannot be in the future' });
+            return res.status(400).json({
+                success: false,
+                message: 'Ngày sinh không thể ở tương lai'
+            });
+        }
+
+        if (!/^0\d{9}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Số điện thoại phải là 10 chữ số, bắt đầu bằng 0'
+            });
         }
 
         const profile = await Profile.findOneAndUpdate(
-            { _id: id, userId },
-            { name, dateOfBirth, identityNumber, gender },
+            { _id: id }, // Bỏ điều kiện userId
+            { name, dateOfBirth, gender, identityNumber, phone },
             { new: true }
         );
 
         if (!profile) {
-            return res.status(404).json({ message: 'Profile not found or unauthorized' });
+            return res.status(404).json({
+                success: false,
+                message: 'Hồ sơ không tìm thấy'
+            });
         }
 
-        res.status(200).json({ message: 'Profile updated successfully', profile });
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to update profile', error: err.message });
+        return res.status(200).json({
+            success: true,
+            message: 'Cập nhật hồ sơ thành công',
+            profile
+        });
+    } catch (error) {
+        console.error('Lỗi khi cập nhật profile:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi server',
+            error: error.message
+        });
     }
 };
 
-// Xóa hồ sơ bệnh nhân
-exports.deleteProfile = async (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id;
+exports.getRecordsByProfileId = async (req, res) => {
+    const { profileId } = req.params; // Lấy profileId từ params (ví dụ: /api/records/profile/:profileId)
 
     try {
-        const profile = await Profile.findOneAndDelete({ _id: id, userId });
+        // Query records theo profileId
+        const records = await Records.find({ profileId })
+            .populate('doctorId', 'name specialty') // Populate doctorId, chỉ lấy name và specialty
+            .populate('appointmentId', 'appointmentDate status') // Populate appointmentId, lấy các trường cần
+            // .populate('department', 'name') // Populate department
+            .populate('prescription.medicine', 'name dosage') // Populate mảng medicine trong prescription
+            .populate('docterAct', 'name') // Populate docterAct
+            .sort({ createdAt: -1 }) // Sắp xếp theo createdAt giảm dần (mới nhất đầu tiên)
+            .exec(); // Thực thi query
 
-        if (!profile) {
-            return res.status(404).json({ message: 'Profile not found or unauthorized' });
+        if (!records || records.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy records cho profile này'
+            });
         }
 
-        res.status(200).json({ message: 'Profile deleted successfully', profile });
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to delete profile', error: err.message });
+        return res.status(200).json({
+            success: true,
+            data: records
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy records theo profileId:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi server',
+            error: error.message
+        });
     }
+};
+
+exports.getAllProfiles = async (req, res) => {
+  const { search = "" } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { identityNumber: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  try {
+    const profiles = await Profile.find(query).sort({ createdAt: -1 });
+
+    res.json({ profiles });
+  } catch (error) {
+    console.error("[ERROR] getAllProfiles:", error);
+    res.status(500).json({ error: error.message || 'Lỗi server' });
+  }
 };

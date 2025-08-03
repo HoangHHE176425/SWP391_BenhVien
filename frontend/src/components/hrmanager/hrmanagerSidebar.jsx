@@ -24,6 +24,11 @@ const HrManagerSidebar = () => {
       icon: <QuestionCircleOutlined />, 
     },
     {
+      to: "/hrmanager/feedback",
+      label: "Quản Lý Phản Hồi Khách Hàng",
+      icon: <QuestionCircleOutlined />, 
+    },
+    {
       to: "/hrmanager/profile",
       label: "Hồ Sơ Quản Lý",
       icon: <UserOutlined />,
