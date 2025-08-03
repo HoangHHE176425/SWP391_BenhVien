@@ -20,7 +20,7 @@ const Prescription = ({ visible, onCancel, onConfirm }) => {
     const fetchMedicines = async (text) => {
         try {
             const res = await axios.get(`/api/medicines?text=${text}`);
-            setMedicines(res.data);
+            setMedicines(res.data.medicines); // Lấy đúng mảng
         } catch (err) {
             message.error('Không thể tải danh sách thuốc');
             console.error(err);
@@ -172,20 +172,24 @@ const Prescription = ({ visible, onCancel, onConfirm }) => {
                 />
             </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '50px' }}>
-                    <Spin size="large" />
-                </div>
-            ) : (
-                <Table
-                    rowKey="_id"
-                    dataSource={medicines}
-                    columns={columns}
-                    scroll={{ x: 1000, y: 400 }}
-                    bordered
-                    size="small"
-                />
-            )}
+{loading ? (
+    <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+    </div>
+) : (
+    <>
+        {console.log("[Prescription] medicines = ", medicines, "isArray:", Array.isArray(medicines))}
+        <Table
+            rowKey="_id"
+            dataSource={Array.isArray(medicines) ? medicines : []}
+            columns={columns}
+            scroll={{ x: 1000, y: 400 }}
+            bordered
+            size="small"
+        />
+    </>
+)}
+
 
             {/* Hiển thị danh sách thuốc đã chọn */}
             {/* {selectedMedicines.length > 0 && (
