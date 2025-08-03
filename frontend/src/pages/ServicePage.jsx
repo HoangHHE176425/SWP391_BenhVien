@@ -79,7 +79,7 @@ const ServicePage = () => {
         {/* Hero Carousel */}
         <HeroBanner
           image={DEPT_BANNER}
-          title="Dịch Vụ Y Tế KiwiCare"
+          title="Dịch Vụ Y Tế Vietcare"
           subtitle="Chăm sóc sức khỏe toàn diện với các chuyên khoa hàng đầu"
         />
 

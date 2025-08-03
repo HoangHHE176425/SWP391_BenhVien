@@ -269,43 +269,58 @@ const ServiceListPage = () => {
       {/* Modal hiển thị log */}
 {showLogModal && (
   <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4">
-    <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Lịch sử thao tác</h3>
+    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+      {/* Header */}
+      <div className="p-5 border-b flex justify-between items-center bg-gray-100 rounded-t-xl">
+        <h3 className="text-lg font-semibold text-gray-800">Lịch sử thao tác</h3>
         <button
           onClick={() => setShowLogModal(false)}
-          className="text-gray-500 hover:text-red-500 text-xl"
+          className="text-gray-500 hover:text-red-600 text-2xl font-bold"
         >
           &times;
         </button>
       </div>
-      <div className="p-4">
+
+      {/* Body */}
+      <div className="p-6 bg-white">
         {logLoading ? (
-          <p className="text-gray-600">Đang tải...</p>
+          <p className="text-gray-500 italic">Đang tải dữ liệu log...</p>
         ) : logData.length === 0 ? (
-          <p className="text-gray-500">Không có log nào.</p>
+          <p className="text-gray-500 italic">Không có bản ghi nào.</p>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <div className="space-y-5">
             {logData.map((log) => (
-              <li key={log._id} className="py-3 text-sm text-gray-700">
-                <div className="font-medium capitalize">{log.action}</div>
-                <div className="text-gray-600">{log.description}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                {log.performedBy?.employeeCode
-                  ? `Thực hiện bởi: ${log.performedBy.name || 'Không rõ tên'} (${log.performedBy.employeeCode})`
-                  : "Thực hiện bởi: N/A"}
-                  {" | "}
-                  {new Date(log.createdAt).toLocaleString()}
+              <div
+                key={log._id}
+                className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition"
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold text-blue-700">{log.action.toUpperCase()}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(log.createdAt).toLocaleString('vi-VN')}
+                  </span>
                 </div>
-              </li>
+                {log.description && (
+                  <div className="text-sm text-gray-700 mb-1">
+                    <strong>Mô tả:</strong> {log.description}
+                  </div>
+                )}
+                <div className="text-sm text-gray-600">
+                  <strong>Người thực hiện:</strong>{" "}
+                  {log.performedBy?.name || 'Không rõ tên'}{" "}
+                  {log.performedBy?.employeeCode && `(${log.performedBy.employeeCode})`}
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
-      <div className="p-4 border-t text-right">
+
+      {/* Footer */}
+      <div className="p-4 border-t bg-gray-50 text-right rounded-b-xl">
         <button
           onClick={() => setShowLogModal(false)}
-          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium"
         >
           Đóng
         </button>
@@ -313,6 +328,7 @@ const ServiceListPage = () => {
     </div>
   </div>
 )}
+
 
     </div>
   );

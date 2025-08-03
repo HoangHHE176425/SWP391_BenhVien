@@ -17,6 +17,7 @@
     "@mui/icons-material": "^7.1.1",
     "@mui/material": "^7.1.0",
     "@payos/payos-checkout": "^1.0.8",
+    "@react-oauth/google": "^0.12.2",
     "@tailwindcss/vite": "^4.1.11",
     "antd": "^5.26.3",
     "axios": "^1.10.0",
@@ -40,6 +41,7 @@
     "react-router-dom": "^7.6.3",
     "react-scroll": "^1.9.3",
     "react-slick": "^0.30.3",
+    "react-toastify": "^11.0.5",
     "recharts": "^3.0.2",
     "slick-carousel": "^1.8.1",
     "styled-components": "^6.1.18"

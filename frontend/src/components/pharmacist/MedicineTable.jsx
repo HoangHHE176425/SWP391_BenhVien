@@ -1,11 +1,12 @@
 import React from "react";
-import { FaPen, FaTrashAlt } from "react-icons/fa";
+import { FaPen, FaBan } from "react-icons/fa";
 
 
-const MedicineTable = ({ medicines, onEdit, onDelete }) => (
+const MedicineTable = ({ medicines, onEdit, onDisable }) => (
   <table className="medicine-table">
     <thead>
       <tr>
+        <th>Mã thuốc</th>
         <th>Tên thuốc</th>
         <th>Loại</th>
         <th>Hoạt chất</th>
@@ -19,7 +20,8 @@ const MedicineTable = ({ medicines, onEdit, onDelete }) => (
     </thead>
     <tbody>
       {medicines.map((med) => (
-        <tr key={med._id}>
+        <tr key={med._id} className={med.isActive ? "" : "table-secondary"}>
+          <td>{med.medicineId || med._id}</td>
           <td>{med.name}</td>
           <td>{med.type}</td>
           <td>{med.ingredient}</td>
@@ -27,21 +29,22 @@ const MedicineTable = ({ medicines, onEdit, onDelete }) => (
           <td>{med.unitPrice?.toLocaleString()}</td>
           <td>{med.quantity}</td>
           <td>
-            {med.expirationDate
-              ? new Date(med.expirationDate).toLocaleDateString("vi-VN")
-              : ""}
+            {med.expirationDate ? new Date(med.expirationDate).toLocaleDateString("vi-VN") : ""}
           </td>
           <td>{med.supplier?.email}</td>
           <td className="medicine-actions">
             <FaPen className="btn-edit" onClick={() => onEdit(med)} />
-            <FaTrashAlt className="btn-delete" onClick={() => onDelete(med._id)} />
+            <FaBan
+              className={`btn-disable ${!med.isActive ? "disabled" : ""}`}
+              onClick={() => med.isActive && onDisable(med)}
+              title={med.isActive ? "Vô hiệu hóa" : "Đã vô hiệu hóa"}
+            />
           </td>
-
         </tr>
       ))}
       {!medicines.length && (
         <tr>
-          <td colSpan={9} className="text-center text-muted py-3">
+          <td colSpan={10} className="text-center text-muted py-3">
             Không có thuốc nào
           </td>
         </tr>

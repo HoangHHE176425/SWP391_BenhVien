@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import "../assets/css/Login.css";
 import { Modal } from "antd";
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -112,21 +115,34 @@ const LoginPage = () => {
                   className="input"
                   required
                 />
-                <span
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    color: "#555",
-                    userSelect: "none",
-                  }}
-                >
-                  {showPassword ? "Ẩn" : "Hiện"}
-                </span>
+                {showPassword ? (
+  <EyeInvisibleOutlined
+    onClick={() => setShowPassword(false)}
+    style={{
+      position: "absolute",
+      right: 10,
+      top: "50%",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      fontSize: 18,
+      color: "#555",
+    }}
+  />
+) : (
+  <EyeOutlined
+    onClick={() => setShowPassword(true)}
+    style={{
+      position: "absolute",
+      right: 10,
+      top: "50%",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      fontSize: 18,
+      color: "#555",
+    }}
+  />
+)}
+
               </div>
             </div>
 
@@ -136,10 +152,78 @@ const LoginPage = () => {
             <button type="submit" className="loginButton">
               Đăng Nhập
             </button>
-          </form>
-          <div className="signupLink">
+                      <div className="signupLink">
             Bạn Chưa Có Tài Khoản? <a href="/register">Đăng Ký</a>
           </div>
+          </form>
+<div style={{ textAlign: "center", marginTop: 20 }}>
+  <p>Hoặc đăng nhập bằng Google:</p>
+  <GoogleLogin
+  onSuccess={async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log("[GoogleLogin] JWT đã giải mã:", decoded);
+
+      const res = await fetch("http://localhost:9999/api/auth/google-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+      console.log("[GoogleLogin] Phản hồi từ server:", data);
+
+      if (res.ok) {
+        if (data.shouldRegister || data.needComplete) {
+          Modal.info({
+            title: "Tài khoản Google chưa được đăng ký",
+            content: "Vui lòng đăng ký để sử dụng hệ thống.",
+            onOk: () => {
+              localStorage.setItem(
+                "googleRegisterData",
+                JSON.stringify({
+                  email: data.email || decoded.email,
+                  name: data.name || decoded.name,
+                  picture: decoded.picture || "",
+                })
+              );
+              navigate("/register"); // hoặc "/complete-profile"
+            },
+          });
+          return;
+        }
+
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+        login(data.user, data.token);
+        navigate("/");
+      } else {
+        Modal.error({
+          title: "Đăng nhập bằng Google thất bại",
+          content: data.message || "Có lỗi xảy ra. Vui lòng thử lại.",
+        });
+      }
+    } catch (err) {
+      console.error("Google Login Error:", err);
+      Modal.error({
+        title: "Lỗi Google",
+        content: "Không thể xử lý phản hồi từ Google.",
+      });
+    }
+  }}
+  onError={(err) => {
+    console.error("GoogleLogin onError:", err);
+    Modal.error({
+      title: "Lỗi đăng nhập Google",
+      content: "Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc dùng cách khác.",
+    });
+  }}
+/>
+
+
+
+</div>
+
         </div>
       </div>
     </div>

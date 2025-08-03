@@ -1,6 +1,5 @@
 import { Container, Row, Col, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import HeaderComponent from "../components/HeaderComponent";
 import FooterComponent from "../components/FooterComponent";
 import React, { useState } from 'react';
 import '../assets/css/ForgotPass.css';
@@ -50,29 +49,6 @@ const ForgotPassword = () => {
 
   return (
     <>
-      <div className="bg-light py-2 px-5 d-none d-lg-block">
-        <Row className="align-items-center justify-content-between">
-          <Col md={6} className="text-start">
-            <small>
-              <i className="far fa-clock text-primary me-2"></i>
-              Opening Hours: Mon - Sat : 7.00 am - 8.00 pm, Sunday 9.00 am - 5.00 pm
-            </small>
-          </Col>
-          <Col md={6} className="text-end">
-            <small className="me-4">
-              <i className="fa fa-envelope-open text-primary me-2"></i>
-              contact@kiwicare.com
-            </small>
-            <small>
-              <i className="fa fa-phone-alt text-primary me-2"></i>
-              +987 654 3210
-            </small>
-          </Col>
-        </Row>
-      </div>
-
-      <HeaderComponent />
-
       <Container fluid className="py-5">
         <Container>
           <Row className="justify-content-center">

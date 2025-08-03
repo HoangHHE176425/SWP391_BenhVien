@@ -100,7 +100,7 @@
 
 .header-logo h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #dc2626 100%);
   -webkit-background-clip: text;
@@ -138,7 +138,7 @@
   text-decoration: none;
   color: #475569;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 11px;
   transition: all 0.3s ease;
   position: relative;
   white-space: nowrap;

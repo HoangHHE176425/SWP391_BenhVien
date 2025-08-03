@@ -1,9 +1,9 @@
 const Profile = require("../../models/Profile");
 const Question = require("../../models/Question");
 const User = require("../../models/User");
+const Patient = require("../../models/Patient");
 const Appointment = require("../../models/Appointment");
 const Feedback = require("../../models/Feedback");
-const Patient = require("../../models/Patient");
 const Schedule = require("../../models/Schedule"); // Thêm import Schedule để cập nhật timeSlot
 const mongoose = require("mongoose"); // Thêm import mongoose để sử dụng ObjectId và kiểm tra hợp lệ
 
@@ -652,6 +652,30 @@ const createGuestFeedback = async (req, res) => {
   }
 };
 
+// Lấy danh sách tất cả bệnh nhân
+const getAllPatients = async (req, res) => {
+  try {
+    const patients = await Patient.find({})
+      .populate('profileId', 'name dateOfBirth gender identityNumber')
+      .select('_id patientId profileId');
+    
+    // Map để trả về thông tin cần thiết
+    const mappedPatients = patients.map(patient => ({
+      _id: patient._id,
+      patientId: patient.patientId,
+      name: patient.profileId?.name || 'Không có tên',
+      dateOfBirth: patient.profileId?.dateOfBirth,
+      gender: patient.profileId?.gender,
+      identityNumber: patient.profileId?.identityNumber
+    }));
+    
+    res.status(200).json(mappedPatients);
+  } catch (error) {
+    console.error("Error fetching patients:", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
 module.exports = {
   getMyProfiles,
   sendQA,
@@ -670,4 +694,6 @@ module.exports = {
   createFeedback,
   createGuestFeedback,
   createOfflineAppointment,
+  getAllPatients,
 };
+

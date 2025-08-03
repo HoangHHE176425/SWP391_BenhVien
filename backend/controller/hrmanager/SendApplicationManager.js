@@ -1,6 +1,7 @@
 const SendApplication = require('../../models/SendApplication');
 const Employee = require('../../models/Employee');
 const Department = require('../../models/Department');
+const SendApplicationLog = require('../../models/SendApplicationLog');
 
 // Get all applications received by an HRManager
 const getApplicationsByReceiver = async (req, res) => {
@@ -19,8 +20,11 @@ const getApplicationsByReceiver = async (req, res) => {
     const applications = await SendApplication.find({ receiver: receiverId })
       .populate({
         path: 'sender',
-        select: 'name department',
-        populate: { path: 'department', select: 'name' },
+        select: "name employeeCode email role status phone specialization department",
+        populate: {
+          path: 'department',
+          select: 'name departmentCode description status image',
+        },
       })
       .populate('receiver', 'name')
       .sort({ createdAt: -1 });
@@ -53,7 +57,6 @@ const updateApplication = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy đơn.' });
     }
 
-    // ✅ Truy vấn lại nhân viên từ userId để kiểm tra role
     const employee = await Employee.findById(req.user.userId);
     if (!employee || employee.role !== 'HRManager' || employee.status !== 'active') {
       return res.status(403).json({ message: 'Bạn không có quyền cập nhật đơn này.' });
@@ -63,6 +66,11 @@ const updateApplication = async (req, res) => {
       return res.status(403).json({ message: 'Không có quyền cập nhật đơn này.' });
     }
 
+    // Lưu lại dữ liệu trước khi thay đổi
+    const previousStatus = application.status;
+    const previousReply = application.reply;
+
+    // Cập nhật đơn
     application.status = status;
     application.reply = reply || application.reply;
     application.decisionAt = new Date();
@@ -70,11 +78,30 @@ const updateApplication = async (req, res) => {
 
     await application.save();
 
+    // ✅ Ghi log hành động cập nhật đơn
+    await SendApplicationLog.create({
+      applicationId: application._id,
+      action: 'status-change',
+      employee: employee._id,
+      previousData: {
+        status: previousStatus,
+        reply: previousReply,
+      },
+      newData: {
+        status: application.status,
+        reply: application.reply,
+      },
+      note: `Cập nhật trạng thái đơn thành "${status}"`,
+    });
+
     const populatedApplication = await SendApplication.findById(id)
       .populate({
         path: 'sender',
-        select: 'name department',
-        populate: { path: 'department', select: 'name' },
+        select: 'name employeeCode email role status phone specialization department',
+        populate: {
+          path: 'department',
+          select: 'name departmentCode description status image',
+        },
       })
       .populate('receiver', 'name');
 
@@ -87,6 +114,7 @@ const updateApplication = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi cập nhật đơn.', error: error.message });
   }
 };
+
 
 
 module.exports = {

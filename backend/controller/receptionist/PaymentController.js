@@ -479,7 +479,7 @@ exports.createPaymentLinkEmbedded = async (req, res) => {
         const result = await payos.createPaymentLink({
             orderCode,
             amount: total,
-            description: `Thanh toán kiwicare`,
+            description: `Thanh toán Vietcare`,
             cancelUrl: "http://localhost:5173/invoice", // bắt buộc
             returnUrl: "http://localhost:5173/invoice", // quay lại front-end
         });
@@ -515,7 +515,7 @@ exports.createPaymentLinkEmbeddedForBookAppointment = async (req, res) => {
         const result = await payos.createPaymentLink({
             orderCode,
             amount: total,
-            description: `Thanh toán kiwicare`,
+            description: `Thanh toán Vietcare`,
             cancelUrl: "http://localhost:5173/appointment",
             returnUrl: returnUrl,
         });

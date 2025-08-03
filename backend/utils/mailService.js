@@ -42,7 +42,7 @@ const sendAppointmentReminder = async ({ to, patientName, doctorName, date }) =>
       <p>Please arrive on time. If you need to reschedule, contact us immediately.</p>
       <br/>
       <p>Thank you!</p>
-      <p>KiwiCare Team</p>
+      <p>Vietcare Team</p>
     `
     };
 

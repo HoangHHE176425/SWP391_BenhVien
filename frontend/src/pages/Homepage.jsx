@@ -222,7 +222,7 @@ const HomePage = () => {
           <Col md={6} className="text-end">
             <small className="me-4">
               <i className="fa fa-envelope-open text-primary me-2"></i>
-              contact@kiwicare.com
+              contact@Vietcare.com
             </small>
             <small>
               <i className="fa fa-phone-alt text-primary me-2"></i>
@@ -243,7 +243,7 @@ const HomePage = () => {
             <img
               src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d"
               className="d-block w-100"
-              alt="KiwiCare Banner"
+              alt="Vietcare Banner"
               style={{ objectFit: "cover", height: "90vh" }}
             />
             <div
@@ -266,7 +266,7 @@ const HomePage = () => {
                   Chăm Sóc Sức Khỏe Toàn Diện
                 </h5>
                 <h1 className="display-3 fw-bold mb-4">
-                  Dịch Vụ Y Tế Chất Lượng Tại KiwiCare
+                  Dịch Vụ Y Tế Chất Lượng Tại Vietcare
                 </h1>
                 <div>
                   <Link
@@ -294,7 +294,7 @@ const HomePage = () => {
           <Col md={6} className="mb-4 mb-md-0">
             <img
               src="https://images.unsplash.com/photo-1579684453423-f84349ef60b0"
-              alt="Phòng Khám KiwiCare"
+              alt="Phòng Khám Vietcare"
               className="img-fluid rounded shadow-lg"
               style={{ transition: "transform 0.3s ease", transform: "scale(1)" }}
               onMouseOver={(e) =>
@@ -306,9 +306,9 @@ const HomePage = () => {
             />
           </Col>
           <Col md={6}>
-            <h2 className="text-primary fw-bold mb-3">Phòng Khám Đa Khoa KiwiCare</h2>
+            <h2 className="text-primary fw-bold mb-3">Phòng Khám Đa Khoa Vietcare</h2>
             <p className="text-muted mb-4 fs-5">
-              Phòng Khám Đa Khoa KiwiCare tự hào là đơn vị cung cấp dịch vụ y tế toàn diện, với đội ngũ bác sĩ được đào tạo tại các trường đại học y khoa hàng đầu trong và ngoài nước. Chúng tôi chuyên cung cấp các dịch vụ đa chuyên khoa như nội khoa, nhi khoa, phụ sản, và phẫu thuật ngoại khoa, đáp ứng tiêu chuẩn y tế quốc tế. Với sứ mệnh mang đến sức khỏe và sự an tâm, KiwiCare cam kết đồng hành cùng bạn trong mọi nhu cầu chăm sóc sức khỏe.
+              Phòng Khám Đa Khoa Vietcare tự hào là đơn vị cung cấp dịch vụ y tế toàn diện, với đội ngũ bác sĩ được đào tạo tại các trường đại học y khoa hàng đầu trong và ngoài nước. Chúng tôi chuyên cung cấp các dịch vụ đa chuyên khoa như nội khoa, nhi khoa, phụ sản, và phẫu thuật ngoại khoa, đáp ứng tiêu chuẩn y tế quốc tế. Với sứ mệnh mang đến sức khỏe và sự an tâm, Vietcare cam kết đồng hành cùng bạn trong mọi nhu cầu chăm sóc sức khỏe.
             </p>
           </Col>
         </Row>

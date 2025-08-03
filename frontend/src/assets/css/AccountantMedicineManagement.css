@@ -1,0 +1,687 @@
+/* AccountantMedicineManagement.css */
+
+/* Styles cho MedicineFormModal */
+.btn-fetch-checked {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-fetch-checked:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+    transform: translateY(-1px);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.checked-medicines-modal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.checked-medicines-modal .table {
+    font-size: 14px;
+}
+
+.checked-medicines-modal .table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+}
+
+.checked-medicines-modal .table td {
+    vertical-align: middle;
+}
+
+.btn-select {
+    min-width: 80px;
+}
+
+.alert-info h6 {
+    color: #0c5460;
+    margin-bottom: 10px;
+}
+
+.alert-info .row {
+    margin-bottom: 5px;
+}
+
+.alert-info strong {
+    color: #0c5460;
+    font-weight: 600;
+}
+
+.accountant-medicine-container {
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.accountant-medicine-title {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.add-medicine-btn {
+    background-color: #28a745;
+    border-color: #28a745;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(40,167,69,0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    text-decoration: none;
+}
+
+.add-medicine-btn:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.4);
+}
+
+.create-check-btn {
+    background-color: #007bff;
+    border-color: #007bff;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    text-decoration: none;
+}
+
+.create-check-btn:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+.debug-info {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    font-size: 14px;
+    color: #495057;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.debug-info strong {
+    color: #007bff;
+}
+
+.filter-card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.filter-card .card-body {
+    padding: 20px;
+}
+
+.form-label {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    cursor: text;
+    user-select: text;
+    outline: none;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+.form-select {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+.form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+.clear-filter-btn {
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+.clear-filter-btn:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.medicine-table-card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.medicine-table-card .card-body {
+    padding: 20px;
+}
+
+.loading-container {
+    padding: 40px 20px;
+    font-size: 16px;
+    color: #007bff;
+    font-weight: bold;
+    text-align: center;
+}
+
+.medicine-table {
+    margin-top: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.medicine-table thead tr {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.medicine-table th {
+    padding: 15px 12px;
+    font-weight: bold;
+    color: #495057;
+    font-size: 14px;
+}
+
+.medicine-table tbody tr {
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.3s ease;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.medicine-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.medicine-table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+.medicine-table td {
+    padding: 15px 12px;
+    font-weight: 500;
+    color: #495057;
+}
+
+.medicine-table td .text-muted {
+    color: #6c757d;
+}
+
+.medicine-table td .text-success {
+    color: #28a745;
+}
+
+.detail-btn {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(23,162,184,0.3);
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+.detail-btn:hover {
+    background-color: #138496;
+    border-color: #138496;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(23,162,184,0.4);
+}
+
+.no-data-row {
+    padding: 60px 20px;
+    font-size: 16px;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    font-style: italic;
+    text-align: center;
+}
+
+.no-data-message {
+    padding: 40px 20px;
+    font-size: 16px;
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+}
+
+.pagination-container {
+    padding: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pagination-btn {
+    border: 1px solid #007bff;
+    color: #007bff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-weight: bold;
+    margin: 0 12px;
+}
+
+/* Badge Styles */
+.status-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: default;
+    user-select: none;
+    outline: none;
+}
+
+.status-badge.success {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-badge.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-badge.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-badge.info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.status-badge.secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Modal Styles */
+.medicine-detail-modal .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.medicine-detail-modal .modal-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.medicine-detail-modal .modal-body {
+    padding: 20px;
+}
+
+.medicine-detail-modal p {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.medicine-detail-modal strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Add Medicine Modal Styles */
+.add-medicine-modal .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.add-medicine-modal .modal-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.add-medicine-modal .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: bold;
+}
+
+.add-medicine-modal .card-header h6 {
+    margin: 0;
+    color: #495057;
+}
+
+.medicine-list-for-adding {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fff;
+}
+
+.medicine-item-for-adding {
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.medicine-item-for-adding:hover {
+    background-color: #e9ecef;
+    border-color: #007bff;
+}
+
+.medicine-item-for-adding:last-child {
+    margin-bottom: 0;
+}
+
+.medicine-item-for-adding .form-check {
+    margin: 0;
+}
+
+.medicine-item-for-adding .form-check-input {
+    margin-right: 10px;
+}
+
+.medicine-item-for-adding .form-check-label {
+    width: 100%;
+    cursor: pointer;
+}
+
+.medicine-item-for-adding strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.medicine-item-for-adding .text-muted {
+    color: #6c757d;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Medicine Check Modal Styles */
+.medicine-check-modal .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.medicine-check-modal .modal-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.medicine-check-modal .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: bold;
+}
+
+.medicine-check-modal .card-header h6 {
+    margin: 0;
+    color: #495057;
+}
+
+.medicine-check-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.medicine-check-item {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.medicine-check-item:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.medicine-check-item h6 {
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 600;
+}
+
+.medicine-check-item .text-muted {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.medicine-check-item small {
+    display: block;
+    margin-bottom: 4px;
+    color: #495057;
+}
+
+.medicine-check-item .row {
+    margin-bottom: 8px;
+}
+
+.medicine-check-item .col-6 {
+    padding: 0 8px;
+}
+
+.remove-medicine-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+.remove-medicine-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+}
+
+.save-check-btn {
+    background-color: #007bff;
+    border-color: #007bff;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+.save-check-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.save-check-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .accountant-medicine-container {
+        padding: 15px;
+    }
+    
+    .accountant-medicine-title {
+        font-size: 24px;
+    }
+    
+    .add-medicine-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .create-check-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .medicine-table th,
+    .medicine-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+    
+    .detail-btn {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+    
+    .pagination-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .pagination-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 576px) {
+    .accountant-medicine-container {
+        padding: 10px;
+    }
+    
+    .accountant-medicine-title {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .filter-card .card-body {
+        padding: 15px;
+    }
+    
+    .medicine-table-card .card-body {
+        padding: 15px;
+    }
+    
+    .medicine-table {
+        font-size: 12px;
+    }
+    
+    .medicine-table th,
+    .medicine-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+} 

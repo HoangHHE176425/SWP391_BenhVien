@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const medicineSchema = new mongoose.Schema({
+  medicineId: { type: String, required: true, unique: true }, // Mã thuốc người dùng
   name: { type: String, required: true, unique: true},
   type: { type: String, required: true },
   group: { type: String },                        // Nhóm thuốc
@@ -16,7 +17,9 @@ const medicineSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, min: 0 },
   unitPrice: { type: Number, required: true, min: 0 },
   expirationDate: { type: Date, required: true, index: true },
-  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }, // receptionist
+  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  isActive: { type: Boolean, default: true },
+  disableReason: { type: String, default: null },
   lastUpdated: { type: Date, default: Date.now }
 }, { timestamps: true });
 

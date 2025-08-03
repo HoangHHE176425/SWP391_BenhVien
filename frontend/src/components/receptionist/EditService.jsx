@@ -52,6 +52,13 @@ const EditServicePage = () => {
     return (
         <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
             <h2 className="text-2xl font-bold mb-6 text-center">Chỉnh sửa Dịch vụ</h2>
+            <button
+                type="button"
+                onClick={() => navigate('/admin/services')}
+                className="text-sm text-blue-600 hover:underline"
+            >
+                ← Quay lại
+            </button>
             {error && <div className="mb-4 text-red-600 bg-red-100 px-4 py-2 rounded">{error}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-4">

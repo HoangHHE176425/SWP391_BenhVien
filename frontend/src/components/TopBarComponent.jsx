@@ -13,7 +13,7 @@ const TopBarComponent = () => (
             <Col md={6} className="text-end">
                 <small className="text-muted me-4">
                     <i className="fa fa-envelope-open text-primary me-2"></i>
-                    contact@kiwicare.com
+                    contact@Vietcare.com
                 </small>
                 <small className="text-muted">
                     <i className="fa fa-phone-alt text-primary me-2"></i>

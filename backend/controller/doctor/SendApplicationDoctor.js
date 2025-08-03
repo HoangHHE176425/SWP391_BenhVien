@@ -4,7 +4,7 @@ const Employee = require('../../models/Employee');
 // Create a new application
 const createSendApplication = async (req, res) => {
   try {
-    const { senderId, subject, content, templateType, fields } = req.body;
+    const { senderId, subject, content, templateType, fields, priority } = req.body;
 
     // Validate required fields
     if (!senderId || !subject || !content) {
@@ -45,6 +45,7 @@ const createSendApplication = async (req, res) => {
       content,
       templateType: templateType || 'other',
       fields: fields || [],
+      priority: priority || 'normal',
     });
 
     await application.save();

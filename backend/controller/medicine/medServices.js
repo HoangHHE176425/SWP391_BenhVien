@@ -78,26 +78,121 @@ exports.createInvoice = async (req, res) => {
 
 exports.getAllMedicines = async (req, res) => {
   try {
-    const {text, type, group} = req.query;
+    const { page = 1, limit = 10, searchTerm, filterMode } = req.query;
     
     const filter = {};
     
-    if (text) {
+    if (searchTerm) {
       filter.$or = [
-        { name: { $regex: text, $options: 'i' } },
-        { description: { $regex: text, $options: 'i' } }
+        { medicineId: { $regex: searchTerm, $options: 'i' } },
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { type: { $regex: searchTerm, $options: 'i' } },
+        { group: { $regex: searchTerm, $options: 'i' } }
       ];
     }
     
-    if (type) filter.type = type;
-    if (group) filter.group = group;
+    if (filterMode && filterMode !== 'all') {
+      if (filterMode === 'active') {
+        filter.isActive = true;
+      } else if (filterMode === 'inactive') {
+        filter.isActive = false;
+      }
+    }
+    
+    const skip = (page - 1) * limit;
     
     const medicines = await Medicine.find(filter)
-        .sort({ updatedAt: -1 });
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
 
-    res.status(200).json(medicines);
+    const total = await Medicine.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      medicines,
+      totalPages,
+      currentPage: parseInt(page),
+      total
+    });
   } catch (error) {
     console.error('Error fetching medicines:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ', error: error.message });
+  }
+};
+
+// Hàm tạo thuốc mới với medicineId
+exports.createMedicine = async (req, res) => {
+  try {
+    const {
+      medicineId,
+      name,
+      type,
+      group,
+      ingredient,
+      indication,
+      contraindication,
+      dosage,
+      sideEffects,
+      precaution,
+      interaction,
+      note,
+      storage,
+      quantity,
+      unitPrice,
+      expirationDate,
+      supplier,
+      isActive = true
+    } = req.body;
+
+    // Kiểm tra dữ liệu đầu vào bắt buộc
+    if (!medicineId || !name || !type || !quantity || !unitPrice || !expirationDate) {
+      return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+    }
+
+    // Kiểm tra xem medicineId đã tồn tại chưa
+    const existingMedicine = await Medicine.findOne({ medicineId });
+    if (existingMedicine) {
+      return res.status(400).json({ message: 'Mã thuốc đã tồn tại' });
+    }
+
+    // Kiểm tra xem tên thuốc đã tồn tại chưa
+    const existingName = await Medicine.findOne({ name });
+    if (existingName) {
+      return res.status(400).json({ message: 'Tên thuốc đã tồn tại' });
+    }
+
+    // Tạo thuốc mới
+    const newMedicine = new Medicine({
+      medicineId,
+      name,
+      type,
+      group,
+      ingredient,
+      indication,
+      contraindication,
+      dosage,
+      sideEffects,
+      precaution,
+      interaction,
+      note,
+      storage,
+      quantity,
+      unitPrice,
+      expirationDate,
+      supplier,
+      isActive
+    });
+
+    const savedMedicine = await newMedicine.save();
+
+    res.status(201).json({
+      message: 'Tạo thuốc thành công',
+      medicine: savedMedicine
+    });
+  } catch (error) {
+    console.error('Error creating medicine:', error);
     res.status(500).json({ message: 'Lỗi máy chủ', error: error.message });
   }
 };

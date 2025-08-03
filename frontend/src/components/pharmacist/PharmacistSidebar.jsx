@@ -4,6 +4,8 @@ import {
   UserOutlined,
   CalendarOutlined,
   LogoutOutlined,
+  MedicineBoxOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 
 const PharmacistSidebar = () => {
@@ -14,6 +16,16 @@ const PharmacistSidebar = () => {
       to: "/pharmacist/profile",
       label: "Xem Hồ Sơ Cá Nhân",
       icon: <UserOutlined />,
+    },
+    {
+      to: "/pharmacist/medicines",
+      label: "Xem Danh Sách Thuốc",
+      icon: <MedicineBoxOutlined />,
+    },
+    {
+      to: "/pharmacist/transactions",
+      label: "Lịch Sử Giao Dịch",
+      icon: <HistoryOutlined />
     },
   ];
   const handleLogout = () => {

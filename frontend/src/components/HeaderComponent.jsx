@@ -80,7 +80,7 @@ const Header = ({ onMenuClick, menuOpen }) => {
           )}
           <Link to="/" className="header-logo">
             <h1>
-              <i className="fa fa-heartbeat"></i> Kiwicare
+              <i className="fa fa-heartbeat"></i> Vietcare
             </h1>
           </Link>
         </div>

@@ -1,5 +1,4 @@
 const Attendance = require("../../models/Attendance");
-const AttendConfig = require("../../models/AttendanceConfig");
 const dayjs = require("dayjs");
 
 exports.getAllAttendance = async (req, res) => {
