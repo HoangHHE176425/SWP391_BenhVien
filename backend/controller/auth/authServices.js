@@ -335,38 +335,99 @@ const googleLogin = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    const { email, name, picture } = payload;
+    const { email, name } = payload;
 
-    let user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
     if (user) {
-      // Đã có tài khoản → đăng nhập luôn
-      const token = jwt.sign(
-        { id: user._id, email: user.email, name: user.name, role: user.role || "patient", status: user.status },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
+  // Nếu user chưa từng đăng nhập bằng Google, cập nhật flag
+  if (!user.isGoogleAccount) {
+    user.isGoogleAccount = true;
+    await user.save();
+  }
 
-      return res.status(200).json({
-        message: "Đăng nhập thành công",
-        token,
-        user,
-        incompleteProfile: false,
-        missingFields: [],
-      });
-    } else {
-      // Nếu chưa có → frontend sẽ chuyển sang bước hoàn thiện hồ sơ
-      return res.status(200).json({
-        message: "Google xác thực thành công, cần hoàn thiện hồ sơ",
-        email,
-        name,
-        picture,
-        needComplete: true,
-      });
-    }
+  const token = jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role || "patient",
+      status: user.status,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  return res.status(200).json({
+    message: "Đăng nhập Google thành công",
+    token,
+    user,
+    incompleteProfile: false,
+    missingFields: [],
+  });
+}
+
+
+  return res.status(200).json({
+    message: "Tài khoản Google chưa tồn tại. Cần tạo tài khoản mới.",
+    email,
+    name,
+    shouldRegister: true,
+  });
   } catch (error) {
     console.error("Google login error:", error);
     res.status(500).json({ message: "Lỗi đăng nhập Google", error: error.message });
+  }
+};
+
+const googleRegister = async (req, res) => {
+  try {
+    const { email, name, password, phone } = req.body;
+
+    if (!email || !name || !password || !phone) {
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
+    }
+
+    const existed = await User.findOne({ email });
+    const existedEmp = await Employee.findOne({ email });
+    if (existed || existedEmp) {
+      return res.status(400).json({ message: "Email đã tồn tại trên hệ thống" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      email,
+      name,
+      phone,
+      password: hashedPassword,
+      isGoogleAccount: true,
+      status: "active",
+      role: "patient",
+    });
+
+    await newUser.save();
+
+    const token = jwt.sign(
+      {
+        id: newUser._id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        status: newUser.status,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res.status(200).json({
+      message: "Tạo tài khoản và đăng nhập thành công",
+      token,
+      user: newUser,
+    });
+  } catch (err) {
+    console.error("Google register error:", err);
+    return res.status(500).json({ message: "Lỗi máy chủ", error: err.message });
   }
 };
 
@@ -379,9 +440,12 @@ const googleCompleteRegister = async (req, res) => {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
     }
 
+    // ✅ Kiểm tra trùng trong cả User và Employee
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email đã tồn tại" });
+    const existingEmp = await Employee.findOne({ email });
+
+    if (existingUser || existingEmp) {
+      return res.status(400).json({ message: "Email đã tồn tại trên hệ thống" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -422,6 +486,7 @@ const googleCompleteRegister = async (req, res) => {
 };
 
 
+
 const checkPhone = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -443,6 +508,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   googleLogin,
+  googleRegister,
   googleCompleteRegister,
   checkPhone,
 };
