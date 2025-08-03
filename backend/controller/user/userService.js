@@ -4,7 +4,6 @@ const User = require("../../models/User");
 const Patient = require("../../models/Patient");
 const Appointment = require("../../models/Appointment");
 const Feedback = require("../../models/Feedback");
-const Patient = require("../../models/Patient");
 const Schedule = require("../../models/Schedule"); // Thêm import Schedule để cập nhật timeSlot
 const mongoose = require("mongoose"); // Thêm import mongoose để sử dụng ObjectId và kiểm tra hợp lệ
 
@@ -694,7 +693,6 @@ module.exports = {
   createFeedback,
   createGuestFeedback,
   createOfflineAppointment,
-};
   getAllPatients,
 };
 
