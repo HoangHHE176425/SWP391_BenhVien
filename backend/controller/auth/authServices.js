@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 const Employee = require("../../models/Employee");
 const bcrypt = require("bcrypt");
 const Counter = require("../../models/Counter");
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 require("dotenv").config();
 const Login = async (req, res) => {
@@ -90,26 +92,26 @@ const Signup = async (req, res) => {
     // 1) Kiểm tra email đã tồn tại chưa
     const emailExist = await User.findOne({ email });
     if (emailExist) {
-      return res.status(400).json({ message: "Email da ton tai" });
+      return res.status(400).json({ message: "Email đã tồn tại" });
     }
-    const salt = await bcrypt.genSalt(10); // tạo salt
+
+    // 2) Hash password
+    const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3) Tạo user mới (user_code sẽ được middleware pre('save') sinh tự động)
+    // 3) Tạo user mới
     const newUser = new User({
       email,
-      password: hashedPassword,
       name,
       phone,
+      password: hashedPassword,
       status: "active",
-      emailVerificationCode: null,
-      verificationExpires: null,
+      role: "patient",
     });
 
-    // 4) Lưu và lấy ra bản ghi đã lưu để chắc chắn có user_code
     const savedUser = await newUser.save();
 
-    // 5) Trả kết quả về cho Postman (kèm user_code)
+    // 4) Trả về thông tin
     return res.status(200).json({
       message: "Đăng ký thành công",
       user_code: savedUser.user_code,
@@ -124,9 +126,11 @@ const Signup = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Signup error:", error);
     res.status(500).json({ message: "Lỗi máy chủ", error: error.message });
   }
 };
+
 
 const check = async (req, res) => {
   res.status(200).json({ message: "API hoat dong" });
@@ -219,18 +223,36 @@ const forgotPassword = async (req, res) => {
       await employee.save();
     }
 
-    // Gửi email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `"VietCare" <hoanghhhe176425@fpt.edu.vn>"`,
       to: email,
-      subject: "Mã xác minh đặt lại mật khẩu",
+      subject: "Mã xác minh đặt lại mật khẩu - VietCare",
       html: `
-        <h3>Mã xác minh</h3>
-        <p>Mã xác minh của bạn là: <strong>${otp}</strong></p>
-        <p>Mã này có hiệu lực trong 15 phút.</p>
-        <p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e2e2; border-radius: 8px; padding: 20px; background-color: #f9f9f9;">
+          <h2 style="color: #2c3e50;">Xác minh đặt lại mật khẩu</h2>
+          <p style="font-size: 16px; color: #333;">
+            Xin chào, bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại <strong>VietCare</strong>.
+          </p>
+          <p style="font-size: 16px; color: #333;">
+            Mã xác minh của bạn là:
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <span style="font-size: 28px; font-weight: bold; color: #e74c3c;">${otp}</span>
+          </div>
+          <p style="font-size: 14px; color: #666;">
+            Mã này có hiệu lực trong <strong>15 phút</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+          </p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />
+          <p style="font-size: 13px; color: #999;">
+            Trân trọng,<br />
+            <strong>Phòng chăm sóc khách hàng VietCare</strong><br />
+            Email: support@vietcare.com<br />
+            Điện thoại: 0987 654 321
+          </p>
+        </div>
       `,
     };
+
 
     await transporter.sendMail(mailOptions);
     return res.status(200).json({ message: "OTP sent successfully" });
@@ -299,6 +321,119 @@ const resetPassword = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "Thiếu Google Credential" });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Đã có tài khoản → đăng nhập luôn
+      const token = jwt.sign(
+        { id: user._id, email: user.email, name: user.name, role: user.role || "patient", status: user.status },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "Đăng nhập thành công",
+        token,
+        user,
+        incompleteProfile: false,
+        missingFields: [],
+      });
+    } else {
+      // Nếu chưa có → frontend sẽ chuyển sang bước hoàn thiện hồ sơ
+      return res.status(200).json({
+        message: "Google xác thực thành công, cần hoàn thiện hồ sơ",
+        email,
+        name,
+        picture,
+        needComplete: true,
+      });
+    }
+  } catch (error) {
+    console.error("Google login error:", error);
+    res.status(500).json({ message: "Lỗi đăng nhập Google", error: error.message });
+  }
+};
+
+
+const googleCompleteRegister = async (req, res) => {
+  try {
+    const { email, name, password, phone } = req.body;
+
+    if (!email || !name || !password || !phone) {
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email đã tồn tại" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      email,
+      name,
+      phone,
+      password: hashedPassword,
+      isGoogleAccount: true,
+      status: "active",
+      role: "patient",
+    });
+
+    await newUser.save();
+
+    const token = jwt.sign(
+      {
+        id: newUser._id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        status: newUser.status,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res.status(200).json({
+      message: "Tạo tài khoản và đăng nhập thành công",
+      token,
+      user: newUser,
+    });
+  } catch (err) {
+    console.error("Google complete register error:", err);
+    return res.status(500).json({ message: "Lỗi máy chủ", error: err.message });
+  }
+};
+
+
+const checkPhone = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    const existing = await User.findOne({ phone });
+
+    return res.status(200).json({ exists: !!existing });
+  } catch (error) {
+    console.error("Check phone error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 module.exports = {
   Login,
@@ -307,4 +442,8 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
+  googleLogin,
+  googleCompleteRegister,
+  checkPhone,
 };
+
