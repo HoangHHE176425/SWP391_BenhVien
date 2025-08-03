@@ -37,7 +37,7 @@ const ReceptionistLayout = () => {
     { key: "7", path: "/receptionist/notifications", icon: <BellOutlined />, label: "Quản Lý Thông Báo" },
     // { key: "8", path: "/receptionist/users", icon: <UserOutlined />, label: "Quản Lý Người Dùng" },
     { key: "9", path: "/receptionist/medicalrecord", icon: <FileTextOutlined />, label: "Hồ Sơ Y Tế" },
-    { key: "10", path: "/receptionist/medicines", icon: <PlusCircleOutlined />, label: "Quản Lý Thuốc" },
+    // { key: "10", path: "/receptionist/medicines", icon: <PlusCircleOutlined />, label: "Quản Lý Thuốc" },
     { key: "11", path: "/receptionist/invoices", icon: <DollarOutlined />, label: "Quản Lý Hóa Đơn" },
     { key: "12", path: "/receptionist/payments", icon: <DollarOutlined />, label: "Quản Lý Thanh Toán" },
     { key: "13", path: "/receptionist/news", icon: <NotificationOutlined />, label: "Quản Lý Tin Tức" },

@@ -419,21 +419,6 @@ const AccountantMedicineManagement = () => {
 
     return (
         <Container fluid className="accountant-medicine-container">
-            {/* Debug info */}
-            {process.env.NODE_ENV === 'development' && (
-                <Row className="mb-3">
-                    <Col>
-                        <div className="alert alert-info">
-                            <strong>Debug Info:</strong><br/>
-                            Suppliers: {suppliers ? suppliers.length : 'undefined'}<br/>
-                            Selected Supplier: {selectedSupplier}<br/>
-                            Invoices: {invoices ? invoices.length : 'undefined'}<br/>
-                            Loading Suppliers: {loadingSuppliers ? 'Yes' : 'No'}<br/>
-                            Loading Invoices: {loadingInvoices ? 'Yes' : 'No'}
-                        </div>
-                    </Col>
-                </Row>
-            )}
             <Row className="mb-4">
                 <Col>
                     <h2 className="accountant-medicine-title">Quản Lý Thuốc</h2>
