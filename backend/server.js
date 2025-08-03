@@ -41,7 +41,6 @@ app.use("/api/receptionist/news", require("./routers/Receptionist/news.route"));
 app.use("/api/receptionist/medical-record", require("./routers/Receptionist/medicalrecord.route"));
 app.use("/api/attendance", require("./routers/Doctor/attendance.routes"));
 app.use("/api/attendance", require("./routers/Receptionist/attendance.route"));
-app.use("/api/attendance/accountant", require("./routers/accountant/accountantAttendance.route"));
 app.use("/api/pharmacist/accountant", require("./routers/pharmacist/pharmacistAttendance.route"));
 app.use("/api/hrmanager/accountant", require("./routers/hrmanager/hrmanagerAttendance.route"));
 app.use("/api/record", require("./routers/record/record.route"));

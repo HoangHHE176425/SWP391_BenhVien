@@ -19,8 +19,9 @@ const medicineCheckSchema = new mongoose.Schema({
   }, // Tên người kiểm (kế toán)
   soHoaDon: { 
     type: String, 
-    required: true 
-  }, // Số hóa đơn từ nhà cung cấp
+    required: true,
+    unique: true 
+  }, // Số hóa đơn (tự sinh)
   nhaCungCap: { 
     type: String, 
     required: true 
@@ -98,16 +99,82 @@ const medicineCheckDetailSchema = new mongoose.Schema({
   } // Số lượng chênh lệch (thực tế - nhập)
 }, { timestamps: true });
 
-// Middleware để tự động sinh mã phiếu kiểm
+// Middleware để tự động sinh mã phiếu kiểm và số hóa đơn
 medicineCheckSchema.pre('save', async function(next) {
-  if (this.isNew && !this.maPhieuKiem) {
+  if (this.isNew) {
     try {
-      const counter = await mongoose.model('Counter').findByIdAndUpdate(
-        { _id: 'medicineCheck' },
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      this.maPhieuKiem = `PKT_${String(counter.seq).padStart(6, '0')}`;
+      // Sinh mã phiếu kiểm nếu chưa có
+      if (!this.maPhieuKiem) {
+        // Kiểm tra counter hiện có
+        let counter = await mongoose.model('Counter').findById('medicineCheck');
+        
+        if (!counter) {
+          // Nếu chưa có counter, tìm mã phiếu kiểm lớn nhất hiện có
+          const maxCheck = await mongoose.model('MedicineCheck').findOne().sort({ maPhieuKiem: -1 });
+          let nextSeq = 1;
+          
+          if (maxCheck && maxCheck.maPhieuKiem) {
+            // Trích xuất số từ mã phiếu kiểm hiện có (PKT_000001 -> 1)
+            const match = maxCheck.maPhieuKiem.match(/PKT_(\d+)/);
+            if (match) {
+              nextSeq = parseInt(match[1]) + 1;
+            }
+          }
+          
+          // Tạo counter mới với số tiếp theo
+          counter = await mongoose.model('Counter').findByIdAndUpdate(
+            { _id: 'medicineCheck' },
+            { seq: nextSeq },
+            { new: true, upsert: true }
+          );
+        }
+        
+        // Tăng counter và tạo mã phiếu kiểm
+        counter = await mongoose.model('Counter').findByIdAndUpdate(
+          { _id: 'medicineCheck' },
+          { $inc: { seq: 1 } },
+          { new: true }
+        );
+        
+        this.maPhieuKiem = `PKT_${String(counter.seq).padStart(6, '0')}`;
+      }
+      
+      // Sinh số hóa đơn nếu chưa có
+      if (!this.soHoaDon) {
+        // Kiểm tra counter cho số hóa đơn
+        let invoiceCounter = await mongoose.model('Counter').findById('medicineInvoice');
+        
+        if (!invoiceCounter) {
+          // Nếu chưa có counter, tìm số hóa đơn lớn nhất hiện có
+          const maxInvoice = await mongoose.model('MedicineCheck').findOne().sort({ soHoaDon: -1 });
+          let nextInvoiceSeq = 1;
+          
+          if (maxInvoice && maxInvoice.soHoaDon) {
+            // Trích xuất số từ số hóa đơn hiện có (INV_000001 -> 1)
+            const match = maxInvoice.soHoaDon.match(/INV_(\d+)/);
+            if (match) {
+              nextInvoiceSeq = parseInt(match[1]) + 1;
+            }
+          }
+          
+          // Tạo counter mới với số tiếp theo
+          invoiceCounter = await mongoose.model('Counter').findByIdAndUpdate(
+            { _id: 'medicineInvoice' },
+            { seq: nextInvoiceSeq },
+            { new: true, upsert: true }
+          );
+        }
+        
+        // Tăng counter và tạo số hóa đơn
+        invoiceCounter = await mongoose.model('Counter').findByIdAndUpdate(
+          { _id: 'medicineInvoice' },
+          { $inc: { seq: 1 } },
+          { new: true }
+        );
+        
+        this.soHoaDon = `INV_${String(invoiceCounter.seq).padStart(6, '0')}`;
+      }
+      
       next();
     } catch (err) {
       next(err);

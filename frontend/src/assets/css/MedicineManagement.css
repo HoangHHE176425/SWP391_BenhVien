@@ -263,3 +263,210 @@
   padding: 10px;
   margin-bottom: 20px;
 }
+
+/* Modal cho danh sách thuốc đã kiểm */
+.checked-medicines-modal .modal-xl {
+  max-width: 1200px;
+}
+
+.checked-medicines-modal .table {
+  font-size: 14px;
+}
+
+.checked-medicines-modal .table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+}
+
+.checked-medicines-modal .table td {
+  vertical-align: middle;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.checked-medicines-modal .btn-select {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  transition: all 0.3s ease;
+}
+
+.checked-medicines-modal .btn-select:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+/* Button lấy dữ liệu từ thuốc đã kiểm */
+.btn-fetch-checked {
+  background-color: #6f42c1;
+  border-color: #6f42c1;
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-fetch-checked:hover {
+  background-color: #5a32a3;
+  border-color: #5a32a3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
+}
+
+.btn-fetch-checked:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  opacity: 0.6;
+}
+
+/* Loading state */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  .checked-medicines-modal .table-responsive {
+    font-size: 12px;
+  }
+  
+  .checked-medicines-modal .table th,
+  .checked-medicines-modal .table td {
+    padding: 6px 4px;
+  }
+  
+  .checked-medicines-modal .btn-select {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+/* Filter section trong modal */
+.checked-medicines-modal .filter-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.checked-medicines-modal .filter-section .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.checked-medicines-modal .filter-section .form-control,
+.checked-medicines-modal .filter-section .form-select {
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  font-size: 14px;
+}
+
+.checked-medicines-modal .filter-section .form-control:focus,
+.checked-medicines-modal .filter-section .form-select:focus {
+  border-color: #6f42c1;
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* Badge styles */
+.checked-medicines-modal .badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.checked-medicines-modal .badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.checked-medicines-modal .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+/* Disabled button style */
+.checked-medicines-modal .btn-select:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checked-medicines-modal .btn-select:disabled:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Footer stats */
+.checked-medicines-modal .modal-footer .text-muted {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+/* Table improvements */
+.checked-medicines-modal .table th {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  padding: 12px 8px;
+}
+
+.checked-medicines-modal .table td {
+  font-size: 13px;
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+.checked-medicines-modal .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .checked-medicines-modal .filter-section .row {
+    margin-bottom: 10px;
+  }
+  
+  .checked-medicines-modal .filter-section .col-md-4 {
+    margin-bottom: 10px;
+  }
+  
+  .checked-medicines-modal .table-responsive {
+    font-size: 11px;
+  }
+  
+  .checked-medicines-modal .table th,
+  .checked-medicines-modal .table td {
+    padding: 6px 4px;
+  }
+  
+  .checked-medicines-modal .badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .checked-medicines-modal .btn-select {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}

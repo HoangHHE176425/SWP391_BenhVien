@@ -20,11 +20,7 @@ const AccountantSidebar = () => {
       label: "Xem Hồ Sơ Cá Nhân",
       icon: <UserOutlined />,
     },
-    {
-      to: "/accountant/attendance",
-      label: "Chấm Công",
-      icon: <CalendarOutlined />,
-    },
+
     {
       to: "/accountant/medicine-check",
       label: "Kiểm Thuốc",

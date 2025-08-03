@@ -1,5 +1,73 @@
 /* AccountantMedicineManagement.css */
 
+/* Styles cho MedicineFormModal */
+.btn-fetch-checked {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-fetch-checked:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+    transform: translateY(-1px);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.checked-medicines-modal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.checked-medicines-modal .table {
+    font-size: 14px;
+}
+
+.checked-medicines-modal .table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+}
+
+.checked-medicines-modal .table td {
+    vertical-align: middle;
+}
+
+.btn-select {
+    min-width: 80px;
+}
+
+.alert-info h6 {
+    color: #0c5460;
+    margin-bottom: 10px;
+}
+
+.alert-info .row {
+    margin-bottom: 5px;
+}
+
+.alert-info strong {
+    color: #0c5460;
+    font-weight: 600;
+}
+
 .accountant-medicine-container {
     min-height: 100vh;
     padding: 20px;
@@ -24,6 +92,28 @@
     cursor: default;
     user-select: none;
     outline: none;
+}
+
+.add-medicine-btn {
+    background-color: #28a745;
+    border-color: #28a745;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(40,167,69,0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    text-decoration: none;
+}
+
+.add-medicine-btn:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.4);
 }
 
 .create-check-btn {
@@ -313,6 +403,16 @@
     color: #212529;
 }
 
+.status-badge.info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.status-badge.secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
 /* Modal Styles */
 .medicine-detail-modal .modal-header {
     background-color: #f8f9fa;
@@ -336,6 +436,79 @@
 .medicine-detail-modal strong {
     color: #495057;
     font-weight: 600;
+}
+
+/* Add Medicine Modal Styles */
+.add-medicine-modal .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.add-medicine-modal .modal-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.add-medicine-modal .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: bold;
+}
+
+.add-medicine-modal .card-header h6 {
+    margin: 0;
+    color: #495057;
+}
+
+.medicine-list-for-adding {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fff;
+}
+
+.medicine-item-for-adding {
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.medicine-item-for-adding:hover {
+    background-color: #e9ecef;
+    border-color: #007bff;
+}
+
+.medicine-item-for-adding:last-child {
+    margin-bottom: 0;
+}
+
+.medicine-item-for-adding .form-check {
+    margin: 0;
+}
+
+.medicine-item-for-adding .form-check-input {
+    margin-right: 10px;
+}
+
+.medicine-item-for-adding .form-check-label {
+    width: 100%;
+    cursor: pointer;
+}
+
+.medicine-item-for-adding strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.medicine-item-for-adding .text-muted {
+    color: #6c757d;
+    font-size: 12px;
+    margin-top: 4px;
 }
 
 /* Medicine Check Modal Styles */
@@ -421,22 +594,6 @@
     transform: translateY(-1px);
 }
 
-.add-medicine-btn {
-    background-color: #28a745;
-    border-color: #28a745;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    user-select: none;
-    outline: none;
-}
-
-.add-medicine-btn:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-    transform: translateY(-1px);
-}
-
 .save-check-btn {
     background-color: #007bff;
     border-color: #007bff;
@@ -466,6 +623,11 @@
     
     .accountant-medicine-title {
         font-size: 24px;
+    }
+    
+    .add-medicine-btn {
+        padding: 10px 16px;
+        font-size: 13px;
     }
     
     .create-check-btn {

@@ -9,3 +9,18 @@ Content-Type: application/json
   "dateOfBirth": "2000-05-15",
   "gender": "Male"
 }
+
+### Test API lấy danh sách thuốc đã được kiểm và sẵn sàng thêm vào kho
+GET http://localhost:5000/api/accountant/medicine-check/medicines/available
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+### Test API lấy danh sách phiếu kiểm thuốc
+GET http://localhost:5000/api/accountant/medicine-check/checks
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+### Test API lấy thông tin thuốc theo mã
+GET http://localhost:5000/api/accountant/medicine-check/medicines/code/MED001
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json

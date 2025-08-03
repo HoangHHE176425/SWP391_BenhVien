@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const medicineSchema = new mongoose.Schema({
+  medicineId: { type: String, required: true, unique: true }, // Mã thuốc người dùng
   name: { type: String, required: true, unique: true},
   type: { type: String, required: true },
   group: { type: String },                        // Nhóm thuốc

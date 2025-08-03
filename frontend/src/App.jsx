@@ -82,7 +82,7 @@ import LabTestPage from "./pages/LabTestPage.jsx";
 import DoctorAppointments from "./pages/DoctorAppointment.jsx";
 import CreateInvoice2 from "./components/receptionist/CreateInvoiceTest.jsx";
 import AttendanceManagement from "./pages/admin/AttendanceManagement.jsx";
-import AccountantAttendance from "./pages/accountant/AccountantAttendance.jsx";
+
 import PharmacistAttendance from "./pages/pharmacist/PharmacistAttendance.jsx";
 import MedicineManagement from "./pages/pharmacist/MedicineManagement.jsx";
 import TransactionHistory from "./pages/pharmacist/TransactionHistory.jsx";
@@ -401,7 +401,7 @@ const AppRoutes = () => {
           >
             <Route index element={<ProfileReceptionist />} />
             <Route path="profile" element={<ProfileReceptionist />} />
-            <Route path="attendance" element={<AccountantAttendance />} />
+
             <Route path="medicine-management" element={<AccountantMedicineManagement />} />
             <Route path="medicine-check" element={<MedicineCheckManagement />} />
             <Route path="statistics" element={<AccountantStatistics />} />

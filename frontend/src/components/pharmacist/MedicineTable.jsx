@@ -6,6 +6,7 @@ const MedicineTable = ({ medicines, onEdit, onDisable }) => (
   <table className="medicine-table">
     <thead>
       <tr>
+        <th>Mã thuốc</th>
         <th>Tên thuốc</th>
         <th>Loại</th>
         <th>Hoạt chất</th>
@@ -20,6 +21,7 @@ const MedicineTable = ({ medicines, onEdit, onDisable }) => (
     <tbody>
       {medicines.map((med) => (
         <tr key={med._id} className={med.isActive ? "" : "table-secondary"}>
+          <td>{med.medicineId || med._id}</td>
           <td>{med.name}</td>
           <td>{med.type}</td>
           <td>{med.ingredient}</td>
@@ -42,7 +44,7 @@ const MedicineTable = ({ medicines, onEdit, onDisable }) => (
       ))}
       {!medicines.length && (
         <tr>
-          <td colSpan={9} className="text-center text-muted py-3">
+          <td colSpan={10} className="text-center text-muted py-3">
             Không có thuốc nào
           </td>
         </tr>

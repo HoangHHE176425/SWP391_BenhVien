@@ -1,5 +1,6 @@
 const medicineRepo = require('../../repository/medicine.repository');
 const PharmacyTransaction = require('../../models/PharmacyTransaction');
+const Records = require('../../models/Records');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -130,68 +131,119 @@ const processPharmacyTransaction = async (req, res) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { patientId, prescriptionId, paymentMethod, items } = req.body;
+        const { patientId, recordId, prescriptionId, paymentMethod, items } = req.body;
 
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ message: "Items are required" });
+        console.log("Received transaction data:", { patientId, recordId, prescriptionId, paymentMethod, items });
+
+        // Validate items only if not a patient or no prescription
+        if (patientId === "not_a_patient" || !recordId) {
+            if (!items || !Array.isArray(items) || items.length === 0) {
+                return res.status(400).json({ message: "Items are required for non-patients or when no prescription exists" });
+            }
         }
 
-        // Handle patient validation based on patientId
+        // Handle patient validation based on CCCD
         let patientIdentifier = "Không phải bệnh nhân"; // Default for non-patients
+        let recordInfo = null;
+        let hasPrescription = false;
         
         if (patientId && patientId !== "not_a_patient") {
-            // Validate patientId as a non-empty string for actual patients
+            // Validate CCCD as a non-empty string for actual patients
             if (typeof patientId !== 'string' || patientId.trim() === '') {
-                return res.status(400).json({ message: "Mã bệnh nhân phải là chuỗi hợp lệ" });
+                return res.status(400).json({ message: "CCCD phải là chuỗi hợp lệ" });
             }
 
-            // Validate patient existence using Patient model
-            const patient = await mongoose.model('Patient').findOne({ patientId: patientId });
-            if (!patient) {
-                return res.status(400).json({ message: `Mã bệnh nhân ${patientId} không tồn tại` });
+            // Validate patient existence using Records model with CCCD
+            const record = await Records.findOne({ identityNumber: patientId });
+            if (!record) {
+                return res.status(400).json({ message: `CCCD ${patientId} không tồn tại trong hệ thống` });
+            }
+
+            // Validate recordId if provided
+            if (recordId) {
+                const specificRecord = await Records.findOne({ 
+                    _id: recordId, 
+                    identityNumber: patientId 
+                });
+                if (!specificRecord) {
+                    return res.status(400).json({ message: `Record ${recordId} không tồn tại cho CCCD ${patientId}` });
+                }
+                recordInfo = {
+                    recordId: specificRecord._id,
+                    admissionDate: specificRecord.admissionDate,
+                    dischargeDate: specificRecord.dischargeDate,
+                    admissionReason: specificRecord.admissionReason
+                };
+                // Kiểm tra xem có prescription không
+                hasPrescription = specificRecord.prescription && specificRecord.prescription.length > 0;
+                console.log("Record prescription check:", { 
+                    recordId: specificRecord._id, 
+                    hasPrescription, 
+                    prescriptionLength: specificRecord.prescription ? specificRecord.prescription.length : 0 
+                });
             }
             
-            patientIdentifier = patientId; // Use actual patient ID
+            patientIdentifier = patientId; // Use CCCD as patient identifier
         }
 
         // Calculate total amount and prepare transaction items
         const transactionItems = [];
         let totalAmount = 0;
+        let updatedMedicines = null; // Khởi tạo biến updatedMedicines
 
-        for (const item of items) {
-            const { medicineId, quantity } = item;
-            if (!medicineId || !quantity || quantity <= 0) {
-                return res.status(400).json({ message: `Invalid item data: medicineId=${medicineId}, quantity=${quantity}` });
+        // Only process items if they exist and are valid
+        if (items && Array.isArray(items) && items.length > 0) {
+            console.log("Processing items:", items);
+            for (const item of items) {
+                const { medicineId, quantity } = item;
+                console.log("Processing item:", { medicineId, quantity });
+                console.log("MedicineId type:", typeof medicineId);
+                console.log("Quantity type:", typeof quantity);
+                if (!medicineId || !quantity || quantity <= 0) {
+                    console.log("Validation failed:", { 
+                        medicineId, 
+                        quantity, 
+                        medicineIdValid: !!medicineId, 
+                        quantityValid: quantity > 0,
+                        medicineIdType: typeof medicineId,
+                        quantityType: typeof quantity
+                    });
+                    return res.status(400).json({ message: `Invalid item data: medicineId=${medicineId}, quantity=${quantity}` });
+                }
+
+                const medicine = await medicineRepo.getMedicineById(medicineId);
+                console.log(`Validating medicine ${medicineId}:`, medicine);
+                if (!medicine || !medicine.isActive) {
+                    return res.status(400).json({ message: `Medicine ${medicineId} (${medicine?.name || 'unknown'}) is unavailable or inactive` });
+                }
+                if (medicine.quantity < quantity) {
+                    return res.status(400).json({ message: `Insufficient stock for ${medicine.name}: available=${medicine.quantity}, requested=${quantity}` });
+                }
+
+                const price = medicine.unitPrice * quantity;
+                totalAmount += price;
+                transactionItems.push({
+                    medicine: medicineId,
+                    quantity,
+                    price,
+                });
             }
 
-            const medicine = await medicineRepo.getMedicineById(medicineId);
-            console.log(`Validating medicine ${medicineId}:`, medicine);
-            if (!medicine || !medicine.isActive) {
-                return res.status(400).json({ message: `Medicine ${medicineId} (${medicine?.name || 'unknown'}) is unavailable or inactive` });
-            }
-            if (medicine.quantity < quantity) {
-                return res.status(400).json({ message: `Insufficient stock for ${medicine.name}: available=${medicine.quantity}, requested=${quantity}` });
-            }
-
-            const price = medicine.unitPrice * quantity;
-            totalAmount += price;
-            transactionItems.push({
-                medicine: medicineId,
-                quantity,
-                price,
-            });
+            // Process stock updates only if there are items
+            updatedMedicines = await medicineRepo.processTransaction(
+                items.map(item => ({ medicineId: item.medicineId, quantity: item.quantity }))
+            );
+        } else if (patientId !== "not_a_patient" && recordId && !hasPrescription) {
+            // Nếu là bệnh nhân nhưng không có prescription và không có items
+            return res.status(400).json({ message: "Items are required when no prescription exists for the selected record" });
         }
-
-        // Process stock updates
-        const updatedMedicines = await medicineRepo.processTransaction(
-            items.map(item => ({ medicineId: item.medicineId, quantity: item.quantity }))
-        );
 
         // Create pharmacy transaction
         const transaction = await PharmacyTransaction.create({
             prescription: prescriptionId || null,
             pharmacist: decoded.id || null,
             patient: patientIdentifier, // Use patientIdentifier which handles both cases
+            record: recordInfo, // Add record information
             items: transactionItems,
             totalAmount,
             paid: true,
@@ -202,7 +254,7 @@ const processPharmacyTransaction = async (req, res) => {
         res.status(201).json({
             message: "Transaction completed",
             transaction,
-            updatedMedicines,
+            updatedMedicines: updatedMedicines,
         });
     } catch (err) {
         console.error("Error in processPharmacyTransaction:", err);
@@ -254,6 +306,66 @@ const getTransactionHistory = async (req, res) => {
     }
 };
 
+// Lấy danh sách bệnh nhân theo CCCD từ bảng Records
+const getPatientsByCCCD = async (req, res) => {
+    try {
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized: No token" });
+        }
+
+        jwt.verify(token, process.env.JWT_SECRET);
+
+        // Lấy tất cả records có identityNumber (CCCD)
+        const records = await Records.find({ 
+            identityNumber: { $exists: true, $ne: null, $ne: '' } 
+        })
+        .select('identityNumber fullName gender dateOfBirth address admissionDate dischargeDate admissionReason prescription')
+        .populate({
+            path: 'prescription.medicine',
+            select: 'name',
+            model: 'Medicine'
+        })
+        .sort({ createdAt: -1 }); // Sắp xếp theo thời gian tạo mới nhất
+
+        // Nhóm records theo CCCD
+        const patientsByCCCD = {};
+        records.forEach(record => {
+            const cccd = record.identityNumber;
+            if (!patientsByCCCD[cccd]) {
+                patientsByCCCD[cccd] = {
+                    _id: record._id,
+                    patientId: record.identityNumber,
+                    name: record.fullName,
+                    gender: record.gender,
+                    dateOfBirth: record.dateOfBirth,
+                    address: record.address,
+                    cccd: record.identityNumber,
+                    records: []
+                };
+            }
+            patientsByCCCD[cccd].records.push({
+                recordId: record._id,
+                admissionDate: record.admissionDate,
+                dischargeDate: record.dischargeDate,
+                admissionReason: record.admissionReason,
+                prescription: record.prescription,
+                createdAt: record.createdAt
+            });
+        });
+
+        const patients = Object.values(patientsByCCCD);
+
+        res.status(200).json({
+            message: "OK",
+            patients: patients
+        });
+    } catch (err) {
+        console.error("Error in getPatientsByCCCD:", err);
+        res.status(500).json({ message: "Error retrieving patients", error: err.message });
+    }
+};
+
 // Export các hàm chính
 module.exports = {
     createMedicine,
@@ -263,4 +375,5 @@ module.exports = {
     disableMedicine,
     processPharmacyTransaction,
     getTransactionHistory,
+    getPatientsByCCCD,
 };

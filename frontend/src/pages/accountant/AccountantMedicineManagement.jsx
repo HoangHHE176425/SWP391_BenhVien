@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Form, Badge, Modal, Alert } from 'react-bootstrap';
-import axios from 'axios';
+import axiosInstance from '../../../axiosInstance';
 import { toast } from 'react-toastify';
 import '../../assets/css/AccountantMedicineManagement.css';
 
@@ -18,10 +18,15 @@ const AccountantMedicineManagement = () => {
     const [showCreateCheckModal, setShowCreateCheckModal] = useState(false);
     const [suppliers, setSuppliers] = useState([]);
     const [selectedSupplier, setSelectedSupplier] = useState('');
-    const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [invoices, setInvoices] = useState([]);
+    const [selectedInvoice, setSelectedInvoice] = useState('');
+    const [invoiceMedicines, setInvoiceMedicines] = useState([]);
+    const [selectedMedicineCode, setSelectedMedicineCode] = useState('');
     const [checkDetails, setCheckDetails] = useState([]);
     const [availableMedicines, setAvailableMedicines] = useState([]);
     const [selectedMedicineForCheck, setSelectedMedicineForCheck] = useState(null);
+    const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+    const [loadingInvoices, setLoadingInvoices] = useState(false);
     const [medicineForm, setMedicineForm] = useState({
         maThuoc: '',
         tenThuoc: '',
@@ -36,16 +41,41 @@ const AccountantMedicineManagement = () => {
 
     useEffect(() => {
         console.log('AccountantMedicineManagement component mounted');
-        fetchMedicines();
-        fetchSuppliers();
+        let isMounted = true;
+        
+        const loadData = async () => {
+            if (isMounted) {
+                await fetchMedicines();
+                await fetchSuppliers();
+            }
+        };
+        
+        loadData();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [currentPage, searchTerm, filterMode]);
+
+    // Debug useEffect để theo dõi state changes
+    useEffect(() => {
+        console.log('Suppliers state changed:', suppliers);
+    }, [suppliers]);
+
+    useEffect(() => {
+        console.log('Selected supplier changed:', selectedSupplier);
+    }, [selectedSupplier]);
+
+    useEffect(() => {
+        console.log('Invoices state changed:', invoices);
+    }, [invoices]);
 
     const fetchMedicines = async () => {
         console.log('Fetching medicines...');
         setLoading(true);
         try {
-            // Thử API khác nhau
-            const response = await axios.get('/api/medicine/medicines', {
+            // Sử dụng đúng API endpoint
+            const response = await axiosInstance.get('/api/medicines', {
                 params: {
                     page: currentPage,
                     limit: 10,
@@ -111,17 +141,95 @@ const AccountantMedicineManagement = () => {
 
     const fetchSuppliers = async () => {
         try {
-            // Giả sử có API để lấy danh sách nhà cung cấp
-            const response = await axios.get('/api/accountant/suppliers');
-            setSuppliers(response.data.suppliers || []);
+            setLoadingSuppliers(true);
+            console.log('Fetching suppliers...');
+            const response = await axiosInstance.get('/api/accountant/medicine-check/suppliers');
+            console.log('Suppliers response:', response.data);
+            
+            // Xử lý dữ liệu từ API
+            let suppliersData = [];
+            if (response.data && response.data.suppliers) {
+                suppliersData = response.data.suppliers;
+            } else if (Array.isArray(response.data)) {
+                suppliersData = response.data;
+            } else if (response.data && Array.isArray(response.data)) {
+                suppliersData = response.data;
+            }
+            
+            console.log('Processed suppliers data:', suppliersData);
+            setSuppliers(suppliersData);
         } catch (error) {
             console.error('Error fetching suppliers:', error);
             // Fallback data
-            setSuppliers([
+            const fallbackSuppliers = [
                 { id: '1', name: 'Công ty Dược phẩm ABC' },
                 { id: '2', name: 'Công ty Dược phẩm XYZ' },
                 { id: '3', name: 'Công ty Dược phẩm DEF' }
-            ]);
+            ];
+            setSuppliers(fallbackSuppliers);
+        } finally {
+            setLoadingSuppliers(false);
+        }
+    };
+
+    // Fetch hóa đơn theo nhà cung cấp
+    const fetchInvoicesBySupplier = async (supplierName) => {
+        try {
+            setLoadingInvoices(true);
+            console.log('Fetching invoices for supplier:', supplierName);
+            
+            // Sử dụng query parameter thay vì path parameter để tránh lỗi encoding
+            const response = await axiosInstance.get('/api/accountant/medicine-check/suppliers/invoices', {
+                params: {
+                    supplierName: supplierName
+                },
+                timeout: 10000 // 10 giây timeout
+            });
+            
+            console.log('Invoices response:', response.data);
+            setInvoices(response.data.invoices || []);
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+            if (error.code === 'ECONNABORTED') {
+                toast.error('Hết thời gian kết nối, vui lòng thử lại');
+            } else if (error.response?.status === 404) {
+                toast.warning('Không tìm thấy hóa đơn cho nhà cung cấp này');
+            } else {
+                toast.error('Không thể tải danh sách hóa đơn');
+            }
+            setInvoices([]);
+        } finally {
+            setLoadingInvoices(false);
+        }
+    };
+
+    // Fetch thuốc theo hóa đơn
+    const fetchMedicinesByInvoice = async (invoiceNumber) => {
+        try {
+            const response = await axiosInstance.get('/api/accountant/medicine-check/invoices/medicines', {
+                params: {
+                    invoiceNumber: invoiceNumber
+                }
+            });
+            setInvoiceMedicines(response.data.medicines);
+        } catch (error) {
+            console.error('Error fetching medicines by invoice:', error);
+            toast.error('Không thể tải danh sách thuốc');
+        }
+    };
+
+    // Fetch thông tin thuốc theo mã
+    const fetchMedicineByCode = async (medicineCode) => {
+        try {
+            const response = await axiosInstance.get('/api/accountant/medicine-check/medicines/code', {
+                params: {
+                    medicineCode: medicineCode
+                }
+            });
+            return response.data.medicine;
+        } catch (error) {
+            console.error('Error fetching medicine by code:', error);
+            return null;
         }
     };
 
@@ -129,15 +237,102 @@ const AccountantMedicineManagement = () => {
         setShowCreateCheckModal(true);
         setCheckDetails([]);
         setSelectedSupplier('');
-        setInvoiceNumber('');
+        setSelectedInvoice('');
+        setInvoices([]);
+        setInvoiceMedicines([]);
+        setSelectedMedicineCode('');
         setMedicineForm({
             maThuoc: '', tenThuoc: '', soLo: '', hanDung: '',
             soLuongNhap: '', soLuongThucTe: '', donViTinh: '', giaNhap: '', ghiChu: ''
         });
     };
 
+    // Xử lý khi chọn nhà cung cấp
+    const handleSupplierChange = async (supplierName) => {
+        try {
+            console.log('Supplier changed to:', supplierName);
+            console.log('Current suppliers state:', suppliers);
+            
+            // Cập nhật state trước
+            setSelectedSupplier(supplierName);
+            setSelectedInvoice('');
+            setInvoices([]);
+            setInvoiceMedicines([]);
+            setSelectedMedicineCode('');
+            
+            // Chỉ gọi API nếu có tên nhà cung cấp hợp lệ
+            if (supplierName && supplierName.trim() !== '') {
+                console.log('Fetching invoices for supplier:', supplierName);
+                // Sử dụng setTimeout để tránh blocking UI
+                setTimeout(async () => {
+                    try {
+                        await fetchInvoicesBySupplier(supplierName);
+                    } catch (apiError) {
+                        console.error('API Error in fetchInvoicesBySupplier:', apiError);
+                        toast.error('Không thể tải danh sách hóa đơn');
+                    }
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error in handleSupplierChange:', error);
+            toast.error('Có lỗi xảy ra khi chọn nhà cung cấp');
+        }
+    };
+
+    // Xử lý khi chọn hóa đơn
+    const handleInvoiceChange = async (invoiceNumber) => {
+        setSelectedInvoice(invoiceNumber);
+        setInvoiceMedicines([]);
+        setSelectedMedicineCode('');
+        
+        if (invoiceNumber) {
+            await fetchMedicinesByInvoice(invoiceNumber);
+        }
+    };
+
+    // Xử lý khi chọn mã thuốc
+    const handleMedicineCodeChange = async (medicineCode) => {
+        setSelectedMedicineCode(medicineCode);
+        
+        if (medicineCode) {
+            // Tìm thuốc trong danh sách thuốc của hóa đơn
+            const selectedMedicine = invoiceMedicines.find(med => med.maThuoc === medicineCode);
+            
+            if (selectedMedicine) {
+                // Tự động điền thông tin
+                setMedicineForm({
+                    maThuoc: selectedMedicine.maThuoc,
+                    tenThuoc: selectedMedicine.tenThuoc,
+                    soLo: selectedMedicine.soLo,
+                    hanDung: selectedMedicine.hanDung ? selectedMedicine.hanDung.split('T')[0] : '',
+                    soLuongNhap: selectedMedicine.soLuongNhap,
+                    soLuongThucTe: selectedMedicine.soLuongNhap, // Mặc định bằng số lượng nhập
+                    donViTinh: selectedMedicine.donViTinh,
+                    giaNhap: selectedMedicine.giaNhap,
+                    ghiChu: ''
+                });
+            } else {
+                // Thử tìm trong kho thuốc
+                const medicineFromInventory = await fetchMedicineByCode(medicineCode);
+                if (medicineFromInventory) {
+                    setMedicineForm({
+                        maThuoc: medicineFromInventory.medicineId,
+                        tenThuoc: medicineFromInventory.name,
+                        soLo: '',
+                        hanDung: medicineFromInventory.expirationDate ? medicineFromInventory.expirationDate.split('T')[0] : '',
+                        soLuongNhap: '',
+                        soLuongThucTe: '',
+                        donViTinh: '',
+                        giaNhap: medicineFromInventory.unitPrice,
+                        ghiChu: ''
+                    });
+                }
+            }
+        }
+    };
+
     const handleAddMedicineToCheck = () => {
-        if (!medicineForm.maThuoc || !medicineForm.tenThuoc || !medicineForm.soLuongNhap) {
+        if (!selectedMedicineCode || !medicineForm.tenThuoc || !medicineForm.soLuongNhap) {
             toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
             return;
         }
@@ -145,6 +340,7 @@ const AccountantMedicineManagement = () => {
         const newDetail = {
             id: Date.now(), // Temporary ID
             ...medicineForm,
+            maThuoc: selectedMedicineCode,
             soLuongThucTe: medicineForm.soLuongThucTe || medicineForm.soLuongNhap
         };
 
@@ -153,6 +349,7 @@ const AccountantMedicineManagement = () => {
             maThuoc: '', tenThuoc: '', soLo: '', hanDung: '',
             soLuongNhap: '', soLuongThucTe: '', donViTinh: '', giaNhap: '', ghiChu: ''
         });
+        setSelectedMedicineCode('');
         toast.success('Đã thêm thuốc vào phiếu kiểm');
     };
 
@@ -163,7 +360,7 @@ const AccountantMedicineManagement = () => {
     };
 
     const handleSubmitCheck = async () => {
-        if (!selectedSupplier || !invoiceNumber || checkDetails.length === 0) {
+        if (!selectedSupplier || !selectedInvoice || checkDetails.length === 0) {
             toast.error('Vui lòng điền đầy đủ thông tin phiếu kiểm');
             return;
         }
@@ -171,12 +368,12 @@ const AccountantMedicineManagement = () => {
         try {
             const checkData = {
                 nhaCungCap: selectedSupplier,
-                soHoaDon: invoiceNumber,
+                soHoaDon: selectedInvoice,
                 ghiChu: '',
                 details: checkDetails
             };
 
-            await axios.post('/api/accountant/medicine-check/checks', checkData);
+            await axiosInstance.post('/api/accountant/medicine-check/checks', checkData);
             toast.success('Tạo phiếu kiểm thuốc thành công');
             setShowCreateCheckModal(false);
             fetchMedicines(); // Refresh danh sách
@@ -220,10 +417,23 @@ const AccountantMedicineManagement = () => {
         return <Badge className="status-badge success">Còn hàng</Badge>;
     };
 
-    console.log('Rendering AccountantMedicineManagement, medicines:', medicines);
-    
     return (
         <Container fluid className="accountant-medicine-container">
+            {/* Debug info */}
+            {process.env.NODE_ENV === 'development' && (
+                <Row className="mb-3">
+                    <Col>
+                        <div className="alert alert-info">
+                            <strong>Debug Info:</strong><br/>
+                            Suppliers: {suppliers ? suppliers.length : 'undefined'}<br/>
+                            Selected Supplier: {selectedSupplier}<br/>
+                            Invoices: {invoices ? invoices.length : 'undefined'}<br/>
+                            Loading Suppliers: {loadingSuppliers ? 'Yes' : 'No'}<br/>
+                            Loading Invoices: {loadingInvoices ? 'Yes' : 'No'}
+                        </div>
+                    </Col>
+                </Row>
+            )}
             <Row className="mb-4">
                 <Col>
                     <h2 className="accountant-medicine-title">Quản Lý Thuốc</h2>
@@ -237,22 +447,6 @@ const AccountantMedicineManagement = () => {
                         <i className="fas fa-plus me-2"></i>
                         Tạo phiếu kiểm thuốc
                     </Button>
-                </Col>
-            </Row>
-
-            {/* Debug Info */}
-            <Row className="mb-3">
-                <Col>
-                    <div className="debug-info">
-                        <strong>Debug Info:</strong> 
-                        <br />
-                        Medicines count: <strong>{medicines.length}</strong>, 
-                        Loading: <strong>{loading ? 'Yes' : 'No'}</strong>, 
-                        Current page: <strong>{currentPage}</strong>
-                        <br />
-                        Search term: <strong>"{searchTerm}"</strong>, 
-                        Filter mode: <strong>"{filterMode}"</strong>
-                    </div>
                 </Col>
             </Row>
 
@@ -331,7 +525,7 @@ const AccountantMedicineManagement = () => {
                                     {medicines.length > 0 ? (
                                         medicines.map((medicine, index) => (
                                             <tr key={medicine._id}>
-                                                <td>{medicine._id}</td>
+                                                <td>{medicine.medicineId || medicine._id}</td>
                                                 <td>{medicine.name}</td>
                                                 <td className="text-muted">{medicine.type}</td>
                                                 <td>
@@ -412,7 +606,7 @@ const AccountantMedicineManagement = () => {
                     {selectedMedicine && (
                         <Row>
                             <Col md={6}>
-                                <p><strong>Mã thuốc:</strong> {selectedMedicine._id}</p>
+                                <p><strong>Mã thuốc:</strong> {selectedMedicine.medicineId || selectedMedicine._id}</p>
                                 <p><strong>Tên thuốc:</strong> {selectedMedicine.name}</p>
                                 <p><strong>Loại:</strong> {selectedMedicine.type}</p>
                                 <p><strong>Nhóm:</strong> {selectedMedicine.group}</p>
@@ -442,10 +636,15 @@ const AccountantMedicineManagement = () => {
             {/* Create Medicine Check Modal */}
             <Modal 
                 show={showCreateCheckModal} 
-                onHide={() => setShowCreateCheckModal(false)} 
+                onHide={() => {
+                    console.log('Closing modal');
+                    setShowCreateCheckModal(false);
+                }} 
                 size="xl"
                 scrollable
                 className="medicine-check-modal"
+                backdrop="static"
+                keyboard={false}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>Tạo phiếu kiểm thuốc mới</Modal.Title>
@@ -462,27 +661,41 @@ const AccountantMedicineManagement = () => {
                                         <Form.Label>Nhà cung cấp *</Form.Label>
                                         <Form.Select
                                             value={selectedSupplier}
-                                            onChange={(e) => setSelectedSupplier(e.target.value)}
+                                            onChange={(e) => {
+                                                e.preventDefault();
+                                                handleSupplierChange(e.target.value);
+                                            }}
                                             required
+                                            disabled={loadingSuppliers}
                                         >
-                                            <option value="">Chọn nhà cung cấp</option>
-                                            {suppliers.map(supplier => (
-                                                <option key={supplier.id} value={supplier.name}>
+                                            <option value="">{loadingSuppliers ? 'Đang tải...' : 'Chọn nhà cung cấp'}</option>
+                                            {suppliers && Array.isArray(suppliers) && suppliers.length > 0 ? suppliers.map(supplier => (
+                                                <option key={supplier.id || supplier._id || supplier.name} value={supplier.name}>
                                                     {supplier.name}
                                                 </option>
-                                            ))}
+                                            )) : (
+                                                <option value="" disabled>Không có dữ liệu</option>
+                                            )}
                                         </Form.Select>
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Số hóa đơn *</Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            value={invoiceNumber}
-                                            onChange={(e) => setInvoiceNumber(e.target.value)}
-                                            placeholder="Nhập số hóa đơn"
+                                        <Form.Select
+                                            value={selectedInvoice}
+                                            onChange={(e) => handleInvoiceChange(e.target.value)}
                                             required
-                                        />
+                                            disabled={!selectedSupplier || loadingInvoices}
+                                        >
+                                            <option value="">{loadingInvoices ? 'Đang tải...' : 'Chọn số hóa đơn'}</option>
+                                            {invoices && Array.isArray(invoices) && invoices.length > 0 ? invoices.map(invoice => (
+                                                <option key={invoice._id || invoice.soHoaDon} value={invoice.soHoaDon}>
+                                                    {invoice.soHoaDon} - {formatDate(invoice.ngayKiem)}
+                                                </option>
+                                            )) : (
+                                                <option value="" disabled>Không có hóa đơn</option>
+                                            )}
+                                        </Form.Select>
                                     </Form.Group>
                                 </Card.Body>
                             </Card>
@@ -496,15 +709,21 @@ const AccountantMedicineManagement = () => {
                                         <Col md={6}>
                                             <Form.Group className="mb-2">
                                                 <Form.Label>Mã thuốc *</Form.Label>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={medicineForm.maThuoc}
-                                                    onChange={(e) => setMedicineForm({
-                                                        ...medicineForm,
-                                                        maThuoc: e.target.value
-                                                    })}
-                                                    placeholder="Mã thuốc"
-                                                />
+                                                <Form.Select
+                                                    value={selectedMedicineCode}
+                                                    onChange={(e) => {
+                                                        e.preventDefault();
+                                                        handleMedicineCodeChange(e.target.value);
+                                                    }}
+                                                    disabled={!selectedInvoice}
+                                                >
+                                                    <option value="">Chọn mã thuốc</option>
+                                                    {invoiceMedicines.map(medicine => (
+                                                        <option key={medicine._id} value={medicine.maThuoc}>
+                                                            {medicine.maThuoc} - {medicine.tenThuoc}
+                                                        </option>
+                                                    ))}
+                                                </Form.Select>
                                             </Form.Group>
                                         </Col>
                                         <Col md={6}>
@@ -518,6 +737,7 @@ const AccountantMedicineManagement = () => {
                                                         tenThuoc: e.target.value
                                                     })}
                                                     placeholder="Tên thuốc"
+                                                    readOnly
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -535,6 +755,7 @@ const AccountantMedicineManagement = () => {
                                                         soLo: e.target.value
                                                     })}
                                                     placeholder="Số lô"
+                                                    readOnly
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -548,6 +769,7 @@ const AccountantMedicineManagement = () => {
                                                         ...medicineForm,
                                                         hanDung: e.target.value
                                                     })}
+                                                    readOnly
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -565,6 +787,7 @@ const AccountantMedicineManagement = () => {
                                                         soLuongNhap: e.target.value
                                                     })}
                                                     placeholder="Số lượng"
+                                                    readOnly
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -593,6 +816,7 @@ const AccountantMedicineManagement = () => {
                                                         donViTinh: e.target.value
                                                     })}
                                                     placeholder="Viên, chai, gói..."
+                                                    readOnly
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -610,6 +834,7 @@ const AccountantMedicineManagement = () => {
                                                         giaNhap: e.target.value
                                                     })}
                                                     placeholder="Giá nhập"
+                                                    readOnly
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -719,7 +944,7 @@ const AccountantMedicineManagement = () => {
                     <Button 
                         variant="primary" 
                         onClick={handleSubmitCheck}
-                        disabled={!selectedSupplier || !invoiceNumber || checkDetails.length === 0}
+                        disabled={!selectedSupplier || !selectedInvoice || checkDetails.length === 0}
                         className="save-check-btn"
                     >
                         <i className="fas fa-save me-2"></i>

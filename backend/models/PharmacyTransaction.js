@@ -6,6 +6,14 @@ const pharmacyTransactionSchema = new mongoose.Schema({
 
   patient: { type: String, required: true },
 
+  // Thêm thông tin record bệnh án
+  record: {
+    recordId: { type: mongoose.Schema.Types.ObjectId, ref: 'Records' },
+    admissionDate: Date,
+    dischargeDate: Date,
+    admissionReason: String
+  },
+
   items: [
     {
       medicine: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine' },

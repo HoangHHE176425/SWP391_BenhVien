@@ -9,5 +9,6 @@ router.put('/medicines/:id', medicineService.updateMedicine);
 router.put('/medicines/:id/disable', medicineService.disableMedicine);
 router.post('/transactions', medicineService.processPharmacyTransaction);
 router.get('/transactions', medicineService.getTransactionHistory);
+router.get('/patients', medicineService.getPatientsByCCCD);
 
 module.exports = router;

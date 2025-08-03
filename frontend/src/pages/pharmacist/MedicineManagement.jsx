@@ -7,6 +7,7 @@ import MedicineFormModal from "../../components/pharmacist/MedicineFormModal";
 import PharmacyTransactionModal from "../../components/pharmacist/PharmacyTransactionModal";
 
 const EMPTY_MEDICINE = {
+    medicineId: "",
     name: "",
     type: "",
     group: "",
@@ -74,9 +75,9 @@ const MedicineManagement = () => {
 
         const fetchPatients = async () => {
             try {
-                const res = await axios.get(`/api/user/patients`);
-                if (Array.isArray(res.data)) {
-                    setPatients(res.data);
+                const res = await axios.get(`/api/pharmacist/patients`);
+                if (res.data && Array.isArray(res.data.patients)) {
+                    setPatients(res.data.patients);
                 } else {
                     setPatients([]);
                 }
