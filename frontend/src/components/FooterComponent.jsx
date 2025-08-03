@@ -77,9 +77,9 @@ const FooterComponent = () => {
       <Container>
         <Row className="pt-4">
           <Col lg={3} md={6} className="mb-4" style={{ paddingRight: "20px", paddingLeft: "20px" }}>
-            <h5 className="text-white mb-4">Giới Thiệu Về Kiwicare</h5>
+            <h5 className="text-white mb-4">Giới Thiệu Về Vietcare</h5>
             <p className="text-light">
-              Kiwicare là phòng khám đa khoa hàng đầu, cung cấp dịch vụ y tế toàn diện với công nghệ hiện đại và đội ngũ bác sĩ chuyên môn cao. Chúng tôi cam kết mang đến sự chăm sóc sức khỏe tận tâm và chất lượng cho mọi bệnh nhân.
+              Vietcare là phòng khám đa khoa hàng đầu, cung cấp dịch vụ y tế toàn diện với công nghệ hiện đại và đội ngũ bác sĩ chuyên môn cao. Chúng tôi cam kết mang đến sự chăm sóc sức khỏe tận tâm và chất lượng cho mọi bệnh nhân.
             </p>
           </Col>
           <Col lg={3} md={6} className="mb-4" style={{ paddingRight: "20px", paddingLeft: "20px" }}>
@@ -169,7 +169,7 @@ const FooterComponent = () => {
             </p>
             <p className="text-light">
               <MailOutlined className="text-primary me-2" />
-              contact@kiwicare.com
+              contact@Vietcare.com
             </p>
             <p className="text-light">
               <PhoneOutlined className="text-primary me-2" />
@@ -214,7 +214,7 @@ const FooterComponent = () => {
         </Row>
         <div className="text-center py-3 border-top border-light mt-4">
           <p className="mb-0">
-            © <span className="text-white">Kiwicare</span>. All Rights Reserved.
+            © <span className="text-white">Vietcare</span>. All Rights Reserved.
           </p>
         </div>
       </Container>

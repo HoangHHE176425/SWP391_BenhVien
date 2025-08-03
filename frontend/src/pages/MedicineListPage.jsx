@@ -67,7 +67,7 @@ const MedicineListPage = () => {
       <HeroBanner
         image={MEDICINE_BANNER}
         title="Danh Mục Thuốc"
-        subtitle="Tra cứu thông tin, tác dụng, chỉ định và giá thuốc tại KiwiCare"
+        subtitle="Tra cứu thông tin, tác dụng, chỉ định và giá thuốc tại Vietcare"
       />
       <div className="medicine-container">
         <div className="medicine-search-bar">

@@ -1035,64 +1035,104 @@ const payload = {
       </Modal>
 
       <Modal
-        title={`Lịch sử log - ${selectedScheduleLog?.employeeId?.name || '---'} (${selectedScheduleLog?.employeeId?.employeeCode || '—'})`}
-        open={logVisible}
-        onCancel={() => setLogVisible(false)}
-        footer={null}
-        width={600}
-      >
-        {logs.length === 0 ? (
-          <p>Không có log</p>
-        ) : (
-          <ul>
-            {logs.map((log, idx) => (
-              <li key={idx} style={{ marginBottom: 12 }}>
-                <p><strong>Thời gian:</strong> {dayjs(log.createdAt).format("DD/MM/YYYY HH:mm:ss")}</p>
-                <p><strong>Loại:</strong> {log.actionType}</p>
-                <p><strong>Người thực hiện:</strong> {log.actionBy?.name || "—"} ({log.actionBy?.employeeCode || "—"})</p>
-                {log.description && (
-                  <p><strong>Chi tiết:</strong> {log.description}</p>
-                )}
-                {log.changes && (
-                  <div>
-                    <strong>Thay đổi:</strong>
-                    <ul>
-                      {Object.entries(log.changes).map(([field, val]) => {
-                        if (field === "timeSlots") {
-                          return (
-                            <li key={field}>
-                              {field}:
-                              <ul>
-                                {val.to.map((slot, idx) => (
-                                  <li key={idx}>
-                                    {dayjs(slot.startTime).format("HH:mm")} - {dayjs(slot.endTime).format("HH:mm")} ({slot.status})
-                                  </li>
-                                ))}
-                              </ul>
+  title={
+    <>
+      <strong>Lịch sử log</strong> — {selectedScheduleLog?.employeeId?.name || '---'}{" "}
+      <span style={{ color: "#888" }}>({selectedScheduleLog?.employeeId?.employeeCode || '—'})</span>
+    </>
+  }
+  open={logVisible}
+  onCancel={() => setLogVisible(false)}
+  footer={null}
+  width={700}
+>
+  {logs.length === 0 ? (
+    <p>Không có log.</p>
+  ) : (
+    <div style={{ maxHeight: 500, overflowY: "auto" }}>
+      {logs.map((log, idx) => (
+        <div
+          key={idx}
+          style={{
+            background: "#f9f9f9",
+            padding: "16px 20px",
+            borderLeft: "4px solid #1890ff",
+            borderRadius: 6,
+            marginBottom: 16,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div style={{ marginBottom: 6 }}>
+            <strong>Thời gian:</strong>{" "}
+            <span style={{ color: "#555" }}>
+              {dayjs(log.createdAt).format("DD/MM/YYYY HH:mm:ss")}
+            </span>
+          </div>
+
+          <div style={{ marginBottom: 6 }}>
+            <strong>Loại hành động:</strong>{" "}
+            <Tag color="blue" style={{ fontWeight: "bold" }}>{log.actionType}</Tag>
+          </div>
+
+          <div style={{ marginBottom: 6 }}>
+            <strong>Người thực hiện:</strong>{" "}
+            {log.actionBy?.name || "—"}{" "}
+            <span style={{ color: "#888" }}>
+              ({log.actionBy?.employeeCode || "—"})
+            </span>
+          </div>
+
+          {log.description && (
+            <div style={{ marginBottom: 6 }}>
+              <strong>Ghi chú:</strong> {log.description}
+            </div>
+          )}
+
+          {log.changes && (
+            <div style={{ marginTop: 8 }}>
+              <strong>Thay đổi:</strong>
+              <ul style={{ paddingLeft: 20, marginTop: 4 }}>
+                {Object.entries(log.changes).map(([field, val]) => {
+                  if (field === "timeSlots") {
+                    return (
+                      <li key={field}>
+                        <strong>{field}:</strong>
+                        <ul>
+                          {val.to.map((slot, idx) => (
+                            <li key={idx}>
+                              {dayjs(slot.startTime).format("HH:mm")} - {dayjs(slot.endTime).format("HH:mm")}{" "}
+                              <Tag color={slot.status === "busy" ? "red" : "green"}>{slot.status}</Tag>
                             </li>
-                          );
-                        }
-                        const isDate = (value) => typeof value === "string" && dayjs(value).isValid();
-                        const formatValue = (value) => {
-                          if (isDate(value)) return dayjs(value).format("YYYY-MM-DD");
-                          if (typeof value === "object") return JSON.stringify(value);
-                          return value;
-                        };
-                        return (
-                          <li key={field}>
-                            {field}: {formatValue(val.from)} → {formatValue(val.to)}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
-                <hr />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Modal>
+                          ))}
+                        </ul>
+                      </li>
+                    );
+                  }
+
+                  const isDate = (value) =>
+                    typeof value === "string" && dayjs(value).isValid();
+                  const formatValue = (value) => {
+                    if (isDate(value)) return dayjs(value).format("YYYY-MM-DD");
+                    if (typeof value === "object") return JSON.stringify(value);
+                    return value;
+                  };
+
+                  return (
+                    <li key={field}>
+                      <strong>{field}:</strong> {formatValue(val.from)} →{" "}
+                      <span style={{ color: "#1890ff" }}>{formatValue(val.to)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</Modal>
+
 
 
       <Modal

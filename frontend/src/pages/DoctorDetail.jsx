@@ -115,7 +115,7 @@ const DoctorDetail = () => {
       {/* Hero Carousel */}
       <HeroBanner
         image={DEPT_BANNER}
-        title="Đội Ngũ Bác Sĩ KiwiCare"
+        title="Đội Ngũ Bác Sĩ Vietcare"
         subtitle="Những chuyên gia tận tâm vì sức khỏe của bạn"
       />
 

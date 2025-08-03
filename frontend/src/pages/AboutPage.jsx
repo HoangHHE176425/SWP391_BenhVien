@@ -19,7 +19,7 @@ const AboutPage = () => {
           <Col md={6} className="text-end">
             <small className="text-muted me-4">
               <i className="fa fa-envelope-open text-primary me-2"></i>
-              contact@kiwicare.com
+              contact@Vietcare.com
             </small>
             <small className="text-muted">
               <i className="fa fa-phone-alt text-primary me-2"></i>
@@ -36,7 +36,7 @@ const AboutPage = () => {
             <img
               src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d"
               className="d-block w-100"
-              alt="KiwiCare Banner"
+              alt="Vietcare Banner"
               style={{ objectFit: 'cover', height: '80vh', borderRadius: '8px' }}
             />
             <div
@@ -51,7 +51,7 @@ const AboutPage = () => {
                 borderRadius: '8px'
               }}
             >
-              <h1 className="display-3 fw-bold text-white mb-3">Giới Thiệu Phòng Khám KiwiCare</h1>
+              <h1 className="display-3 fw-bold text-white mb-3">Giới Thiệu Phòng Khám Vietcare</h1>
               <p className="text-white fs-5">Chăm sóc sức khỏe toàn diện với dịch vụ y tế đa chuyên khoa chất lượng cao</p>
             </div>
           </div>
@@ -67,7 +67,7 @@ const AboutPage = () => {
             <div className="col-md-6 mb-4 mb-md-0">
               <img
                 src="https://images.unsplash.com/photo-1579684453423-f84349ef60b0"
-                alt="Phòng Khám KiwiCare"
+                alt="Phòng Khám Vietcare"
                 className="img-fluid rounded shadow-lg"
                 style={{ transition: 'transform 0.3s ease', transform: 'scale(1)' }}
                 onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -75,9 +75,9 @@ const AboutPage = () => {
               />
             </div>
             <div className="col-md-6">
-              <h2 className="text-primary fw-bold mb-3">Phòng Khám Đa Khoa KiwiCare</h2>
+              <h2 className="text-primary fw-bold mb-3">Phòng Khám Đa Khoa Vietcare</h2>
               <p className="text-muted mb-4 fs-5">
-                Thành lập vào năm 2018, KiwiCare cam kết mang đến dịch vụ y tế toàn diện với các giá trị cốt lõi: chuyên nghiệp – tận tâm – hiện đại. Đội ngũ bác sĩ tại KiwiCare được đào tạo bài bản tại các trường đại học y khoa uy tín như Đại học Y Dược TP. Hồ Chí Minh, Đại học Y Hà Nội, và các tổ chức quốc tế. Với kinh nghiệm phong phú và tinh thần không ngừng đổi mới, chúng tôi đảm bảo mang đến sự an tâm và hài lòng cho mọi bệnh nhân.
+                Thành lập vào năm 2018, Vietcare cam kết mang đến dịch vụ y tế toàn diện với các giá trị cốt lõi: chuyên nghiệp – tận tâm – hiện đại. Đội ngũ bác sĩ tại Vietcare được đào tạo bài bản tại các trường đại học y khoa uy tín như Đại học Y Dược TP. Hồ Chí Minh, Đại học Y Hà Nội, và các tổ chức quốc tế. Với kinh nghiệm phong phú và tinh thần không ngừng đổi mới, chúng tôi đảm bảo mang đến sự an tâm và hài lòng cho mọi bệnh nhân.
               </p>
               <div className="row text-primary fw-semibold">
                 <div className="col-6 mb-3"><i className="fa fa-check-circle text-primary me-2"></i>Khám nội tổng quát</div>

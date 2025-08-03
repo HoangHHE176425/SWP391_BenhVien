@@ -191,7 +191,7 @@ const BlogListPage = () => {
             <img
               src="https://img4.thuthuatphanmem.vn/uploads/2020/07/05/background-y-te_034617740.jpg"
               className="d-block w-100"
-              alt="KiwiCare Doctors Banner"
+              alt="Vietcare Doctors Banner"
               style={{ objectFit: 'cover', height: '80vh' }}
             />
             <div

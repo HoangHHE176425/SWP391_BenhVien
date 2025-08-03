@@ -12,7 +12,6 @@ import {
 } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
-import AttendConfigModal from "./AttendConfigModal";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -28,46 +27,46 @@ const AttendanceManagement = () => {
   const [editingNote, setEditingNote] = useState(null);
   const [noteModal, setNoteModal] = useState(false);
   const [deadlineTime, setDeadlineTime] = useState("08:00");
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-
-  const fetchConfig = async () => {
-    try {
-      const res = await axios.get("/api/admin/attend-config");
-      setDeadlineTime(res.data.data.checkInDeadline || "08:00");
-    } catch (err) {
-      message.warning("Failed to load check-in deadline config.");
-    }
-  };
 
   const fetchAttendance = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (filters.status) params.status = filters.status;
-      if (filters.dates.length === 2) {
-        params.startDate = filters.dates[0].format("YYYY-MM-DD");
-        params.endDate = filters.dates[1].format("YYYY-MM-DD");
-      }
-      const res = await axios.get("/api/admin/attend", { params });
-      let data = res.data.data;
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token"); // ⬅️ lấy token
 
-      if (filters.employeeName) {
-        data = data.filter((rec) =>
-          rec.employeeId?.name
-            ?.toLowerCase()
-            .includes(filters.employeeName.toLowerCase())
-        );
-      }
-      setRecords(data);
-    } catch (err) {
-      message.error("Failed to fetch attendance data.");
-    } finally {
-      setLoading(false);
+    const params = {};
+    if (filters.status) params.status = filters.status;
+    if (filters.dates.length === 2) {
+      params.startDate = filters.dates[0].format("YYYY-MM-DD");
+      params.endDate = filters.dates[1].format("YYYY-MM-DD");
     }
-  };
+
+    const res = await axios.get("/api/admin/attend", {
+      headers: {
+        Authorization: `Bearer ${token}`, // ⬅️ gắn token vào header
+      },
+      params,
+    });
+
+    let data = res.data.data;
+
+    if (filters.employeeName) {
+      data = data.filter((rec) =>
+        rec.employeeId?.name
+          ?.toLowerCase()
+          .includes(filters.employeeName.toLowerCase())
+      );
+    }
+
+    setRecords(data);
+  } catch (err) {
+    message.error("Failed to fetch attendance data.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
-    fetchConfig();
     fetchAttendance();
   }, []);
 
@@ -132,9 +131,7 @@ const AttendanceManagement = () => {
       title: "Trạng Thái",
       render: (_, record) => {
         if (!record.checkInTime) {
-          const deadline = dayjs(record.date)
-            .hour(deadlineHour)
-            .minute(deadlineMinute);
+          const deadline = dayjs(`${dayjs(record.date).format("YYYY-MM-DD")}T${deadlineTime}`);
           return dayjs().isAfter(deadline) ? (
             <Tag color="red">Vắng mặt</Tag>
           ) : (
@@ -157,24 +154,32 @@ const AttendanceManagement = () => {
             setNoteModal(true);
           }}
         >
-          Chỉnh Sửa Ghi Chú
+          Xem log
         </Button>
       ),
     },
   ];
 
   const handleNoteUpdate = async () => {
-    try {
-      await axios.put(`/api/admin/attend/note/${editingNote._id}`, {
-        note: editingNote.notes,
-      });
-      message.success("Note updated");
-      setNoteModal(false);
-      fetchAttendance();
-    } catch (err) {
-      message.error("Failed to update note");
-    }
-  };
+  try {
+    const token = localStorage.getItem("token"); // ⬅️ lấy token
+
+    await axios.put(`/api/admin/attend/note/${editingNote._id}`, {
+      note: editingNote.notes,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`, // ⬅️ đính kèm token
+      },
+    });
+
+    message.success("Note updated");
+    setNoteModal(false);
+    fetchAttendance();
+  } catch (err) {
+    message.error("Failed to update note");
+  }
+};
+
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Quản Lý Điểm Danh</h2>
@@ -215,28 +220,6 @@ const AttendanceManagement = () => {
         rowKey="_id"
         loading={loading}
         pagination={{ pageSize: 10 }}
-      />
-      <Modal
-        title="Chỉnh Sửa Ghi Chú"
-        open={noteModal}
-        onOk={handleNoteUpdate}
-        onCancel={() => setNoteModal(false)}
-      >
-        <Input.TextArea
-          rows={4}
-          value={editingNote?.notes}
-          onChange={(e) =>
-            setEditingNote({ ...editingNote, notes: e.target.value })
-          }
-        />
-      </Modal>
-      <AttendConfigModal
-        open={configModalOpen}
-        onClose={() => {
-          setConfigModalOpen(false);
-          fetchConfig();
-          fetchAttendance();
-        }}
       />
     </div>
   );

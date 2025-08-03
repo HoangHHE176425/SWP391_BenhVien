@@ -36,6 +36,11 @@ const sendApplicationSchema = new mongoose.Schema({
     enum: ['pending', 'processing', 'approved', 'rejected'],
     default: 'pending',
   },
+priority: {
+  type: String,
+  enum: ['normal', 'urgent'],
+  default: 'normal',
+},
   reply: {
     type: String,
     default: '',

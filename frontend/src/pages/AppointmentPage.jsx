@@ -667,7 +667,7 @@ const AppointmentPage = () => {
           <Col md={6} className="text-end">
             <small className="text-muted me-4">
               <i className="fa fa-envelope-open text-primary me-2"></i>
-              contact@kiwicare.com
+              contact@Vietcare.com
             </small>
             <small className="text-muted">
               <i className="fa fa-phone-alt text-primary me-2"></i>
@@ -688,7 +688,7 @@ const AppointmentPage = () => {
             <img
               src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d"
               className="d-block w-100"
-              alt="KiwiCare Banner"
+              alt="Vietcare Banner"
               style={{
                 objectFit: "cover",
                 height: "80vh",
@@ -708,7 +708,7 @@ const AppointmentPage = () => {
               }}
             >
               <h1 className="display-3 fw-bold text-white mb-3">
-                Đặt Lịch Hẹn Tại KiwiCare
+                Đặt Lịch Hẹn Tại Vietcare
               </h1>
               <p className="text-white fs-5">
                 Dễ dàng đặt lịch với các bác sĩ chuyên khoa hàng đầu

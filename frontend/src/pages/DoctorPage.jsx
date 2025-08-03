@@ -83,7 +83,7 @@ const DoctorPage = () => {
       {/* Hero Carousel */}
       <HeroBanner
         image={DEPT_BANNER}
-        title="Đội Ngũ Bác Sĩ KiwiCare"
+        title="Đội Ngũ Bác Sĩ Vietcare"
         subtitle="Những chuyên gia tận tâm vì sức khỏe của bạn"
       />
 
@@ -128,7 +128,7 @@ const DoctorPage = () => {
             <Col lg={4} className="wow fadeInUp" data-wow-delay="0.1s">
               <div className="bg-light rounded h-100 p-5">
                 <h5 className="text-primary text-uppercase position-relative d-inline-block">
-                  Bác Sĩ KiwiCare
+                  Bác Sĩ Vietcare
                   <span
                     className="position-absolute top-0 start-0 translate-middle-y bg-primary w-100"
                     style={{ height: "2px" }}
