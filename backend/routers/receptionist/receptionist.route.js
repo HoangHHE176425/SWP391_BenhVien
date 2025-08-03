@@ -27,6 +27,7 @@ receptionistRouter.get('/invoices', invoiceController.getAllInvoices);
 receptionistRouter.get('/services/:invoiceId', invoiceController.getServices);
 receptionistRouter.post('/invoices', invoiceController.CreateInvoices);
 receptionistRouter.post('/appointmentinvoices', invoiceController.CreateInvoices2);
+receptionistRouter.post('/invoices-from-records', invoiceController.CreateInvoicesFromRecord);
 receptionistRouter.get("/services", invoiceController.getAllServices);
 receptionistRouter.put('/services/paid/:invoiceId', paymentController.paidServices);
 receptionistRouter.delete('/services/delete/:invoiceId', paymentController.deleteInvoice);
