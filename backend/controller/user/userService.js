@@ -6,11 +6,13 @@ const Appointment = require("../../models/Appointment");
 const Feedback = require("../../models/Feedback");
 const Schedule = require("../../models/Schedule"); // Thêm import Schedule để cập nhật timeSlot
 const mongoose = require("mongoose"); // Thêm import mongoose để sử dụng ObjectId và kiểm tra hợp lệ
-
+const Record = require("../../models/Records");
 const doctorRepo = require("../../repository/employee.repository");
 const serviceRepo = require("../../repository/service.repository");
 const departmentRepo = require("../../repository/department.repository");
 const medicineRepo = require("../../repository/medicine.repository");
+const Service = require("../../models/Service");
+const Medicine = require("../../models/Medicine");
 
 // Đặt lịch khám
 const getMyProfiles = async (req, res) => {
@@ -687,7 +689,47 @@ const getAllPatients = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
+const getAllRecords = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, identityNumber } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
+    const query = {};
+    if (identityNumber) {
+      query.identityNumber = identityNumber;
+    }
+
+    const records = await Record.find(query)
+      .populate("profileId", "name dateOfBirth gender")
+      .populate("doctorId", "name email")
+      .populate("appointmentId", "date time status")
+      .populate("services", "name price description")
+      .populate("prescription.medicine", "name type group dosage")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const total = await Record.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: records.length,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      data: records,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách bệnh án:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   getMyProfiles,
   sendQA,
@@ -707,5 +749,6 @@ module.exports = {
   createGuestFeedback,
   createOfflineAppointment,
   getAllPatients,
+  getAllRecords,
 };
 
