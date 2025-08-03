@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import moment from "moment";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import {
-  Table, Button, Input, DatePicker, Select, 
+  Table, Button, Input, DatePicker, Select,
   Space, message, Typography, Divider, Modal, Tag, Spin, Pagination
 } from "antd";
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -17,10 +16,10 @@ dayjs.extend(isSameOrBefore);
 
 function QueueManagement() {
   const [queues, setQueues] = useState([]);
-  const [filteredQueues, setFilteredQueues] = useState([]); // Thêm state filteredQueues
+  const [filteredQueues, setFilteredQueues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dateFilter, setDateFilter] = useState(null); // Sử dụng giống Receptionist, null ban đầu
+  const [dateFilter, setDateFilter] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -30,12 +29,13 @@ function QueueManagement() {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [filterDepartment, setFilterDepartment] = useState(null);
-  const [filterRole, setFilterRole] = useState('Doctor'); // Mặc định lọc Doctor
+  const [filterRole, setFilterRole] = useState('Doctor');
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [departmentDetailVisible, setDepartmentDetailVisible] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [viewQueueDoctor, setViewQueueDoctor] = useState(null);
 
-  const token = localStorage.getItem("token"); 
+  const token = localStorage.getItem("token");
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
   useEffect(() => {
@@ -44,13 +44,12 @@ function QueueManagement() {
   }, []);
 
   useEffect(() => {
-    if (selectedDoctor) {
-      fetchQueues(selectedDoctor._id);
+    if (viewQueueDoctor) {
+      fetchQueues(viewQueueDoctor._id);
     }
-  }, [selectedDoctor, currentPage]);
+  }, [viewQueueDoctor, currentPage]);
 
   useEffect(() => {
-    // Lọc queues theo dateFilter, chỉ lấy queues của selectedDoctor
     let result = queues;
     if (dateFilter) {
       result = result.filter(q =>
@@ -63,7 +62,6 @@ function QueueManagement() {
   const fetchAllDoctors = async () => {
     try {
       const res = await axios.get('/api/receptionist/employees/all');
-      // Lọc chỉ lấy employee có role 'Doctor'
       const doctorsList = res.data.filter(emp => emp.role === 'Doctor');
       setDoctors(doctorsList);
     } catch (err) {
@@ -80,7 +78,7 @@ function QueueManagement() {
         limit: itemsPerPage,
       };
       const res = await axios.get("http://localhost:9999/api/apm/queues", { params });
-      console.log("API Response for doctorId", doctorId, ":", res.data); // Debug
+      console.log("API Response for doctorId", doctorId, ":", res.data);
       setQueues(res.data.queues || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalItems(res.data.total || 0);
@@ -102,20 +100,19 @@ function QueueManagement() {
   };
 
   const handleViewQueue = (doctor) => {
-    setSelectedDoctor(doctor);
-    setDateFilter(null); // Reset dateFilter khi chuyển bác sĩ
-    fetchQueues(doctor._id);
+    setViewQueueDoctor(doctor);
+    setDateFilter(null);
   };
 
   const clearFilters = () => {
     setSearchText('');
     setFilterDepartment(null);
-    setFilterRole('Doctor'); // Reset về Doctor
+    setFilterRole('Doctor');
   };
 
   const formatDateTime = (isoString) => {
-    if (!isoString) return "";
-    return moment(isoString).format("DD/MM/YYYY HH:mm");
+    if (!isoString) return "Chưa có";
+    return dayjs(isoString).format("DD/MM/YYYY HH:mm");
   };
 
   const doctorColumns = [
@@ -174,9 +171,9 @@ function QueueManagement() {
       render: (_, __, index) => index + 1
     },
     {
-      title: 'Thứ tự',
-      dataIndex: 'position',
-      key: 'position',
+      title: 'Thời gian đặt lịch',
+      key: 'appointmentTime',
+      render: (entry) => formatDateTime(entry.appointmentId?.timeSlot?.startTime || entry.appointmentId?.appointmentDate)
     },
     {
       title: 'Bệnh nhân',
@@ -208,7 +205,8 @@ function QueueManagement() {
     <div style={{ padding: 24 }}>
       <Title level={3}>Quản lý hàng đợi</Title>
 
-      {!selectedDoctor ? (
+      {!viewQueueDoctor ? (
+        // Hiển thị danh sách bác sĩ
         <>
           <Divider />
           <Title level={4}>Danh sách bác sĩ</Title>
@@ -222,16 +220,16 @@ function QueueManagement() {
               style={{ width: 300 }}
               allowClear
             />
-            <Select
+            {/* <Select
               placeholder="Lọc theo vai trò"
               style={{ width: 200 }}
               allowClear
               value={filterRole}
               onChange={setFilterRole}
-              disabled // Mặc định Doctor, không cho đổi
+              disabled
             >
               <Option value="Doctor">Bác sĩ</Option>
-            </Select>
+            </Select> */}
             <Select
               placeholder="Lọc theo khoa"
               style={{ width: 200 }}
@@ -272,7 +270,7 @@ function QueueManagement() {
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => {
-                setSelectedDoctor(null);
+                setViewQueueDoctor(null);
                 setQueues([]);
               }}
             >
@@ -284,18 +282,18 @@ function QueueManagement() {
             <DatePicker
               placeholder="Lọc theo ngày"
               onChange={value => {
-                setDateFilter(value); // Sử dụng dayjs object trực tiếp
-                setCurrentPage(1); // Reset về trang 1 khi đổi ngày
+                setDateFilter(value);
+                setCurrentPage(1);
               }}
               style={{ width: 200 }}
               value={dateFilter}
-              allowClear // Cho phép xóa ngày
+              allowClear
             />
             <Button onClick={() => fetchQueues(selectedDoctor._id)}>Tải lại</Button>
           </Space>
 
           <Divider />
-          <Title level={4}>Hàng đợi của {selectedDoctor.name}</Title>
+          <Title level={4}>Hàng đợi của {viewQueueDoctor.name}</Title>
 
           {loading ? (
             <div style={{ textAlign: 'center', padding: '50px 0' }}>
@@ -314,11 +312,11 @@ function QueueManagement() {
             <Table
               rowKey="_id"
               dataSource={filteredQueues
-                .flatMap(q => q.queueEntries.filter(entry => 
-                  entry.doctorId?._id === selectedDoctor._id || entry.doctorId === selectedDoctor._id
+                .flatMap(q => q.queueEntries.filter(entry =>
+                  entry.doctorId?._id === viewQueueDoctor._id || entry.doctorId === viewQueueDoctor._id
                 ))}
               columns={queueColumns}
-              pagination={false} // Sử dụng phân trang riêng
+              pagination={false}
             />
           )}
 
@@ -345,7 +343,7 @@ function QueueManagement() {
             <p><strong>Email:</strong> {selectedDoctor.email}</p>
             <p><strong>Vai trò:</strong> {selectedDoctor.role}</p>
             <p><strong>Trạng thái:</strong> {selectedDoctor.status}</p>
-            <p><strong>Khoa:</strong> {selectedDoctor.department?.name || 'Không rõ'}</p>
+            {/* <p><strong>Khoa:</strong> {selectedDoctor.department?.name || 'Không rõ'}</p> */}
             <p><strong>Chuyên môn:</strong> {selectedDoctor.specialization}</p>
             <p><strong>Số điện thoại:</strong> {selectedDoctor.phone}</p>
           </div>

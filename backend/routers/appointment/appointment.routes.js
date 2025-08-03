@@ -20,7 +20,7 @@ appointmentRouter.get('/pending', apmServices.getPendingAppointments);
 
 appointmentRouter.post('/queue/push/:appointmentId', apmServices.pushToQueue);
 
-appointmentRouter.patch('/:id/status', apmServices.updateStatus);
+appointmentRouter.put('/:id/status', apmServices.updateStatus);
 
 appointmentRouter.get('/', apmServices.getAppointments);
 

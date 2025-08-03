@@ -260,7 +260,7 @@ const getFeedbacksForReceptionist = async (req, res) => {
         populate: { path: 'doctorId', select: 'name' }, 
         select: 'appointmentDate doctorId'
       })
-      .select('userId appointmentId content rating createdAt'); 
+      .select('userId appointmentId content rating createdAt guestName'); 
 
     if (feedbacks.length === 0) {
       return res.status(200).json({ message: 'No feedbacks found' }); // Không coi là lỗi, return 200 với message

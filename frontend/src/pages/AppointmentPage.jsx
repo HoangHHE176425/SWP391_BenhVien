@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Modal, Button, Table } from "react-bootstrap";
+import { Row, Col, Modal, Button, ListGroup } from "react-bootstrap";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/material_green.css";
 import "../assets/css/AppointmentPage.css";
 import axios from "axios";
 import { useAuth } from "../context/authContext";
-import moment from 'moment'; // Để xử lý ngày tuần
+import moment from 'moment';
 
 const AppointmentPage = () => {
   const { token } = useAuth();
@@ -59,11 +59,12 @@ const AppointmentPage = () => {
           id: dep._id,
           name: dep.name,
           description: dep.description,
+          icon: dep.icon || "fa fa-stethoscope", // Giả sử có trường icon
         }));
 
         setDepartmentData(departments);
       } catch (err) {
-        console.error("[ERROR] Fetch departments:", err); // Log lỗi tải departments
+        console.error("[ERROR] Fetch departments:", err);
       }
     };
 
@@ -97,11 +98,10 @@ const AppointmentPage = () => {
         setProfileId(res.data.profile._id);
         setStep("department");
       } else {
-        // Nếu chưa tồn tại, hiện modal tạo mới
         setShowCreateModal(true);
       }
     } catch (err) {
-      console.error("[ERROR] Check CCCD:", err); // Log lỗi kiểm tra CCCD
+      console.error("[ERROR] Check CCCD:", err);
       setError("Kiểm tra CCCD thất bại.");
     } finally {
       setLoading(false);
@@ -112,7 +112,6 @@ const AppointmentPage = () => {
     setLoading(true);
     setError(null);
 
-    // Validate name (không chứa số)
     const regexName = /^[a-zA-Z\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ\s]+$/;
     if (!regexName.test(profileName)) {
       setError("Tên không được chứa số, chỉ chấp nhận chữ cái và khoảng trắng.");
@@ -120,7 +119,6 @@ const AppointmentPage = () => {
       return;
     }
 
-    // Validate identityNumber (12 ký tự số)
     const regexId = /^\d{12}$/;
     if (!regexId.test(identityNumber)) {
       setError("CMND/CCCD phải là 12 ký tự số, không khoảng trắng, chữ hoặc ký tự đặc biệt.");
@@ -128,7 +126,7 @@ const AppointmentPage = () => {
       return;
     }
 
-    const regexPhone = /^(0[1-9][0-9]{8,9})$/; // Số điện thoại Việt Nam: 10-11 số, bắt đầu 0
+    const regexPhone = /^(0[1-9][0-9]{8,9})$/;
     if (!regexPhone.test(profilePhoneNumber)) {
       setError("Số điện thoại không hợp lệ (phải là 10-11 số, bắt đầu 0).");
       setLoading(false);
@@ -157,7 +155,7 @@ const AppointmentPage = () => {
       setSuccess(true);
       setStep("department");
     } catch (err) {
-      console.error("[ERROR] Create profile:", err); // Log lỗi tạo profile
+      console.error("[ERROR] Create profile:", err);
       setError("Tạo hồ sơ thất bại.");
     } finally {
       setLoading(false);
@@ -168,20 +166,20 @@ const AppointmentPage = () => {
     if (selectedDepartment) {
       const fetchDoctors = async () => {
         try {
-          console.log("[LOG] Fetching doctors for department:", selectedDepartment); // Debug
+          console.log("[LOG] Fetching doctors for department:", selectedDepartment);
           const res = await axios.get(`http://localhost:9999/api/doctor/doctor?departmentId=${selectedDepartment}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
-          console.log("[LOG] Doctors response:", res.data); // Debug response
-          setDoctors(res.data.doctors || []); // Đặt trực tiếp doctors từ response
+          console.log("[LOG] Doctors response:", res.data);
+          setDoctors(res.data.doctors || []);
         } catch (err) {
-          console.error("[ERROR] Fetch doctors:", err); // Log lỗi tải doctors
-          setDoctors([]); // Reset nếu lỗi
+          console.error("[ERROR] Fetch doctors:", err);
+          setDoctors([]);
         }
       };
       fetchDoctors();
     } else {
-      setDoctors([]); // Reset khi không có department
+      setDoctors([]);
     }
   }, [selectedDepartment, token]);
 
@@ -189,26 +187,27 @@ const AppointmentPage = () => {
     if (selectedDoctor && startWeekDate) {
       const fetchWeekSlots = async () => {
         try {
-          console.log("[LOG] Fetching week slots for doctor:", selectedDoctor, "startDate:", startWeekDate); // Debug gọi API
+          console.log("[LOG] Fetching slots for doctor:", selectedDoctor, "startDate:", startWeekDate);
           const res = await axios.get(`http://localhost:9999/api/doctor/${selectedDoctor}/slots?startDate=${startWeekDate}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
-          console.log("[LOG] Week slots response:", res.data); // Log response data
-          setWeekSlots(res.data.slots);
+          console.log("[LOG] Slots response:", res.data);
+          setWeekSlots(res.data.slots || []);
         } catch (err) {
-          console.error("[ERROR] Fetch week slots:", err); // Log lỗi tải slots
+          console.error("[ERROR] Fetch slots:", err);
+          setWeekSlots([]);
         }
       };
       fetchWeekSlots();
     }
   }, [selectedDoctor, startWeekDate, token]);
 
+  // Mock data cho cả tuần từ thứ Hai
   useEffect(() => {
     if (selectedDoctor && startWeekDate) {
       const mockSlots = [];
-
       for (let i = 0; i < 7; i++) {
         const date = moment(startWeekDate).add(i, 'days').startOf('day').toDate();
         mockSlots.push(
@@ -226,7 +225,6 @@ const AppointmentPage = () => {
           }
         );
       }
-
       setWeekSlots(mockSlots);
     }
   }, [selectedDoctor, startWeekDate]);
@@ -241,8 +239,12 @@ const AppointmentPage = () => {
       return;
     }
 
-    // Kiểm tra mã BHYT nếu chọn "Có"
-    if (hasBhyt === "Có" && bhytCode) {
+    if (hasBhyt === "Có") {
+      if (!bhytCode) {
+        setError("Vui lòng nhập mã BHYT.");
+        setLoading(false);
+        return;
+      }
       const bhytCodeRegex = /^[A-Z]{2}\d{13}$/;
       if (!bhytCodeRegex.test(bhytCode)) {
         setError("Mã BHYT phải có định dạng 2 chữ cái in hoa + 13 số.");
@@ -251,8 +253,7 @@ const AppointmentPage = () => {
       }
     }
 
-
-    const standardizedStart = moment.utc(selectedSlot.startTime).toISOString(); // UTC chuẩn
+    const standardizedStart = moment.utc(selectedSlot.startTime).toISOString();
     const standardizedEnd = moment.utc(selectedSlot.endTime).toISOString();
 
     try {
@@ -272,27 +273,27 @@ const AppointmentPage = () => {
         room: ""
       };
 
-      console.log("[LOG] Creating appointment with payload:", payload); // Log payload trước khi gửi
-
-      // Chỉ thêm bhytCode nếu người dùng chọn "Có"
       if (hasBhyt === "Có" && bhytCode) {
         payload.bhytCode = bhytCode;
       }
 
+      console.log("[LOG] Creating appointment with payload:", payload);
+
       const res = await axios.post(
-        "http://localhost:9999/api/user/create", payload
-        , {
+        "http://localhost:9999/api/user/create",
+        payload,
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      console.log("[LOG] Create appointment success:", res.data); // Log response thành công
+      console.log("[LOG] Create appointment success:", res.data);
       setSuccess(true);
       setStep("confirm");
     } catch (err) {
-      console.error("[ERROR] Create appointment:", err.response?.data || err); // Log chi tiết lỗi API
+      console.error("[ERROR] Create appointment:", err.response?.data || err);
       setError("Đặt lịch thất bại.");
     } finally {
       setLoading(false);
@@ -329,7 +330,6 @@ const AppointmentPage = () => {
               </button>
             </div>
 
-            {/* Modal tạo Profile mới */}
             <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
               <Modal.Header closeButton>
                 <Modal.Title>Tạo Hồ Sơ Mới</Modal.Title>
@@ -364,8 +364,8 @@ const AppointmentPage = () => {
                     className="form-control"
                     value={profileDateOfBirth}
                     onChange={(e) => setProfileDateOfBirth(e.target.value)}
-                    max={moment().format('YYYY-MM-DD')} // Giới hạn tối đa là hôm nay
-                    min={moment().subtract(120, 'years').format('YYYY-MM-DD')} // Giới hạn tối thiểu 120 năm trước
+                    max={moment().format('YYYY-MM-DD')}
+                    min={moment().subtract(120, 'years').format('YYYY-MM-DD')}
                     required
                   />
                 </div>
@@ -400,14 +400,18 @@ const AppointmentPage = () => {
             <Row>
               {departmentData.map((dep) => (
                 <Col key={dep.id} md={6} className="mb-4">
-                  <label
-                    className={`border p-4 rounded text-center cursor-pointer hover:bg-light ${selectedDepartment === dep.id ? "border-primary" : ""}`}
+                  <div
+                    className={`department-card p-4 rounded shadow-sm text-center cursor-pointer position-relative ${selectedDepartment === dep.id ? "selected" : ""
+                      }`}
                     onClick={() => setSelectedDepartment(dep.id)}
                   >
-                    <input type="radio" name="department" className="d-none" />
+                    <i className={`${dep.icon} fa-2x text-primary mb-3`}></i>
                     <h5 className="fw-semibold">{dep.name}</h5>
                     {dep.description && <p className="text-muted small mb-0">{dep.description}</p>}
-                  </label>
+                    {selectedDepartment === dep.id && (
+                      <i className="fas fa-check-circle text-success position-absolute" style={{ top: '10px', right: '10px', fontSize: '1.5rem' }}></i>
+                    )}
+                  </div>
                 </Col>
               ))}
             </Row>
@@ -449,7 +453,7 @@ const AppointmentPage = () => {
                         )}
                       </div>
                       <h5 className="doctor-name">{doctor.name}</h5>
-                      <p className="doctor-degree">{doctor.specialization || "Chưa có chuyên môn"}</p> {/* Sử dụng specialization */}
+                      <p className="doctor-degree">{doctor.specialization || "Chưa có chuyên môn"}</p>
                       <p className="doctor-experience">{doctor.expYear || "Chưa cập nhật"} năm kinh nghiệm</p>
                     </label>
                   </Col>
@@ -476,78 +480,59 @@ const AppointmentPage = () => {
           <div className="p-4 bg-white rounded shadow-sm">
             <h3 className="text-primary fw-bold mb-4">Chọn Ngày và Giờ</h3>
             <div className="mb-3">
-              <label className="form-label">Chọn ngày bắt đầu (từ thứ 2)</label>
-              <input
-                type="date"
+              <label className="form-label">Chọn ngày bắt đầu (Thứ Hai)</label>
+              <Flatpickr
                 className="form-control"
                 value={defaultStartDate}
-                onChange={(e) => {
-                  const selectedDate = moment(e.target.value);
-                  if (selectedDate.isoWeekday() !== 1) {
-                    setError("Vui lòng chọn ngày thứ 2 để hiển thị tuần.");
-                  } else {
-                    setError(null); // Xóa lỗi khi chọn đúng thứ 2
-                    setStartWeekDate(selectedDate.format('YYYY-MM-DD'));
-                    // fetchWeekSlots(); // Reload slot khi thay đổi ngày hợp lệ
+                options={{
+                  dateFormat: "Y-m-d",
+                  minDate: moment().isoWeekday(1).format('YYYY-MM-DD'),
+                  disable: [
+                    function (date) {
+                      return date.getDay() !== 1; // Chỉ cho phép chọn thứ Hai
+                    }
+                  ],
+                  locale: {
+                    firstDayOfWeek: 1 // Bắt đầu tuần từ thứ Hai
                   }
                 }}
-                min={moment().isoWeekday(1).format('YYYY-MM-DD')}
+                onChange={([date]) => {
+                  const selectedDate = moment(date).format('YYYY-MM-DD');
+                  setStartWeekDate(selectedDate);
+                }}
               />
             </div>
             {weekSlots.length === 0 ? (
-              <p className="text-muted">Không có slot available cho ngày đã chọn.</p>
+              <p className="text-muted">Không có slot khả dụng cho tuần đã chọn.</p>
             ) : (
-              <Table striped bordered hover className="custom-slot-table">
-                <thead>
-                  <tr>
-                    {Array.from({ length: 7 }).map((_, dayIdx) => {
-                      const dayDate = moment(defaultStartDate).add(dayIdx, 'days');
-                      const dayFormatted = dayDate.isoWeekday() >= 1 && dayDate.isoWeekday() <= 7
-                        ? dayDate.format('dddd (DD/MM/YYYY)')
-                        : null;
-                      return (
-                        <th key={dayIdx} className="text-center bg-primary text-white">
-                          {dayFormatted || "Không hiển thị"}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {Array.from({ length: 7 }).map((_, dayIdx) => {
-                      const dayDate = moment(defaultStartDate).add(dayIdx, 'days').format('YYYY-MM-DD');
-                      const daySlots = weekSlots
-                        .filter(slot => moment(slot.date).format('YYYY-MM-DD') === dayDate)
-                        .filter(slot => slot.status === "Available") // Chỉ hiển thị slot Available
-                        .filter(slot => moment(slot.date).isSameOrAfter(now, 'day'))
-                        .filter(slot => moment(slot.startTime).isAfter(twoHoursLater));
-                      return (
-                        <td key={dayIdx} className="align-middle">
-                          {daySlots.length === 0 ? (
-                            <p className="text-muted text-center">Không có slot khả dụng</p>
-                          ) : (
-                            daySlots.map((slot, slotIdx) => (
-                              <div key={slotIdx} className="form-check mb-2">
-                                <input
-                                  type="radio"
-                                  className="form-check-input"
-                                  checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
-                                  onChange={() => setSelectedSlot(slot)}
-                                  disabled={moment(slot.date).isBefore(now, 'day') || slot.status !== "Available"}
-                                />
-                                <label className="form-check-label">
-                                  {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
-                                </label>
-                              </div>
-                            ))
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </Table>
+              <ListGroup className="slot-list">
+                {weekSlots
+                  .filter(slot => moment(slot.date).isSameOrAfter(now, 'day'))
+                  .filter(slot => moment(slot.startTime).isAfter(twoHoursLater))
+                  .filter(slot => slot.status === "Available")
+                  .sort((a, b) => moment(a.date).diff(moment(b.date)) || moment(a.startTime).diff(moment(b.startTime)))
+                  .map((slot, slotIdx) => (
+                    <ListGroup.Item
+                      key={slotIdx}
+                      action
+                      active={selectedSlot && selectedSlot.startTime === slot.startTime}
+                      onClick={() => setSelectedSlot(slot)}
+                      className="d-flex align-items-center slot-item"
+                    >
+                      <input
+                        type="radio"
+                        className="form-check-input me-3"
+                        checked={selectedSlot ? selectedSlot.startTime === slot.startTime : false}
+                        onChange={() => setSelectedSlot(slot)}
+                        disabled={moment(slot.date).isBefore(now, 'day') || slot.status !== "Available"}
+                      />
+                      <span>
+                        {moment(slot.startTime).format('HH:mm')} - {moment(slot.endTime).format('HH:mm')}
+                        ({moment(slot.date).format('dddd, DD/MM/YYYY')})
+                      </span>
+                    </ListGroup.Item>
+                  ))}
+              </ListGroup>
             )}
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             <div className="d-flex justify-content-between mt-4">
@@ -560,6 +545,7 @@ const AppointmentPage = () => {
             </div>
           </div>
         );
+
       case "details":
         return (
           <div className="p-4 bg-white rounded shadow-sm">
@@ -586,7 +572,7 @@ const AppointmentPage = () => {
                   checked={hasBhyt === "Có"}
                   onChange={(e) => {
                     setHasBhyt(e.target.value);
-                    if (e.target.value === "Không") setBhytCode(""); // Xóa mã BHYT nếu chọn "Không"
+                    if (e.target.value === "Không") setBhytCode("");
                   }}
                 />
                 <label className="form-check-label" htmlFor="hasBhytYes">
@@ -631,6 +617,7 @@ const AppointmentPage = () => {
             </div>
           </div>
         );
+
       case "confirm":
         return (
           <div className="p-4 bg-white rounded shadow-sm text-center">

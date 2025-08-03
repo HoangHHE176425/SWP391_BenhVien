@@ -1,28 +1,27 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Table, Spinner, Alert, Form, Button, Modal } from "react-bootstrap";
+import { Table, Spinner, Alert, Form, Button, Modal, Row, Col } from "react-bootstrap";
 
 const FeedbackList = () => {
   const [feedbacks, setFeedbacks] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // Để tìm theo tên bác sĩ
+  const [searchTerm, setSearchTerm] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('all'); // State mới cho bộ lọc theo rating
   const [searchTriggered, setSearchTriggered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // State mới cho modal gửi feedback
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedbackData, setFeedbackData] = useState({ guestName: "", guestEmail: "", doctorId: "", content: "", rating: 5 });
-  const [doctors, setDoctors] = useState([]) // Sửa typo: thiếu dấu chấm phẩy ở code gốc, nhưng không ảnh hưởng lỗi.
+  const [feedbackData, setFeedbackData] = useState({ guestName: "", guestEmail: "", content: "", rating: 5 });
+  const [stats, setStats] = useState({ total: 0, averageRating: 0.0, positivePercentage: 0.0 }); // State mới cho thống kê
 
   const fetchFeedbacks = async () => {
     try {
-      const res = await axios.get("http://localhost:9999/api/staff/feedback");
-      // SỬA: Đảm bảo setFeedbacks luôn array, dù res.data là gì (object, null, undefined)
-      setFeedbacks(Array.isArray(res.data) ? res.data : []);
+      const res = await axios.get("http://localhost:9999/api/receptionist/feedback");
+      const data = Array.isArray(res.data) ? res.data : [];
+      setFeedbacks(data);
     } catch (err) {
       console.error("Lỗi lấy dữ liệu phản hồi:", err);
       setError("Không thể tải phản hồi.");
-      setFeedbacks([]); // SỬA: Set [] nếu error, tránh undefined
+      setFeedbacks([]);
     } finally {
       setLoading(false);
     }
@@ -33,45 +32,49 @@ const FeedbackList = () => {
     fetchFeedbacks();
   }, []);
 
+  // Tính toán thống kê khi feedbacks thay đổi
   useEffect(() => {
-    if (showFeedbackModal) { // Chỉ fetch khi mở modal để tối ưu
-      const fetchDoctors = async () => {
-        try {
-          const res = await axios.get("http://localhost:9999/api/doctor/doctor"); 
-          setDoctors(Array.isArray(res.data) ? res.data : []); // SỬA tương tự: Đảm bảo doctors luôn array
-        } catch (err) {
-          console.error("Lỗi lấy danh sách bác sĩ:", err);
-          alert("Không thể tải danh sách bác sĩ. Bạn có thể bỏ qua field này.");
-          setDoctors([]); // Fallback
-        }
-      };
-      fetchDoctors();
+    if (feedbacks.length > 0) {
+      const total = feedbacks.length;
+      const totalRating = feedbacks.reduce((sum, fb) => sum + fb.rating, 0);
+      const averageRating = (totalRating / total).toFixed(1);
+      const positiveCount = feedbacks.filter((fb) => fb.rating >= 4).length;
+      const positivePercentage = ((positiveCount / total) * 100).toFixed(1);
+      setStats({ total, averageRating, positivePercentage });
+    } else {
+      setStats({ total: 0, averageRating: 0.0, positivePercentage: 0.0 });
     }
-  }, [showFeedbackModal]);
+  }, [feedbacks]);
 
-  // Filter feedbacks theo tên bác sĩ (chỉ khi searchTriggered = true)
-  const filteredFeedbacks = searchTriggered
-    ? (Array.isArray(feedbacks) ? feedbacks.filter(fb => fb.appointmentId?.doctorId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) : []) // SỬA: Đảm bảo filter trên array, fallback []
-    : (Array.isArray(feedbacks) ? feedbacks : []); // SỬA: Luôn trả array
+  // Filter feedbacks theo tên bác sĩ và rating
+  const filteredFeedbacks = feedbacks.filter(fb => {
+    const matchesDoctor = searchTriggered ? fb.appointmentId?.doctorId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) : true;
+    const matchesRating = ratingFilter === 'all' ? true : fb.rating === parseInt(ratingFilter, 10);
+    return matchesDoctor && matchesRating;
+  });
 
-  // Mở modal gửi feedback
   const openFeedbackModal = () => {
     setShowFeedbackModal(true);
   };
 
-  // Gửi feedback (guest, không cần token)
   const handleSendFeedback = async () => {
-    if (!feedbackData.content || feedbackData.rating < 1 || feedbackData.rating > 5) {
+    if (!feedbackData.content) {
       alert("Vui lòng điền nội dung và đánh giá hợp lệ!");
       return;
     }
 
+    // Kiểm tra content không chứa số
+    if (!/^[^\d]*$/.test(feedbackData.content)) {
+      alert("Nội dung đánh giá không được chứa số!");
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:9999/api/user/feedback/guest", feedbackData); // API public, không token
+      await axios.post("http://localhost:9999/api/user/feedback/guest", feedbackData);
       alert("Gửi feedback thành công!");
       setShowFeedbackModal(false);
-      setFeedbackData({ guestName: "", guestEmail: "", doctorId: "", content: "", rating: 5 }); // Reset form
-      fetchFeedbacks(); // Refresh danh sách feedbacks sau khi gửi
+      setFeedbackData({ guestName: "", guestEmail: "", content: "", rating: 5 });
+      window.location.reload(); // Reload trang sau khi gửi thành công
     } catch (err) {
       console.error("Gửi feedback thất bại:", err);
       alert("Gửi feedback thất bại. Vui lòng thử lại.");
@@ -83,13 +86,13 @@ const FeedbackList = () => {
       alert("Vui lòng nhập tên bác sĩ để tìm!");
       return;
     }
-    setSearchTriggered(true); // Kích hoạt filter
+    setSearchTriggered(true);
   };
 
-  // Hàm bấm nút Reset (mới): Clear và hiển thị hết
   const handleReset = () => {
     setSearchTerm('');
-    setSearchTriggered(false); // Tắt filter, hiển thị hết
+    setRatingFilter('all'); // Reset cả bộ lọc rating
+    setSearchTriggered(false);
   };
 
   if (loading) return <Spinner animation="border" variant="primary" />;
@@ -99,11 +102,28 @@ const FeedbackList = () => {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="text-primary fw-bold">Phản Hồi Của Khách Hàng</h2>
-        {/* Button gửi feedback (giữ nguyên) */}
         <Button variant="primary" onClick={openFeedbackModal}>Gửi Feedback</Button>
       </div>
 
-      {/* Input tìm theo tên bác sĩ + nút Tìm và Reset (mới) */}
+      {/* Thống kê nhanh */}
+      <Row className="mb-4">
+        <Col md={4}>
+          <Alert variant="info">
+            <strong>Tổng số feedback:</strong> {stats.total}
+          </Alert>
+        </Col>
+        <Col md={4}>
+          <Alert variant="info">
+            <strong>Số feedback trung bình:</strong> {stats.averageRating} sao
+          </Alert>
+        </Col>
+        <Col md={4}>
+          <Alert variant="info">
+            <strong>Tỉ lệ feedback tích cực:</strong> {stats.positivePercentage}%
+          </Alert>
+        </Col>
+      </Row>
+
       <Form.Group className="mb-4 d-flex align-items-end">
         <div style={{ flex: 1 }}>
           <Form.Label>Tìm theo tên bác sĩ:</Form.Label>
@@ -111,14 +131,28 @@ const FeedbackList = () => {
             type="text"
             placeholder="Nhập tên bác sĩ..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} // Chỉ update state, không filter ngay
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="primary" className="ms-2" onClick={handleSearch}>Tìm</Button> {/* Nút Tìm mới */}
-        <Button variant="secondary" className="ms-2" onClick={handleReset}>Reset</Button> {/* Nút Reset mới */}
+        <div className="ms-3" style={{ width: 200 }}>
+          <Form.Label>Lọc theo đánh giá:</Form.Label>
+          <Form.Select
+            value={ratingFilter}
+            onChange={(e) => setRatingFilter(e.target.value)}
+          >
+            <option value="all">Tất cả</option>
+            <option value="5">5 sao</option>
+            <option value="4">4 sao</option>
+            <option value="3">3 sao</option>
+            <option value="2">2 sao</option>
+            <option value="1">1 sao</option>
+          </Form.Select>
+        </div>
+        <Button variant="primary" className="ms-2" onClick={handleSearch}>Tìm</Button>
+        <Button variant="secondary" className="ms-2" onClick={handleReset}>Reset</Button>
       </Form.Group>
 
-      {filteredFeedbacks.length === 0 ? ( // SỬA: Không cần check Array.isArray vì đã fallback ở trên, nhưng length an toàn vì array rỗng có length=0
+      {filteredFeedbacks.length === 0 ? (
         <Alert variant="info">Không có phản hồi nào phù hợp.</Alert>
       ) : (
         <div className="table-responsive">
@@ -134,7 +168,7 @@ const FeedbackList = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredFeedbacks.map((fb) => ( // Giữ nguyên, giờ filteredFeedbacks luôn array nên an toàn
+              {filteredFeedbacks.map((fb) => (
                 <tr key={fb._id}>
                   <td>Ẩn danh</td>
                   <td>{fb.content}</td>
@@ -149,7 +183,6 @@ const FeedbackList = () => {
         </div>
       )}
 
-      {/* Modal gửi feedback*/}
       <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Gửi Feedback</Modal.Title>
@@ -164,18 +197,6 @@ const FeedbackList = () => {
                 onChange={(e) => setFeedbackData({ ...feedbackData, guestName: e.target.value })}
                 placeholder="Nhập Họ và Tên"
               />
-            </Form.Group>
-            <Form.Group className="mt-3">
-              <Form.Label>Bác Sĩ (tùy chọn)</Form.Label>
-              <Form.Select
-                value={feedbackData.doctorId}
-                onChange={(e) => setFeedbackData({ ...feedbackData, doctorId: e.target.value })} // Set doctorId khi chọn
-              >
-                <option value="">Chọn bác sĩ...</option> {/* Option default, doctorId rỗng */}
-                {doctors.map((doc) => ( // Giữ nguyên, giờ doctors luôn array
-                  <option key={doc._id} value={doc._id}>{doc.name}</option> // Value = _id (ID), text = name
-                ))}
-              </Form.Select>
             </Form.Group>
             <Form.Group className="mt-3">
               <Form.Label>Nội dung</Form.Label>

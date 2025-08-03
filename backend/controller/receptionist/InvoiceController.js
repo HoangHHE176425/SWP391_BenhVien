@@ -3,6 +3,10 @@ const Invoice = require('../../models/Invoice');
 const Payment = require('../../models/Payment');
 const Service = require('../../models/Service');
 const User = require('../../models/User');
+const Record = require("../../models/Records");
+const Medicine = require("../../models/Medicine");
+
+
 exports.getAllInvoices = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
@@ -10,23 +14,16 @@ exports.getAllInvoices = async (req, res) => {
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // if (!req.user) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: 'Vui lòng đăng nhập để truy cập'
-    //   });
-    // }
+  const invoices = await Invoice.find()
+    .populate('profileId', 'name')
+    .populate('services', 'name price description')
+    .populate('medicines.medicine', 'name unitPrice')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limitNum);
 
-    // const invoices = await Invoice.find({ userId: req.user.id })
-    const invoices = await Invoice.find()
-      .populate('userId', 'name email')
-      .populate('profileId', 'name')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum);
+    const total = await Invoice.countDocuments();
 
-    // const total = await Invoice.countDocuments({ userId: req.user.id });
-    const total = await Invoice.countDocuments()
     res.status(200).json({
       success: true,
       count: invoices.length,
@@ -44,6 +41,7 @@ exports.getAllInvoices = async (req, res) => {
     });
   }
 };
+
 exports.getAllInvoices4User = async (req, res) => {
   try {
     const {
@@ -85,11 +83,11 @@ exports.getAllInvoices4User = async (req, res) => {
     sortQuery[sort] = order === 'asc' ? 1 : -1;
 
     // ===== 3. Query với sort ==========
-    const invoices = await Invoice.find(query)
-      .populate('userId', 'name email')
+    const invoices = await Invoice.find()
       .populate('profileId', 'name')
-      .populate('services', 'name price')
-      .sort(sortQuery)
+      .populate('services', 'name price description')
+      .populate('medicines.medicine', 'name price')
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum);
 
@@ -301,3 +299,152 @@ exports.CreateInvoices2 = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi tạo hóa đơn" });
   }
 };
+// controller/recordController.js
+exports.getAllRecords = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, identityNumber } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const query = {};
+    if (identityNumber) {
+      query.identityNumber = identityNumber;
+    }
+
+    const records = await Record.find(query)
+      .populate('profileId', 'name dateOfBirth gender')
+      .populate('doctorId', 'name email')
+      .populate('appointmentId', 'date time status')
+      .populate('services', 'name price')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const total = await Record.countDocuments(query);
+
+    return res.status(200).json({
+      success: true,
+      count: records.length,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      data: records
+    });
+  } catch (error) {
+    console.error("Error fetching records:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+exports.CreateInvoicesFromRecord = async (req, res) => {
+    console.log("📥 Đã vào CreateInvoicesFromRecord");
+  console.log("📄 Body:", req.body);
+  const { recordIds = [] } = req.body;
+
+  console.log("➡️ Bắt đầu tạo hóa đơn từ recordIds:", recordIds);
+
+  if (!Array.isArray(recordIds) || recordIds.length === 0) {
+    return res.status(400).json({ message: "Thiếu recordIds" });
+  }
+
+  try {
+    const invoices = [];
+
+    for (const recordId of recordIds) {
+      try {
+        console.log("🔍 Đang xử lý recordId:", recordId);
+
+        const record = await Record.findById(recordId)
+          .populate('services', 'name price')
+          .populate('prescription.medicine', 'name unitPrice')
+          .populate('profileId', '_id');
+
+        console.log("📋 Record trả về:", record);
+
+
+        if (!record) {
+          console.warn("⚠️ Không tìm thấy record:", recordId);
+          continue;
+        }
+
+        console.log("📝 record:", JSON.stringify(record, null, 2));
+
+        if (!record.profileId || !record.profileId._id) {
+          console.warn("⚠️ Thiếu profileId trong record:", recordId);
+          continue;
+        }
+
+        console.log("✅ profileId:", record.profileId._id);
+
+        const prescription = Array.isArray(record.prescription) ? record.prescription : [];
+        const services = Array.isArray(record.services) ? record.services : [];
+
+        console.log("📦 prescription:", prescription);
+        console.log("🔧 services:", services);
+
+        // Tổng tiền thuốc
+        const medicineTotal = prescription.reduce((sum, item) => {
+          const price = item?.medicine?.unitPrice || 0;
+          const qty = item?.quantity || 0;
+          return sum + price * qty;
+        }, 0);
+
+        // Tổng tiền dịch vụ
+        const serviceTotal = services.reduce((sum, item) => {
+          const price = item?.price || 0;
+          return sum + price;
+        }, 0);
+
+        const totalAmount = medicineTotal + serviceTotal;
+        console.log(`💰 Tổng tiền: thuốc=${medicineTotal}, dịch vụ=${serviceTotal}, tổng=${totalAmount}`);
+
+        const invoice = new Invoice({
+          profileId: record.profileId._id,
+          recordIds: [record._id],
+          services: services.map(s => s._id),
+          medicines: prescription.map(item => ({
+            medicine: item.medicine?._id,
+            quantity: item.quantity || 0
+          })),
+          invoiceNumber: "INV-" + Math.floor(1000 + Math.random() * 9000),
+          totalAmount,
+          status: "Pending",
+        });
+
+        console.log("📄 Dữ liệu hóa đơn chuẩn bị lưu:", invoice);
+
+        await invoice.save();
+        console.log("✅ Hóa đơn đã lưu:", invoice.invoiceNumber);
+
+        // Cập nhật trạng thái record
+        record.isPaid = true;
+        record.paymentStatus = "paid";
+        record.status = "done";
+        record.paidAt = new Date();
+        await record.save();
+
+        console.log("📌 Đã cập nhật trạng thái record:", record._id);
+        invoices.push(invoice);
+      } catch (err) {
+        console.error("🔥 Lỗi khi xử lý recordId:", recordId);
+        console.error(err);
+      }
+    }
+
+    return res.status(200).json({
+      message: "Tạo hóa đơn thành công",
+      invoices
+    });
+
+    } catch (error) {
+    console.error("💥 Lỗi tổng thể khi tạo hóa đơn:", error); // Ghi log đầy đủ
+    return res.status(500).json({
+      message: "Lỗi server khi tạo hóa đơn",
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
+
+

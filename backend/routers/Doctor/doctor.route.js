@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {getDoctorsByDepartment, getAvailableSlotsInWeek} = require("../../controller/doctor/doctorService");
+const {getDoctorsByDepartment, getAvailableSlotsInWeek, getAllDoctors} = require("../../controller/doctor/doctorService");
 
 // Route mẫu
 router.get("/", (req, res) => {
@@ -32,5 +32,7 @@ router.put("/:id", profileController.updateProfileById);
 
 // Xoá hồ sơ theo ID
 router.delete("/:id", profileController.deleteProfileById);
+
+router.get("/doctors", getAllDoctors);
 
 module.exports = router;

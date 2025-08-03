@@ -363,7 +363,6 @@ useEffect(() => {
             <Route path="news" element={<NewsManagement />} />
             <Route path="add/medicalrecords" element={<AddMedicalRecord />} />
             <Route path="view/medicalrecords" element={<ViewMedicalRecords />} />
-            <Route path="feedback" element={<FeedbackManagement />} />
             <Route path="qna" element={<QnAView />} />
             <Route path="appointments" element={<AppointmentScheduleManagement />} />
             <Route path="notifications" element={<NotificationManagement />} />
@@ -407,6 +406,7 @@ useEffect(() => {
             <Route path="attendance" element={<HrmanagerAttendance />} />
             <Route path="schedule" element={<ReceptionistScheduleManager />} />
             <Route path="sendApplicationManager" element={<SendApplicationManager />} />
+            <Route path="feedback" element={<FeedbackManagement />} />
           </Route>
 
           {/* Accountant Routes */}
