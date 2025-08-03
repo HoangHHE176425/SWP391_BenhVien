@@ -84,7 +84,6 @@ const AccountantSidebar = () => {
           ...styles.link,
           cursor: "pointer",
           color: "#ddd",
-          marginTop: "auto",
         }}
       >
         <span style={styles.icon}>
