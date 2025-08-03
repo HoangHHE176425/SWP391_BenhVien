@@ -161,7 +161,8 @@ const LoginPage = () => {
   <GoogleLogin
   onSuccess={async (credentialResponse) => {
     try {
-      const decoded = jwtDecode(credentialResponse.credential); // ✅
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log("[GoogleLogin] JWT đã giải mã:", decoded);
 
       const res = await fetch("http://localhost:9999/api/auth/google-login", {
         method: "POST",
@@ -170,8 +171,28 @@ const LoginPage = () => {
       });
 
       const data = await res.json();
+      console.log("[GoogleLogin] Phản hồi từ server:", data);
 
       if (res.ok) {
+        if (data.shouldRegister || data.needComplete) {
+          Modal.info({
+            title: "Tài khoản Google chưa được đăng ký",
+            content: "Vui lòng đăng ký để sử dụng hệ thống.",
+            onOk: () => {
+              localStorage.setItem(
+                "googleRegisterData",
+                JSON.stringify({
+                  email: data.email || decoded.email,
+                  name: data.name || decoded.name,
+                  picture: decoded.picture || "",
+                })
+              );
+              navigate("/register"); // hoặc "/complete-profile"
+            },
+          });
+          return;
+        }
+
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("token", data.token);
         login(data.user, data.token);
@@ -198,6 +219,7 @@ const LoginPage = () => {
     });
   }}
 />
+
 
 
 </div>
