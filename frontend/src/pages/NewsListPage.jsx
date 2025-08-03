@@ -207,7 +207,7 @@ const NewsListPage = () => {
             <img
               src="https://kientrucbenhvien.com/wp-content/uploads/2019/12/thiet-ke-noi-that-phong-kham-da-khoa-son-duong-04.jpg"
               className="d-block w-100"
-              alt="KiwiCare Doctors Banner"
+              alt="Vietcare Doctors Banner"
               style={{ objectFit: "cover", height: "80vh" }}
             />
             <div
