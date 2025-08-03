@@ -14,7 +14,7 @@ const DoctorAppointments = () => {
     total: 0,
     showSizeChanger: false, // Tắt thay đổi pageSize
   });
-  const [selectedDate, setSelectedDate] = useState(new Date('2025-08-02')); // Ngày mặc định
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const doctor = JSON.parse(localStorage.getItem("user"));
 
   // Hàm debounce tự viết
@@ -75,10 +75,15 @@ const DoctorAppointments = () => {
 
         if (res.data && Array.isArray(res.data.appointments)) {
           const { appointments } = res.data;
-          // Lọc lại ở client để đảm bảo chỉ hiển thị trạng thái mong muốn
-          const filteredAppointments = appointments.filter(appt =>
-            ['confirmed', 'waiting_for_doctor'].includes(appt.status)
-          );
+          // Lọc lại ở client để đảm bảo chỉ hiển thị trạng thái mong muốn và doctorId phù hợp
+          const filteredAppointments = appointments.filter(appt => {
+            const isValidStatus = ['confirmed', 'waiting_for_doctor'].includes(appt.status);
+            const isValidDoctor = appt.doctorId?._id === doctorId; // Sửa: So sánh với appt.doctorId._id
+            if (!isValidDoctor) {
+              console.warn(`Lịch hẹn có doctorId không khớp: appt.doctorId._id = ${appt.doctorId?._id}, doctorId mong đợi = ${doctorId}`, appt);
+            }
+            return isValidStatus && isValidDoctor;
+          });
           setAppointments(filteredAppointments);
           // Tổng số chỉ tính lịch hẹn hiển thị
           setPagination((prev) => ({
