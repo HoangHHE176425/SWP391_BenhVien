@@ -267,9 +267,10 @@ module.exports.delEmployees = async (req, res) => {
 };
 
 module.exports.getDoctorsByDepartment = async (req, res) => {
-    const { departmentId } = req.query;
+    const { departmentId, services } = req.query;
 
     try {
+        console.log(services);
         const doctors = await Employee.find({ role: 'Doctor', ...(departmentId && {department: departmentId}) }).select('name _id specialization');
         res.json({ doctors });
     } catch (error) {
