@@ -56,9 +56,12 @@ const CompleteProfilePage = () => {
     return;
   }
   if (password.length < 6) {
-  Modal.warning({ title: "Mật khẩu quá ngắn", content: "Mật khẩu phải có ít nhất 6 ký tự." });
-  return;
-}
+    Modal.warning({
+      title: "Mật khẩu quá ngắn",
+      content: "Mật khẩu phải có ít nhất 6 ký tự.",
+    });
+    return;
+  }
   // Kiểm tra mật khẩu khớp
   if (password !== confirmPassword) {
     Modal.error({
@@ -87,7 +90,7 @@ const CompleteProfilePage = () => {
     }
 
     // 2. Gửi yêu cầu hoàn tất hồ sơ
-    const res = await fetch("http://localhost:9999/api/auth/google-complete-register", {
+    const res = await fetch("http://localhost:9999/api/auth/complete-profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, name, phone, password }),
