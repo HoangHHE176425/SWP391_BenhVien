@@ -1,39 +1,39 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import RemoveIcon from "@mui/icons-material/Remove";
 import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Pagination,
+  Paper,
+  Select,
+  Snackbar,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Button,
-  TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  DialogContentText,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  FormControlLabel,
-  Checkbox,
-  Tab,
   Tabs,
-  Box,
-  IconButton,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  Pagination,
+  TextField,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../assets/css/BlogManagement.css";
 
@@ -565,7 +565,6 @@ const BlogManagement = () => {
         <TableCell className="title">Tiêu đề</TableCell>
         <TableCell className="content">Nội dung</TableCell>
         <TableCell>Hình ảnh</TableCell>
-        <TableCell className="category">Danh mục</TableCell>
         <TableCell className="slug">Slug</TableCell>
         <TableCell className="actions">Hành động</TableCell>
       </TableRow>
@@ -589,7 +588,7 @@ const BlogManagement = () => {
               {blog.content
                 ?.map(
                   (item) =>
-                    `${item.type}: ${item.text || item.url || "N/A"}`
+                    `${item.text || item.url || "N/A"}`
                 )
                 .join(", ") || "N/A"}
             </TableCell>
@@ -602,7 +601,6 @@ const BlogManagement = () => {
                 />
               )}
             </TableCell>
-            <TableCell className="category">{categoryName}</TableCell>
             <TableCell className="slug">{blog.slug}</TableCell>
             <TableCell className="actions">
               <Button

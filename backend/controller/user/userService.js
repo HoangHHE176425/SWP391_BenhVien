@@ -486,6 +486,7 @@ const getAllDepartment = async (req, res) => {
   const searchTerm = req.query.searchTerm || "";  // Lấy tham số tìm kiếm từ query
 
   try {
+    console.log('run day hehe');
     // Lấy tổng số phòng ban để tính số trang
     const totalDepartments = await departmentRepo.countDepartments();
     const totalPages = Math.ceil(totalDepartments / limit);
