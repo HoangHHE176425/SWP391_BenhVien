@@ -22,6 +22,7 @@ import ServicePage from "./pages/ServicePage";
 import DoctorPage from "./pages/DoctorPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import DoctorDetail from "./pages/DoctorDetail";
 import AboutPage from "./pages/AboutPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -93,7 +94,6 @@ import OfflineAppointmentPage from "./pages/receptionist/OfflineAppointmentPage"
 import QueueManagementPage from "./pages/receptionist/QueueManagement";
 import FeedbackList from "./pages/ListFeedback";
 
-
 // Components
 import Header from "./components/HeaderComponent";
 import MenuComponent from "./components/MenuComponent";
@@ -125,17 +125,26 @@ const RoleRedirect = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const stored = localStorage.getItem("user");
+    const user = stored && stored !== "undefined" ? JSON.parse(stored) : null;
     const role = (user?.role || "Patient").toLowerCase();
     const path = location.pathname;
 
     if (!user) {
-      // If no user, redirect to login unless already on login/register
-      if (!["/login", "/register", "/forgot-password", "/reset-password"].includes(path)) {
-        navigate("/login", { replace: true });
-      }
-      return;
-    }
+  const allowAnonymousPaths = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+    "/complete-profile"
+  ];
+
+  if (!allowAnonymousPaths.includes(path)) {
+    navigate("/login", { replace: true });
+  }
+  return;
+}
+
 
     // Role-to-path mapping for redirection
     const roleToPath = {
@@ -238,12 +247,21 @@ const AppRoutes = () => {
 
   const toggleMenu = () => setMenuOpen((open) => !open);
 
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    const userRole = storedUser?.role?.toLowerCase() || "patient";
-    setUser(storedUser);
+useEffect(() => {
+  try {
+    const stored = localStorage.getItem("user");
+    const parsed = stored && stored !== "undefined" ? JSON.parse(stored) : null;
+    const userRole = parsed?.role?.toLowerCase() || "patient";
+    setUser(parsed);
     setRole(userRole);
-  }, [location.pathname]);
+  } catch (err) {
+    console.error("Invalid JSON in localStorage:", err);
+    localStorage.removeItem("user"); // tránh lỗi lặp
+    setUser(null);
+    setRole("patient");
+  }
+}, [location.pathname]);
+
 
   const isPatient = role === "patient";
 
@@ -417,6 +435,7 @@ const AppRoutes = () => {
           <Route path="/news/:slug" element={<NewsDetail />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/complete-profile" element={<CompleteProfilePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/medicines-home" element={<MedicineListPage />} />
           <Route path="/department-home" element={<DepartmentPage />} />
@@ -484,11 +503,15 @@ const AppRoutes = () => {
 };
 
 // Root App component
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 const App = () => {
   return (
-    <Router>
-      <AppRoutes />
-    </Router>
+    <GoogleOAuthProvider clientId="637095580644-ue0hve6eqq11fv7qe03bjpntf5qtd5q5.apps.googleusercontent.com">
+      <Router>
+        <AppRoutes />
+      </Router>
+    </GoogleOAuthProvider>
   );
 };
 
