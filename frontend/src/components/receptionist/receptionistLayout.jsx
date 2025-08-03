@@ -40,10 +40,10 @@ const ReceptionistLayout = () => {
     { key: "10", path: "/receptionist/medicines", icon: <PlusCircleOutlined />, label: "Quản Lý Thuốc" },
     { key: "11", path: "/receptionist/invoices", icon: <DollarOutlined />, label: "Quản Lý Hóa Đơn" },
     { key: "12", path: "/receptionist/payments", icon: <DollarOutlined />, label: "Quản Lý Thanh Toán" },
-    { key: "13", path: "/receptionist/news", icon: <NotificationOutlined />, label: "Quản Lý Tin Tức" },
+    // { key: "13", path: "/receptionist/news", icon: <NotificationOutlined />, label: "Quản Lý Tin Tức" },
     // { key: "14", path: "/receptionist/feedback", icon: <CommentOutlined />, label: "Quản Lý Feedback" },
-    { key: "15", path: "/receptionist/qna", icon: <QuestionCircleOutlined />, label: "Q/A" },
-    { key: "16", path: "/receptionist/schedule", icon: <QuestionCircleOutlined />, label: "Quản Lý Lịch Làm Việc" },
+    // { key: "15", path: "/receptionist/qna", icon: <QuestionCircleOutlined />, label: "Q/A" },
+    // { key: "16", path: "/receptionist/schedule", icon: <QuestionCircleOutlined />, label: "Quản Lý Lịch Làm Việc" },
     { key: "18", path: "/receptionist/profile", icon: <QuestionCircleOutlined />, label: "Hồ Sơ Cá Nhân" },
     { key: "17", path: null, icon: <LogoutOutlined />, label: "Đăng Xuất", onClick: () => handleLogout() },
   ];
