@@ -17,6 +17,7 @@
     "@mui/icons-material": "^7.1.1",
     "@mui/material": "^7.1.0",
     "@payos/payos-checkout": "^1.0.8",
+    "@react-oauth/google": "^0.12.2",
     "@tailwindcss/vite": "^4.1.11",
     "antd": "^5.26.3",
     "axios": "^1.10.0",
