@@ -66,29 +66,6 @@ const DoctorAttendance = () => {
     });
 
   const handleCheckInBySchedule = async (schedule) => {
-  const now = dayjs();
-
-  const latestEndTime = dayjs(
-    Math.max(...schedule.timeSlots.map(slot => new Date(slot.endTime).getTime()))
-  );
-
-  if (now.isAfter(latestEndTime)) {
-    message.warning("Đã quá giờ làm, không thể check-in.");
-    return;
-  }
-
-  // ✅ Cho phép check-in trễ tối đa 1 phút
-  const isInGracePeriod = schedule.timeSlots.some(slot => {
-    const start = dayjs(slot.startTime);
-    const graceEnd = start.add(1, 'minute');
-    return now.isSameOrAfter(start) && now.isBefore(graceEnd);
-  });
-
-  if (!isInGracePeriod) {
-    message.warning("Chưa đến giờ hoặc đã trễ hơn 1 phút sau giờ bắt đầu.");
-    return;
-  }
-
   try {
     const ipAddress = await getIPAddress();
     const location = await getLocation();
@@ -116,6 +93,8 @@ const DoctorAttendance = () => {
 };
 
 
+
+
   const handleCheckOutBySchedule = async (schedule) => {
     try {
       const res = await fetch("http://localhost:9999/api/attendance/doctor/check-out", {
@@ -141,7 +120,7 @@ const DoctorAttendance = () => {
   const map = {
     Present: { color: "green", label: "Hoàn thành" },
     "Late-Arrival": { color: "gold", label: "Đến muộn" },
-    "Left-Early": { color: "blue", label: "Về sớm" },
+    "Left-Early": { color: "green", label: "Hoàn thành" },
     "Left-Late": { color: "orange", label: "Check-out muộn" },
     "Checked-In": { color: "processing", label: "Đang làm" },
     Absent: { color: "red", label: "Vắng mặt" }, 
