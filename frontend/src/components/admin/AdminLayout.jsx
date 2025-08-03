@@ -25,7 +25,7 @@ const AdminLayout = () => {
     { key: "1", path: "/admin", icon: <DashboardOutlined />, label: "Bảng Điều Khiển" },
     { key: "2", path: "/admin/accounts", icon: <UserOutlined />, label: "Quản Lý Người Dùng" },
     { key: "3", path: "/admin/employees", icon: <TeamOutlined />, label: "Quản Lý Nhân Viên" },
-    { key: "4", path: "/admin/attendance", icon: <TeamOutlined />, label: "Quản Lý Điểm Danh" },
+    // { key: "4", path: "/admin/attendance", icon: <TeamOutlined />, label: "Quản Lý Điểm Danh" },
     { key: "5", path: "/admin/departments", icon: <AppstoreOutlined />, label: "Quản Lý Khoa" },
     { key: "6", path: "/admin/services", icon: <AppstoreOutlined />, label: "Quản Lý Dịch Vụ" },
     { key: "7", path: "/admin/blogs", icon: <FileTextOutlined />, label: "Quản Lý Bài Viết" },

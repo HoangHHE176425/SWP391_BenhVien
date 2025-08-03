@@ -38,6 +38,9 @@ function ReceptionistScheduleManager() {
   const [employeeList, setEmployeeList] = useState([]);
   const [selectedEmployeeForLogs, setSelectedEmployeeForLogs] = useState(null);
   const [filterAttendanceStatus, setFilterAttendanceStatus] = useState(null);
+  const [attendanceDetail, setAttendanceDetail] = useState(null);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  
   const token = localStorage.getItem("token"); 
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
@@ -104,6 +107,7 @@ function ReceptionistScheduleManager() {
         try {
           const attendanceRes = await axios.get(`/api/receptionist/schedule-management/schedule/${schedule._id}/attendances`);
           schedule.attendanceStatus = attendanceRes.data?.[0]?.status || 'Chưa điểm danh';
+          schedule.attendanceDetail = attendanceRes.data?.[0];
         } catch {
           schedule.attendanceStatus = 'Chưa điểm danh';
         }
@@ -450,10 +454,20 @@ setSchedules(sortedSchedules);
           <Button type="link" danger onClick={() => markAsOnLeave(record._id)}>
             Nghỉ phép
           </Button>
+          <Button
+            type="link"
+            onClick={() => {
+              setAttendanceDetail(record.attendanceDetail);
+              setLocationModalVisible(true);
+            }}
+            disabled={!record.attendanceDetail}
+          >
+            Xem địa chỉ
+          </Button>
         </Space>
       )
     }
-  ];
+      ];
 
   const employeeColumns = [
     {
@@ -524,21 +538,24 @@ setSchedules(sortedSchedules);
 
   const baseDate = dayjs(date).startOf('day');
 
-  const formattedTimeSlots = values.timeSlots.map(({ timeRange, status }) => {
+  const formattedTimeSlots = timeSlots.map(({ timeRange, status }) => {
   const [startRaw, endRaw] = timeRange;
-  const baseDate = dayjs(values.date).startOf("day");
-
-  const startTime = baseDate
+  const startTime = dayjs(date)
     .hour(startRaw.hour())
     .minute(startRaw.minute())
     .second(0)
     .millisecond(0);
 
-  const endTime = baseDate
+  let endTime = dayjs(date)
     .hour(endRaw.hour())
     .minute(endRaw.minute())
     .second(0)
     .millisecond(0);
+
+  // Nếu endTime nhỏ hơn startTime -> sang ngày hôm sau (ca đêm)
+  if (endTime.isBefore(startTime)) {
+    endTime = endTime.add(1, 'day');
+  }
 
   return {
     startTime: startTime.toISOString(),
@@ -1181,6 +1198,34 @@ const payload = {
   )}
 </Modal>
 
+<Modal
+  title="Thông tin điểm danh"
+  open={locationModalVisible}
+  onCancel={() => setLocationModalVisible(false)}
+  footer={null}
+>
+  {attendanceDetail ? (
+    <div>
+      <p><strong>IP:</strong> {attendanceDetail.ipAddress || 'Không có'}</p>
+      <p><strong>Địa chỉ:</strong> {attendanceDetail.location?.address || ''}</p>
+      {attendanceDetail.location?.latitude && attendanceDetail.location?.longitude ? (
+        <iframe
+          title="Google Map"
+          width="100%"
+          height="300"
+          frameBorder="0"
+          style={{ border: 0, marginTop: 8 }}
+          src={`https://maps.google.com/maps?q=${attendanceDetail.location.latitude},${attendanceDetail.location.longitude}&z=15&output=embed`}
+          allowFullScreen
+        ></iframe>
+      ) : (
+        <p>Không có tọa độ bản đồ</p>
+      )}
+    </div>
+  ) : (
+    <p>Không có dữ liệu</p>
+  )}
+</Modal>
 
     </div>
   );
