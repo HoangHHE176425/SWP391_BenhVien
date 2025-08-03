@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../assets/css/Register.css"; // dùng lại style cũ
-import { Modal } from "antd";
+import { Modal, message } from "antd";
 
 const CompleteProfilePage = () => {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ const CompleteProfilePage = () => {
       localStorage.removeItem("googleRegisterData");
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
-      alert("Hoàn tất hồ sơ thành công!");
+      message.success("Hoàn tất hồ sơ thành công!");
       navigate("/login");
     } else {
       Modal.error({ title: "Lỗi", content: data.message || "Không thể hoàn tất đăng ký." });
