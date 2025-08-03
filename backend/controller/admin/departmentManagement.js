@@ -68,6 +68,7 @@ exports.getAllDepartments = async (req, res) => {
     }
 
     const query = {
+      status:'active',
       $or: [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
@@ -77,7 +78,7 @@ exports.getAllDepartments = async (req, res) => {
 
     const total = await Department.countDocuments(query);
 
-    const departments = await Department.find(query)
+    const departments = await Department.find({status: 'active'})
       .sort({ createdAt: -1 })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit))

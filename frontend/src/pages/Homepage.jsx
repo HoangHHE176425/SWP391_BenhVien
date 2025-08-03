@@ -70,7 +70,7 @@ const HomePage = () => {
           _id: service._id || service.id || `service-${Math.random()}`,
           title: service.name || service.serviceName || service.title || "Dịch vụ không rõ tên",
           description: service.description || "Không có mô tả",
-          image: service.image || "https://via.placeholder.com/150x150",
+          image: service.image || "https://placehold.co/150x150",
         }));
         console.log("Mapped Services:", mappedServices);
 
@@ -88,7 +88,7 @@ const HomePage = () => {
           _id: department._id || department.id || `department-${Math.random()}`,
           name: department.name || "Khoa không rõ tên",
           description: department.description || "Không có mô tả",
-          image: department.image || "https://via.placeholder.com/150x150",
+          image: department.image || "https://placehold.co/150x150",
         }));
         console.log("Mapped Departments:", mappedDepartments);
 
@@ -457,11 +457,11 @@ const HomePage = () => {
                   <div className="news-card bg-white rounded shadow h-100">
                     <Link to={`/news/${news.slug}`}>
                       <img
-                        src={news.thumbnail || "https://via.placeholder.com/150x150"}
+                        src={news.thumbnail || "https://placehold.co/150x150"}
                         alt={news.title}
                         className="news-image img-fluid w-100"
                         style={{ height: "150px", objectFit: "cover" }}
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                        onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                       />
                     </Link>
                     <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -497,11 +497,11 @@ const HomePage = () => {
                     <div className="news-card bg-white rounded shadow h-100">
                       <Link to={`/news/${news.slug}`}>
                         <img
-                          src={news.thumbnail || "https://via.placeholder.com/150x150"}
+                          src={news.thumbnail || "https://placehold.co/150x150"}
                           alt={news.title}
                           className="news-image img-fluid w-100"
                           style={{ height: "150px", objectFit: "cover" }}
-                          onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                          onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                         />
                       </Link>
                       <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -562,11 +562,11 @@ const HomePage = () => {
                 <div className="blog-card bg-white rounded shadow h-100">
                   <Link to={`/blog/${blog.slug}`}>
                     <img
-                      src={blog.image || "https://via.placeholder.com/150x150"}
+                      src={blog.image || "https://placehold.co/150x150"}
                       alt={blog.title}
                       className="blog-image img-fluid w-100"
                       style={{ height: "150px", objectFit: "cover" }}
-                      onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                      onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                     />
                   </Link>
                   <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -602,11 +602,11 @@ const HomePage = () => {
                   <div className="blog-card bg-white rounded shadow h-100">
                     <Link to={`/blog/${blog.slug}`}>
                       <img
-                        src={blog.image || "https://via.placeholder.com/150x150"}
+                        src={blog.image || "https://placehold.co/150x150"}
                         alt={blog.title}
                         className="blog-image img-fluid w-100"
                         style={{ height: "150px", objectFit: "cover" }}
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                        onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                       />
                     </Link>
                     <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -666,11 +666,11 @@ const HomePage = () => {
                 <div className="department-card bg-white rounded shadow h-100">
                   <Link to={`/department/${department._id}`}>
                     <img
-                      src={department.image || "https://via.placeholder.com/150x150"}
+                      src={department.image || "https://placehold.co/150x150"}
                       alt={department.name}
                       className="img-fluid w-100"
                       style={{ height: "150px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
-                      onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                      onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                     />
                   </Link>
                   <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -697,11 +697,11 @@ const HomePage = () => {
                   <div className="department-card bg-white rounded shadow h-100">
                     <Link to={`/department/${department._id}`}>
                       <img
-                        src={department.image || "https://via.placeholder.com/150x150"}
+                        src={department.image || "https://placehold.co/150x150"}
                         alt={department.name}
                         className="img-fluid w-100"
                         style={{ height: "150px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                        onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                       />
                     </Link>
                     <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -753,11 +753,11 @@ const HomePage = () => {
                   <div className="service-card bg-white rounded shadow h-100">
                     <Link to={`/service/${service._id}`}>
                       <img
-                        src={service.image || "https://via.placeholder.com/150x150"}
+                        src={service.image || "https://placehold.co/150x150"}
                         alt={service.title}
                         className="img-fluid w-100"
                         style={{ height: "150px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                        onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                       />
                     </Link>
                     <div className="p-3 d-flex flex-column justify-content-between h-100">
@@ -784,11 +784,11 @@ const HomePage = () => {
                     <div className="service-card bg-white rounded shadow h-100">
                       <Link to={`/service/${service._id}`}>
                         <img
-                          src={service.image || "https://via.placeholder.com/150x150"}
+                          src={service.image || "https://placehold.co/150x150"}
                           alt={service.title}
                           className="img-fluid w-100"
                           style={{ height: "150px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
-                          onError={(e) => (e.target.src = "https://via.placeholder.com/150x150")}
+                          onError={(e) => (e.target.src = "https://placehold.co/150x150")}
                         />
                       </Link>
                       <div className="p-3 d-flex flex-column justify-content-between h-100">

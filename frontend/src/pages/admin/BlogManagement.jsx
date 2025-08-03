@@ -94,7 +94,7 @@ const BlogManagement = () => {
       console.error("Error fetching blogs:", error);
       alert(
         "Thất bại khi lấy danh sách bài viết: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
     }
   };
@@ -109,7 +109,7 @@ const BlogManagement = () => {
       console.error("Error fetching categories:", error);
       alert(
         "Thất bại khi lấy danh sách danh mục: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
     }
   };
@@ -143,7 +143,7 @@ const BlogManagement = () => {
       console.error("Error uploading images:", error.response?.data || error);
       alert(
         "Tải hình ảnh thất bại: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
       return [];
     }
@@ -239,7 +239,7 @@ const BlogManagement = () => {
       console.error("Error adding blog:", error.response?.data || error);
       alert(
         "Thêm bài viết thất bại: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
     } finally {
       setLoading(false);
@@ -325,7 +325,7 @@ const BlogManagement = () => {
       console.error("Error updating blog:", error.response?.data || error);
       alert(
         "Cập nhật bài viết thất bại: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
     } finally {
       setLoading(false);
@@ -352,7 +352,7 @@ const BlogManagement = () => {
       console.error("Error deleting blog:", error);
       alert(
         "Xóa bài viết thất bại: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
     } finally {
       setLoading(false);
@@ -558,72 +558,72 @@ const BlogManagement = () => {
         Thêm Bài viết
       </Button>
       <TableContainer component={Paper}>
-  <Table>
-    <TableHead>
-      <TableRow>
-        <TableCell className="stt">STT</TableCell> {/* Thêm cột STT */}
-        <TableCell className="title">Tiêu đề</TableCell>
-        <TableCell className="content">Nội dung</TableCell>
-        <TableCell>Hình ảnh</TableCell>
-        <TableCell className="category">Danh mục</TableCell>
-        <TableCell className="slug">Slug</TableCell>
-        <TableCell className="actions">Hành động</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {paginatedBlogs.map((blog, index) => {
-        const categoryIdValue =
-          blog.categoryId?._id || blog.categoryId;
-        const categoryName =
-          blog.categoryId?.name ||
-          categories.find((cat) => cat._id === categoryIdValue)
-            ?.name ||
-          "N/A";
-        // Tính số thứ tự dựa trên page và index
-        const stt = (page - 1) * blogsPerPage + index + 1;
-        return (
-          <TableRow key={blog._id}>
-            <TableCell className="stt">{stt}</TableCell> {/* Hiển thị STT */}
-            <TableCell className="title">{blog.title}</TableCell>
-            <TableCell className="content">
-              {blog.content
-                ?.map(
-                  (item) =>
-                    `${item.type}: ${item.text || item.url || "N/A"}`
-                )
-                .join(", ") || "N/A"}
-            </TableCell>
-            <TableCell>
-              {blog.image && (
-                <img
-                  src={blog.image}
-                  alt={blog.title}
-                  style={{ width: "50px" }}
-                />
-              )}
-            </TableCell>
-            <TableCell className="category">{categoryName}</TableCell>
-            <TableCell className="slug">{blog.slug}</TableCell>
-            <TableCell className="actions">
-              <Button
-                color="primary"
-                onClick={() => handleOpenEditBlog(blog)}
-                startIcon={<EditIcon />}
-                disabled={loading}
-              />
-              <Button
-                color="secondary"
-                onClick={() => handleOpenDeleteBlogConfirm(blog)}
-                startIcon={<DeleteIcon />}
-                disabled={loading}
-              />
-            </TableCell>
-          </TableRow>
-        );
-      })}
-    </TableBody>
-  </Table>
-</TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell className="stt">STT</TableCell>
+              <TableCell className="title">Tiêu đề</TableCell>
+              <TableCell className="content">Nội dung</TableCell>
+              <TableCell>Hình ảnh</TableCell>
+              <TableCell className="slug">Slug</TableCell>
+              <TableCell className="actions">Hành động</TableCell>
+            </TableRow>
+
+          </TableHead>
+          <TableBody>
+            {paginatedBlogs.map((blog, index) => {
+              const categoryIdValue =
+                blog.categoryId?._id || blog.categoryId;
+              const categoryName =
+                blog.categoryId?.name ||
+                categories.find((cat) => cat._id === categoryIdValue)
+                  ?.name ||
+                "N/A";
+              // Tính số thứ tự dựa trên page và index
+              const stt = (page - 1) * blogsPerPage + index + 1;
+              return (
+                <TableRow key={blog._id}>
+                  <TableCell className="stt">{stt}</TableCell> {/* Hiển thị STT */}
+                  <TableCell className="title">{blog.title}</TableCell>
+                  <TableCell className="content">
+                    {blog.content
+                      ?.map(
+                        (item) =>
+                          `${item.type}: ${item.text || item.url || "N/A"}`
+                      )
+                      .join(", ") || "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {blog.image && (
+                      <img
+                        src={blog.image}
+                        alt={blog.title}
+                        style={{ width: "50px" }}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className="category">{categoryName}</TableCell>
+                  <TableCell className="slug">{blog.slug}</TableCell>
+                  <TableCell className="actions">
+                    <Button
+                      color="primary"
+                      onClick={() => handleOpenEditBlog(blog)}
+                      startIcon={<EditIcon />}
+                      disabled={loading}
+                    />
+                    <Button
+                      color="secondary"
+                      onClick={() => handleOpenDeleteBlogConfirm(blog)}
+                      startIcon={<DeleteIcon />}
+                      disabled={loading}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Pagination
         count={Math.ceil(filteredBlogs.length / blogsPerPage)}
         page={page}

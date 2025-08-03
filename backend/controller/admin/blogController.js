@@ -46,6 +46,24 @@ exports.getBlogBySlug = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.getBlogBySlug = async (req, res) => {
+  try {
+    console.log("📌 Received slug:", req.params.slug); // 👈 thêm dòng này
+
+    const { slug } = req.params;
+    const blog = await Blog.findOne({ slug });
+
+    if (!blog) {
+      console.log("❌ Blog not found for slug:", slug); // 👈 thêm dòng này
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    res.json(blog);
+  } catch (error) {
+    console.error("Error fetching blog by slug:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 exports.createBlog = async (req, res) => {
   try {
