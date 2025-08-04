@@ -60,6 +60,7 @@ const adminUserManagerRouter = require("./routers/Admin/adminUserManager.route")
 const adminEmployeeManagerRouter = require("./routers/Admin/adminEmployeeManager.route");
 const adminStatsRouter = require("./routers/Admin/adminDashboard.route");
 const adminAttendanceRouter = require("./routers/Admin/adminAttendance.route");
+const adminBlog = require("./routers/Admin/blog.route");
 
 // 15-7
 const foodrouter = require("./routers/User/api.food");
@@ -76,6 +77,7 @@ app.use("/api/admin", adminUserManagerRouter);
 app.use("/api/admin", adminEmployeeManagerRouter);
 app.use("/api/admin", adminStatsRouter);
 app.use("/api/admin", adminAttendanceRouter);
+app.use("/api/admin", adminBlog);
 
 // 15-7
 app.use("/api/food", foodrouter);

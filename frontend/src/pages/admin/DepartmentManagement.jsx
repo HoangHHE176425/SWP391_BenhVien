@@ -100,6 +100,7 @@ const DepartmentManagement = () => {
           search: searchQuery.trim(),
           page: currentPage,
           limit: paginationLimit,
+          isAll:true,
         },
         headers: {
           Authorization: `Bearer ${token}`,

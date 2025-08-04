@@ -31,21 +31,21 @@ exports.getAllBlogs = async (req, res) => {
   }
 };
 
-exports.getBlogBySlug = async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const blog = await Blog.findOne({ slug })
-      .populate("author_id", "fullname email")
-      .populate("categoryId", "name");
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
-    }
-    res.json(blog);
-  } catch (error) {
-    console.error("Error fetching blog by slug:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
+// exports.getBlogBySlug = async (req, res) => {
+//   try {
+//     const { slug } = req.params;
+//     const blog = await Blog.findOne({ slug })
+//       .populate("author_id", "fullname email")
+//       .populate("categoryId", "name");
+//     if (!blog) {
+//       return res.status(404).json({ message: "Blog not found" });
+//     }
+//     res.json(blog);
+//   } catch (error) {
+//     console.error("Error fetching blog by slug:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 exports.getBlogBySlug = async (req, res) => {
   try {
     console.log("📌 Received slug:", req.params.slug); // 👈 thêm dòng này

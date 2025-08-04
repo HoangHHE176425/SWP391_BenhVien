@@ -60,7 +60,7 @@ const validateQueryParams = (page, limit, search) => {
 // Lấy tất cả khoa có hỗ trợ tìm kiếm và phân trang
 exports.getAllDepartments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "" } = req.query;
+    const { page = 1, limit = 10, search = "", } = req.query;
 
     const validationError = validateQueryParams(page, limit, search);
     if (validationError) {
@@ -68,17 +68,17 @@ exports.getAllDepartments = async (req, res) => {
     }
 
     const query = {
-      status:'active',
+      // status:'active',
       $or: [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
         { departmentCode: { $regex: search, $options: "i" } }, // ✅ thêm dòng này
       ],
     };
-
+    console.log(query)
     const total = await Department.countDocuments(query);
 
-    const departments = await Department.find({status: 'active'})
+    const departments = await Department.find()
       .sort({ createdAt: -1 })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit))

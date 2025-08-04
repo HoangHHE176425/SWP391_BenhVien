@@ -483,7 +483,7 @@ const getAllDepartment = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const searchTerm = req.query.searchTerm || "";  // Lấy tham số tìm kiếm từ query
+  const searchTerm = req.query.searchTerm || req.query.search || "";  // Lấy tham số tìm kiếm từ query
 
   try {
     console.log('run day hehe');
@@ -658,7 +658,7 @@ const getAllPatients = async (req, res) => {
     const patients = await Patient.find({})
       .populate('profileId', 'name dateOfBirth gender identityNumber')
       .select('_id patientId profileId');
-    
+
     // Map để trả về thông tin cần thiết
     const mappedPatients = patients.map(patient => ({
       _id: patient._id,
@@ -668,7 +668,7 @@ const getAllPatients = async (req, res) => {
       gender: patient.profileId?.gender,
       identityNumber: patient.profileId?.identityNumber
     }));
-    
+
     res.status(200).json(mappedPatients);
   } catch (error) {
     console.error("Error fetching patients:", error);

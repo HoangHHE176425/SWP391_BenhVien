@@ -58,14 +58,15 @@ const BlogDetail = () => {
                 },
               ],
         };
+        console.log(">>>", transformedBlog)
         setBlog(transformedBlog);
 
         // Increment blog views
-        await axios.post(
-          `http://localhost:9999/api//blogs/slug/${slug}/views`,
-          {},
-          { headers }
-        );
+        // await axios.post(
+        //   `http://localhost:9999/api/blogs/slug/${slug}/views`,
+        //   {},
+        //   { headers }
+        // );
 
         // Fetch top viewed blogs
         const topViewedResponse = await axios.get(
